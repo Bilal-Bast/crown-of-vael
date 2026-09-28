@@ -7,6 +7,7 @@ func _run() -> void:
 	var scene := load("res://scenes/main.tscn") as PackedScene
 	var main := scene.instantiate() as Control
 	root.add_child(main)
+	(main.get("profile") as SaveData).save_path = "res://.godot/layout_smoke.save"
 	await process_frame
 	await process_frame
 	var field := main.get("battlefield") as Control
@@ -22,13 +23,20 @@ func _run() -> void:
 		quit(1)
 		return
 	main.call("_select_tab", "Heroes")
+	var heroes := main.get("heroes_area") as Control
+	var equipment := main.get("equipment_area") as Control
 	var placeholder := main.get("placeholder_area") as Control
-	if battle_area.visible or not placeholder.visible:
-		push_error("Heroes placeholder did not open cleanly.")
+	if battle_area.visible or not heroes.visible or placeholder.visible or heroes.get_global_rect().end.y > nav.get_global_rect().position.y:
+		push_error("Heroes screen did not fit cleanly.")
+		quit(1)
+		return
+	main.call("_select_tab", "Equipment")
+	if not equipment.visible or heroes.visible or equipment.get_global_rect().end.y > nav.get_global_rect().position.y:
+		push_error("Equipment screen did not fit cleanly.")
 		quit(1)
 		return
 	main.call("_select_tab", "Battle")
-	if not battle_area.visible or placeholder.visible:
+	if not battle_area.visible or placeholder.visible or equipment.visible:
 		push_error("Battle tab did not reopen cleanly.")
 		quit(1)
 		return

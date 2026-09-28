@@ -1,23 +1,25 @@
-# Crown of Vael — playable prototype
+# Crown of Vael
 
-Open `project.godot` in Godot 4.3 or newer and run the project. The game uses a 1080 × 1920 portrait viewport that scales to smaller portrait screens. Characters and effects are drawn with Godot shapes, so no external art is required.
+Open `project.godot` in Godot 4.7.1 and run the project. The 1080 × 1920 portrait viewport scales to 360 × 640. Characters, the Squire portrait, item icons, and effects use procedural Godot drawing and text.
 
-The Squire attacks automatically, casts Shield Bash every eight seconds, and earns Gold and Hero EXP from defeated enemies. Easy 1-1 through Easy 1-9 each have three waves of five enemies. Easy 1-10 is a 30-second Goblin Warlord fight. Death returns to the previous stage. A failed boss attempt returns to Easy 1-9; after clearing it, the player must tap **Retry Boss** to begin the next attempt.
+The Squire fights automatically and casts Shield Bash every eight seconds. Easy 1-1 through Easy 1-9 each have three waves of five enemies. Easy 1-10 is a 30-second Goblin Warlord fight. Stage progression, death rollback, boss retry, the HUD, and account-wide Gold upgrades continue from Phase 2.
 
-Gold buys persistent HP, ATK, or Armor upgrades. The HUD shows Gold, Gems (currently display only), and a derived Player Power score. Stage, Gold, Gems, EXP, level, upgrades, and boss retry state are stored in `user://crown_of_vael.save`.
+## Phase 3 progression
 
-The Battle tab contains the live fight, Shield Bash cooldown, Squire stats, and upgrades. Heroes, Equipment, Skills, and Summon open future-feature placeholders while combat continues.
+- **Heroes:** Squire is the only playable hero. Combat EXP raises Hero Level and base stats. The fixed Squire → Knight → Royal Knight → Paladin → Divine Paladin path shows future level and Evolution Crest costs, while Mage, Ranger, Assassin, and Necromancer appear as locked roster cards. Evolution remains unavailable.
+- **Gems:** A stage's first clear grants 1 Gem and 1 Enhancement Stone. The first Goblin Warlord clear grants 5 Gems and 2 Stones. Reaching Hero Levels 5, 10, and 20 grants 2 Gems each, once.
+- **Equipment:** Seven slots and a seven-item starter pool are available. Enemies can drop more equipment; bosses have a higher chance. Gear contributes ATK, HP, Armor, Attack Speed, Crit Chance, or Crit Damage to live combat and Power. Items can be equipped, removed, upgraded with Gold and Stones, and compared. Five copies with the same item, rarity, and level merge into one copy of the next rarity. All eight rarity frames are supported.
+- **Save:** `user://crown_of_vael.save` stores currencies, hero progression, first clears, milestone claims, equipment IDs and levels, equipped slots, and evolution progress. Existing Phase 2 saves receive safe defaults and the starter item pool.
 
-## Structure
+Skills and Summon remain placeholders. No purchases or online systems are included.
 
-- `scripts/game_data.gd`: enemy definitions, wave composition, stat scaling, and progression values.
-- `scripts/save_data.gd`: local profile persistence and purchases.
-- `scripts/battle_controller.gd`: automatic combat, rewards, stage events, and boss timer.
-- `scripts/battlefield.gd`: placeholder battlefield rendering and floating damage numbers.
-- `scripts/skill_badge.gd`: Shield Bash icon and cooldown ring.
-- `scripts/main.gd`: portrait HUD, bottom navigation, and progression flow.
-- `tests/progression_smoke.gd`: checks the first three stages, rewards, and saved stage data.
-- `tests/layout_smoke.gd`: checks portrait panel boundaries and tab switching.
-- `tests/visual_capture.gd`: captures the Easy 1-1 screen to `.godot/phase2_capture.png` for visual checks.
+## Structure and checks
 
-Future equipment, companions, artifacts, heroes, dungeons, and summons can add data and systems around the profile and battle controller without changing the battlefield renderer.
+- `scripts/game_data.gd`: enemy, hero, evolution, and progression values.
+- `scripts/equipment_data.gd`: starter pool, rarity visuals, item stats, costs, and drop rolls.
+- `scripts/save_data.gd`: persistence, migration, rewards, equipment actions, and future evolution gate.
+- `scripts/battle_controller.gd`: combat and live reward events.
+- `scripts/battlefield.gd`, `scripts/hero_portrait.gd`: procedural battle art and Squire portrait.
+- `scripts/main.gd`: portrait HUD, Heroes, Equipment, and navigation.
+- `tests/progression_smoke.gd`, `tests/layout_smoke.gd`, `tests/phase3_smoke.gd`: progression, layout, and Phase 3 checks.
+- `tests/phase3_visual_capture.gd`: 360 × 640 captures for visual review.

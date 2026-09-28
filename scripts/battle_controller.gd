@@ -5,6 +5,8 @@ signal changed
 signal damage_popup(target_index: int, amount: int, critical: bool, bash: bool)
 signal attack_started(attacker_index: int, target_index: int)
 signal enemy_defeated(target_index: int, reward_gold: int, reward_exp: int)
+signal equipment_dropped(item: Dictionary)
+signal hero_leveled(level: int, gem_bonus: int)
 signal message(text: String)
 signal stage_cleared
 signal battle_lost(boss_failure: bool)
@@ -24,7 +26,7 @@ func start(new_profile: SaveData) -> void:
 	profile = new_profile
 	stage = profile.stage
 	wave = 1
-	hero = GameData.hero_stats(profile.level, profile.upgrades)
+	hero = GameData.hero_stats(profile.level, profile.upgrades, profile.gear_stats())
 	hero_hp = float(hero["hp"])
 	boss_time = 30.0
 	bash_time = 8.0
@@ -37,7 +39,7 @@ func start(new_profile: SaveData) -> void:
 func refresh_hero_stats() -> void:
 	var old_max := float(hero.get("hp", 0.0))
 	var old_hp := hero_hp
-	hero = GameData.hero_stats(profile.level, profile.upgrades)
+	hero = GameData.hero_stats(profile.level, profile.upgrades, profile.gear_stats())
 	hero_hp = minf(float(hero["hp"]), old_hp + maxf(0.0, float(hero["hp"]) - old_max))
 	changed.emit()
 
@@ -115,9 +117,16 @@ func _hit_enemy(index: int, amount: int, critical: bool, bash: bool) -> void:
 	damage_popup.emit(index, amount, critical, bash)
 	if float(enemy["current_hp"]) <= 0.0:
 		enemy_defeated.emit(index, int(enemy["gold"]), int(enemy["exp"]))
+		var gems_before := profile.gems
 		var leveled_up := profile.add_rewards(int(enemy["gold"]), int(enemy["exp"]))
+		var drop := EquipmentData.roll_drop(stage, stage == 10)
+		if not drop.is_empty():
+			profile.inventory.append(drop)
+			profile.save()
+			equipment_dropped.emit(drop)
 		if leveled_up:
 			refresh_hero_stats()
+			hero_leveled.emit(profile.level, profile.gems - gems_before)
 			message.emit("Level up! Squire is now level %d." % profile.level)
 		if _all_enemies_defeated():
 			if stage == 10 or wave >= GameData.WAVES_PER_STAGE:

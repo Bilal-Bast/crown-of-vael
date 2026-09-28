@@ -68,6 +68,17 @@ func _on_enemy_defeated(target_index: int, gold: int, exp: int) -> void:
 	floaters.append({"pos": pos + Vector2(0, -140), "text": "+%d GOLD  +%d EXP" % [gold, exp], "color": Color("ffe79c"), "age": 0.0, "life": 1.25, "size": 22})
 	queue_redraw()
 
+func show_equipment_drop(item_name: String, rarity_color: Color) -> void:
+	floaters.append({"pos": Vector2(size.x * 0.5, size.y * 0.45), "text": "LOOT: %s" % item_name, "color": rarity_color, "age": 0.0, "life": 2.2, "size": 30, "centered": true})
+	queue_redraw()
+
+func show_level_up(level: int, gem_bonus: int) -> void:
+	var note := "SQUIRE LEVEL %d!" % level
+	if gem_bonus > 0:
+		note += "  +%d GEMS" % gem_bonus
+	floaters.append({"pos": Vector2(size.x * 0.5, size.y * 0.28), "text": note, "color": Color("f7e9af"), "age": 0.0, "life": 2.0, "size": 39, "centered": true})
+	queue_redraw()
+
 func _draw() -> void:
 	var w := size.x
 	var h := size.y
@@ -259,7 +270,9 @@ func _draw_effects(unit: float) -> void:
 		var pos: Vector2 = floater["pos"] + Vector2(0, -ratio * 74 * unit)
 		var color: Color = floater["color"]
 		color.a = 1.0 - ratio
-		draw_string(ThemeDB.fallback_font, pos + Vector2(-70 * unit, 0), str(floater["text"]), HORIZONTAL_ALIGNMENT_LEFT, -1, roundi(float(floater["size"]) * unit), color)
+		var font_size := roundi(float(floater["size"]) * unit)
+		var x_offset := -ThemeDB.fallback_font.get_string_size(str(floater["text"]), HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x * 0.5 if bool(floater.get("centered", false)) else -70.0 * unit
+		draw_string(ThemeDB.fallback_font, pos + Vector2(x_offset, 0), str(floater["text"]), HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
 
 func _draw_hp_bar(pos: Vector2, width: float, ratio: float, color: Color) -> void:
 	draw_rect(Rect2(pos, Vector2(width, 10)), Color("233934"))
