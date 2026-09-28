@@ -45,13 +45,22 @@ func refresh_hero_stats() -> void:
 
 func _spawn_wave() -> void:
 	enemies.clear()
-	var kinds: Array[String] = ["Goblin Warlord"] if stage == 10 else GameData.wave_kinds(stage, wave)
+
+	var kinds: Array[String] = []
+
+	if stage == 10:
+		kinds = ["Goblin Warlord"]
+	else:
+		for kind in GameData.wave_kinds(stage, wave):
+			kinds.append(str(kind))
+
 	for kind in kinds:
 		var enemy := GameData.enemy_stats(kind, stage)
 		enemy["current_hp"] = enemy["hp"]
 		enemy["attack_time"] = 0.7 + randf_range(0.0, 0.5)
 		enemy["stun_time"] = 0.0
 		enemies.append(enemy)
+
 	changed.emit()
 
 func _process(delta: float) -> void:
