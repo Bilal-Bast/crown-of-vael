@@ -19,6 +19,9 @@ var first_clears: Array[int] = []
 var milestones: Array[String] = []
 var inventory: Array[Dictionary] = []
 var equipped := {}
+var banners := {"equipment": SummonData.new_banner(), "skills": SummonData.new_banner()}
+var skills := {"shield_bash": {"level": 1, "duplicates": 0, "rarity": 0}}
+var equipped_skill_slots: Array[String] = ["shield_bash", "", "", ""]
 var save_path := SAVE_PATH
 
 static func load_profile() -> SaveData:
@@ -79,6 +82,35 @@ static func load_from(path: String) -> SaveData:
 	if saved_upgrades is Dictionary:
 		for key in profile.upgrades:
 			profile.upgrades[key] = clampi(int(saved_upgrades.get(key, 0)), 0, 999)
+	var saved_banners: Variant = data.get("banners", {})
+	if saved_banners is Dictionary:
+		for banner in SummonData.BANNERS:
+			var raw: Variant = saved_banners.get(banner, {})
+			if raw is Dictionary:
+				profile.banners[banner] = {
+					"level": clampi(int(raw.get("level", 1)), 1, SummonData.MAX_LEVEL),
+					"exp": maxi(0, int(raw.get("exp", 0))),
+					"pity": clampi(int(raw.get("pity", 0)), 0, SummonData.PITY_LIMIT - 1),
+					"free_day": str(raw.get("free_day", "")),
+					"ad_day": str(raw.get("ad_day", "")),
+					"ad_count": clampi(int(raw.get("ad_count", 0)), 0, SummonData.AD_DAILY_LIMIT)
+				}
+	var saved_skills: Variant = data.get("skills", {})
+	if saved_skills is Dictionary:
+		for id in saved_skills:
+			var raw: Variant = saved_skills[id]
+			if SkillData.SKILLS.has(str(id)) and raw is Dictionary:
+				profile.skills[str(id)] = {"level": clampi(int(raw.get("level", 1)), 1, 99), "duplicates": maxi(0, int(raw.get("duplicates", 0))), "rarity": clampi(int(raw.get("rarity", SkillData.SKILLS[id]["rarity"])), 0, 7)}
+	var saved_slots: Variant = data.get("equipped_skill_slots", [])
+	if int(data.get("phase4_version", 0)) >= 1 and data.has("equipped_skill_slots") and saved_slots is Array:
+		var clean: Array[String] = ["", "", "", ""]
+		var used := {}
+		for index in mini(4, saved_slots.size()):
+			var id := str(saved_slots[index])
+			if profile.skills.has(id) and not used.has(id):
+				clean[index] = id
+				used[id] = true
+		profile.equipped_skill_slots = clean
 	return profile
 
 func save() -> void:
@@ -87,6 +119,7 @@ func save() -> void:
 		push_error("Could not save profile: %s" % error_string(FileAccess.get_open_error()))
 		return
 	file.store_string(JSON.stringify({
+		"phase4_version": 1,
 		"stage": stage,
 		"gold": gold,
 		"gems": gems,
@@ -97,11 +130,42 @@ func save() -> void:
 		"campaign_complete": campaign_complete,
 		"enhancement_stones": enhancement_stones, "evolution": evolution,
 		"evolution_crests": evolution_crests, "first_clears": first_clears,
-		"milestones": milestones, "inventory": inventory, "equipped": equipped
+		"milestones": milestones, "inventory": inventory, "equipped": equipped,
+		"banners": banners, "skills": skills, "equipped_skill_slots": equipped_skill_slots
 	}))
 
+func add_skill_copy(id: String, rarity: int) -> void:
+	if not SkillData.SKILLS.has(id):
+		return
+	if not skills.has(id):
+		skills[id] = {"level": 1, "duplicates": 0, "rarity": clampi(rarity, 0, 7)}
+		return
+	var record: Dictionary = skills[id]
+	record["rarity"] = maxi(int(record["rarity"]), rarity)
+	record["duplicates"] = int(record["duplicates"]) + 1
+	while int(record["level"]) < 99 and int(record["duplicates"]) >= SkillData.copies_to_level(int(record["level"])):
+		record["duplicates"] = int(record["duplicates"]) - SkillData.copies_to_level(int(record["level"]))
+		record["level"] = int(record["level"]) + 1
+
+func equip_skill(id: String, slot: int) -> bool:
+	if not skills.has(id) or slot < 0 or slot >= 4:
+		return false
+	for index in 4:
+		if equipped_skill_slots[index] == id:
+			equipped_skill_slots[index] = ""
+	equipped_skill_slots[slot] = id
+	save()
+	return true
+
+func unequip_skill(slot: int) -> bool:
+	if slot < 0 or slot >= 4 or equipped_skill_slots[slot] == "":
+		return false
+	equipped_skill_slots[slot] = ""
+	save()
+	return true
+
 func _grant_starters() -> void:
-	for kind in EquipmentData.ITEMS:
+	for kind in EquipmentData.STARTER_KINDS:
 		inventory.append(EquipmentData.create_item(kind))
 
 func get_item(id: String) -> Dictionary:

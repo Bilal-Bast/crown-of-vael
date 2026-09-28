@@ -7,6 +7,7 @@ signal attack_started(attacker_index: int, target_index: int)
 signal enemy_defeated(target_index: int, reward_gold: int, reward_exp: int)
 signal equipment_dropped(item: Dictionary)
 signal hero_leveled(level: int, gem_bonus: int)
+signal skill_cast(id: String, slot: int)
 signal message(text: String)
 signal stage_cleared
 signal battle_lost(boss_failure: bool)
@@ -21,6 +22,7 @@ var enemies: Array[Dictionary] = []
 var boss_time := 30.0
 var bash_time := 8.0
 var hero_attack_time := 0.0
+var skill_runtime := SkillRuntime.new()
 
 func start(new_profile: SaveData) -> void:
 	profile = new_profile
@@ -32,6 +34,7 @@ func start(new_profile: SaveData) -> void:
 	bash_time = 8.0
 	hero_attack_time = 0.45
 	active = true
+	skill_runtime.start(profile)
 	_spawn_wave()
 	message.emit("Goblin Warlord! Defeat him in 30 seconds." if stage == 10 else "%s | Wave 1/3" % GameData.stage_label(stage))
 	changed.emit()
@@ -40,6 +43,7 @@ func refresh_hero_stats() -> void:
 	var old_max := float(hero.get("hp", 0.0))
 	var old_hp := hero_hp
 	hero = GameData.hero_stats(profile.level, profile.upgrades, profile.gear_stats())
+	skill_runtime.apply_buffs(hero)
 	hero_hp = minf(float(hero["hp"]), old_hp + maxf(0.0, float(hero["hp"]) - old_max))
 	changed.emit()
 
@@ -71,12 +75,10 @@ func _process(delta: float) -> void:
 		if boss_time <= 0.0:
 			_lose(true)
 			return
-	bash_time -= delta
-	if bash_time <= 0.0:
-		bash_time += 8.0
-		_shield_bash()
-		if not active:
-			return
+	skill_runtime.process(delta, self)
+	bash_time = float(skill_runtime.cooldowns.get("shield_bash", 0.0))
+	if not active:
+		return
 	hero_attack_time -= delta
 	if hero_attack_time <= 0.0:
 		hero_attack_time += 1.0 / float(hero["speed"])
@@ -109,15 +111,6 @@ func _hero_attack() -> void:
 			var critical := randf() < float(hero["crit_chance"])
 			var amount := float(hero["atk"]) * (float(hero["crit_damage"]) if critical else 1.0)
 			_hit_enemy(i, roundi(amount), critical, false)
-			return
-
-func _shield_bash() -> void:
-	for i in enemies.size():
-		if float(enemies[i]["current_hp"]) > 0.0:
-			enemies[i]["stun_time"] = 1.25
-			attack_started.emit(-2, i)
-			message.emit("Shield Bash! Enemy stunned.")
-			_hit_enemy(i, roundi(float(hero["atk"]) * 2.25), false, true)
 			return
 
 func _hit_enemy(index: int, amount: int, critical: bool, bash: bool) -> void:

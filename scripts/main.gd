@@ -2,7 +2,9 @@ extends Control
 
 const BattleScript = preload("res://scripts/battle_controller.gd")
 const BattlefieldScript = preload("res://scripts/battlefield.gd")
-const SkillBadgeScript = preload("res://scripts/skill_badge.gd")
+const SkillBarScript = preload("res://scripts/skill_bar.gd")
+const SkillsScreenScript = preload("res://scripts/skills_screen.gd")
+const SummonScreenScript = preload("res://scripts/summon_screen.gd")
 const HeroPortraitScript = preload("res://scripts/hero_portrait.gd")
 
 const INK := Color("172425")
@@ -15,12 +17,16 @@ const MUTED := Color("aebdb4")
 var profile: SaveData
 var battle: BattleController
 var battlefield: Battlefield
-var skill_badge: SkillBadge
+var skill_bar: SkillBar
 var battle_area: VBoxContainer
 var placeholder_area: PanelContainer
 var placeholder_title: Label
 var heroes_area: ScrollContainer
 var equipment_area: ScrollContainer
+var skills_area: ScrollContainer
+var summon_area: ScrollContainer
+var skills_screen: SkillsScreen
+var summon_screen: SummonScreen
 var heroes_content: VBoxContainer
 var equipment_content: VBoxContainer
 var heroes_exp_text: Label
@@ -110,6 +116,18 @@ func _build_ui() -> void:
 	heroes_content = _screen_content(heroes_area)
 	equipment_area = _screen_scroll(root)
 	equipment_content = _screen_content(equipment_area)
+	skills_area = _screen_scroll(root)
+	skills_screen = SkillsScreenScript.new()
+	skills_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	skills_screen.add_theme_constant_override("separation", 12)
+	skills_area.add_child(skills_screen)
+	skills_screen.configure(profile, battle, _on_skills_changed)
+	summon_area = _screen_scroll(root)
+	summon_screen = SummonScreenScript.new()
+	summon_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	summon_screen.add_theme_constant_override("separation", 12)
+	summon_area.add_child(summon_screen)
+	summon_screen.configure(profile, _on_summon_changed)
 	_build_navigation(root)
 	_refresh_progression_screens()
 
@@ -199,21 +217,24 @@ func _build_battle_area() -> void:
 
 	var skill_panel := _panel()
 	battle_area.add_child(skill_panel)
+	var skill_box := VBoxContainer.new()
+	skill_box.add_theme_constant_override("separation", 6)
+	skill_panel.add_child(skill_box)
 	var skill_row := HBoxContainer.new()
 	skill_row.add_theme_constant_override("separation", 17)
-	skill_panel.add_child(skill_row)
-	skill_badge = SkillBadgeScript.new()
-	skill_badge.custom_minimum_size = Vector2(120, 112)
-	skill_badge.battle = battle
-	skill_row.add_child(skill_badge)
+	skill_box.add_child(skill_row)
+	skill_bar = SkillBarScript.new()
+	skill_bar.custom_minimum_size = Vector2(530, 112)
+	skill_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	skill_bar.battle = battle
+	skill_row.add_child(skill_bar)
 	var skill_copy := VBoxContainer.new()
-	skill_copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	skill_row.add_child(skill_copy)
-	skill_copy.add_child(_label("SHIELD BASH", 30, GOLD))
-	skill_copy.add_child(_label("Auto cast every 8s | Heavy hit + stun", 24, MUTED))
+	skill_copy.add_child(_label("AUTO", 28, GOLD))
+	skill_copy.add_child(_label("4 SLOTS", 23, MUTED))
 	tutorial_text = _label("AUTO COMBAT  |  Enemies drop Gold + EXP. Upgrade below; stages advance on their own.", 24, Color("a9d6ad"))
 	tutorial_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	skill_copy.add_child(tutorial_text)
+	skill_box.add_child(tutorial_text)
 
 	var hero_panel := _panel()
 	battle_area.add_child(hero_panel)
@@ -337,7 +358,7 @@ func _refresh_ui() -> void:
 		var button: Button = upgrade_buttons[stat]
 		button.text = "%s +%d\n%d GOLD" % [str(stat).to_upper(), rank, cost]
 		button.disabled = profile.gold < cost
-	skill_badge.queue_redraw()
+	skill_bar.queue_redraw()
 	battlefield.queue_redraw()
 
 func _living_enemies() -> int:
@@ -356,10 +377,16 @@ func _select_tab(tab_name: String) -> void:
 	battle_area.visible = tab_name == "Battle"
 	heroes_area.visible = tab_name == "Heroes"
 	equipment_area.visible = tab_name == "Equipment"
-	placeholder_area.visible = tab_name in ["Skills", "Summon"]
+	skills_area.visible = tab_name == "Skills"
+	summon_area.visible = tab_name == "Summon"
+	placeholder_area.visible = false
 	placeholder_title.text = tab_name.to_upper()
 	if tab_name in ["Heroes", "Equipment"]:
 		_refresh_progression_screens()
+	elif tab_name == "Skills":
+		skills_screen.refresh()
+	elif tab_name == "Summon":
+		summon_screen.refresh()
 	_update_navigation()
 
 func _clear_content(content: VBoxContainer) -> void:
@@ -551,6 +578,15 @@ func _gear_changed(note: String) -> void:
 	_refresh_ui()
 	_refresh_progression_screens()
 
+func _on_skills_changed() -> void:
+	skill_bar.queue_redraw()
+	_refresh_ui()
+
+func _on_summon_changed() -> void:
+	_refresh_ui()
+	_refresh_progression_screens()
+	skills_screen.refresh()
+
 func _on_equipment_dropped(item: Dictionary) -> void:
 	_show_message("Equipment drop: %s!" % EquipmentData.title(item))
 	battlefield.show_equipment_drop(EquipmentData.title(item), EquipmentData.COLORS[int(item["rarity"])] )
@@ -586,6 +622,7 @@ func _on_stage_cleared() -> void:
 	transition_id += 1
 	var this_transition := transition_id
 	var gem_reward := profile.record_stage_clear(profile.stage)
+	summon_screen.refresh()
 	if selected_tab == "Equipment":
 		_refresh_progression_screens()
 	if profile.stage == 10:
