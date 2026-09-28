@@ -44,7 +44,7 @@ func process(delta: float, battle: BattleController) -> void:
 		var id := battle.profile.equipped_skill_slots[slot]
 		if id == "" or not cooldowns.has(id):
 			continue
-		cooldowns[id] = maxf(0.0, float(cooldowns[id]) - delta)
+		cooldowns[id] = maxf(0.0, float(cooldowns[id]) - delta * battle.artifact_runtime.cooldown_rate(battle.profile))
 		if float(cooldowns[id]) <= 0.0 and cast(id, battle):
 			cooldowns[id] = float(SkillData.SKILLS[id]["cooldown"])
 			battle.skill_cast.emit(id, slot)
@@ -69,7 +69,10 @@ func cast(id: String, battle: BattleController) -> bool:
 			if float(data.get("stun", 0.0)) > 0.0:
 				battle.enemies[target]["stun_time"] = float(data["stun"])
 			battle.attack_started.emit(-2, target)
-			battle._hit_enemy(target, roundi(float(battle.hero["atk"]) * strength), false, id == "shield_bash")
+			var damage := float(battle.hero["atk"]) * strength * (1.0 + float(battle.hero.get("skill_damage", 0.0)))
+			if battle.stage == 10:
+				damage *= 1.0 + float(battle.hero.get("boss_damage", 0.0))
+			battle._hit_enemy(target, roundi(damage), false, id == "shield_bash")
 			if not battle.active:
 				break
 	elif effect == "defense":
@@ -81,7 +84,7 @@ func cast(id: String, battle: BattleController) -> bool:
 		attack_amount = strength
 		battle.refresh_hero_stats()
 	elif effect == "heal":
-		battle.hero_hp = minf(float(battle.hero["hp"]), battle.hero_hp + float(battle.hero["hp"]) * strength)
+		battle.hero_hp = minf(float(battle.hero["hp"]), battle.hero_hp + float(battle.hero["hp"]) * strength * (1.0 + float(battle.hero.get("healing_bonus", 0.0))))
 		battle.changed.emit()
 	battle.message.emit("%s!" % data["name"])
 	return true

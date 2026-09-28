@@ -11,7 +11,17 @@ The Squire fights automatically and casts Shield Bash every eight seconds. Easy 
 - **Equipment:** Seven slots and a seven-item starter pool are available. Enemies can drop more equipment; bosses have a higher chance. Gear contributes ATK, HP, Armor, Attack Speed, Crit Chance, or Crit Damage to live combat and Power. Items can be equipped, removed, upgraded with Gold and Stones, and compared. Five copies with the same item, rarity, and level merge into one copy of the next rarity. All eight rarity frames are supported.
 - **Save:** `user://crown_of_vael.save` stores currencies, hero progression, first clears, milestone claims, equipment IDs and levels, equipped slots, and evolution progress. Existing Phase 2 saves receive safe defaults and the starter item pool.
 
-Skills and Summon remain placeholders. No purchases or online systems are included.
+No purchases or online systems are included.
+
+## Phase 4 and 5 build systems
+
+- **Summoning:** Equipment, Skills, Companions, and Artifacts have separate banner levels, rarity tables, daily free claims, simulated rewarded-ad claims, and 100-pull Legendary pity. Paid 1x, 10x, and 50x pulls cost Gems. The Summon screen opens the Companion Hall and Artifact Vault. Hero summons remain locked.
+- **Skills:** Four active slots auto-cast in battle. Shield Bash is the Squire's starting skill. Summoned copies unlock and level the eight initial skills.
+- **Companions:** Four active allies appear and attack automatically. Copies grant pieces for star ranks; Gold and Companion Essence raise levels. Wolf can evolve through Dire Wolf, Shadow Wolf, and Fenrir using levels, stars, Essence, and Companion Crests. Other evolution paths remain locked.
+- **Artifacts:** Every owned relic grants a small permanent bonus. Two equipped slots activate stronger combat effects, including critical healing, faster skill recovery, fire bursts, extra critical effects, periodic guarding, and a once-per-battle Phoenix revive. Dragon Relics grant a two-piece Crit Damage bonus; the three-piece fire bonus is implemented for a future third slot. Artifact copies, Gold, and Dust raise artifact levels.
+- **Persistence:** Phase 4 saves migrate to the new banners, materials, collections, levels, pieces, evolution stages, and equipped slots without losing earlier progress.
+
+The rewarded-ad provider is a development simulation, and daily claims use the device's local calendar. Debug grants live only in `tests/phase5_debug.gd`.
 
 ## Structure and checks
 

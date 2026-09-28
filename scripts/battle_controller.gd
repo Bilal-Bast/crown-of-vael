@@ -8,6 +8,8 @@ signal enemy_defeated(target_index: int, reward_gold: int, reward_exp: int)
 signal equipment_dropped(item: Dictionary)
 signal hero_leveled(level: int, gem_bonus: int)
 signal skill_cast(id: String, slot: int)
+signal companion_attack(slot: int, target: int, amount: int)
+signal artifact_proc(label: String, color: Color)
 signal message(text: String)
 signal stage_cleared
 signal battle_lost(boss_failure: bool)
@@ -23,18 +25,22 @@ var boss_time := 30.0
 var bash_time := 8.0
 var hero_attack_time := 0.0
 var skill_runtime := SkillRuntime.new()
+var companion_runtime := CompanionRuntime.new()
+var artifact_runtime := ArtifactRuntime.new()
 
 func start(new_profile: SaveData) -> void:
 	profile = new_profile
 	stage = profile.stage
 	wave = 1
-	hero = GameData.hero_stats(profile.level, profile.upgrades, profile.gear_stats())
+	hero = profile.hero_stats()
 	hero_hp = float(hero["hp"])
 	boss_time = 30.0
 	bash_time = 8.0
 	hero_attack_time = 0.45
 	active = true
 	skill_runtime.start(profile)
+	companion_runtime.start(profile)
+	artifact_runtime.start()
 	_spawn_wave()
 	message.emit("Goblin Warlord! Defeat him in 30 seconds." if stage == 10 else "%s | Wave 1/3" % GameData.stage_label(stage))
 	changed.emit()
@@ -42,8 +48,9 @@ func start(new_profile: SaveData) -> void:
 func refresh_hero_stats() -> void:
 	var old_max := float(hero.get("hp", 0.0))
 	var old_hp := hero_hp
-	hero = GameData.hero_stats(profile.level, profile.upgrades, profile.gear_stats())
+	hero = profile.hero_stats()
 	skill_runtime.apply_buffs(hero)
+	artifact_runtime.apply_buffs(hero)
 	hero_hp = minf(float(hero["hp"]), old_hp + maxf(0.0, float(hero["hp"]) - old_max))
 	changed.emit()
 
@@ -75,7 +82,9 @@ func _process(delta: float) -> void:
 		if boss_time <= 0.0:
 			_lose(true)
 			return
+	artifact_runtime.process(delta, self)
 	skill_runtime.process(delta, self)
+	companion_runtime.process(delta, self)
 	bash_time = float(skill_runtime.cooldowns.get("shield_bash", 0.0))
 	if not active:
 		return
@@ -99,7 +108,7 @@ func _process(delta: float) -> void:
 			var damage := maxi(1, roundi(float(enemy["atk"]) - float(hero["armor"])))
 			hero_hp = maxf(0.0, hero_hp - damage)
 			damage_popup.emit(-1, damage, false, false)
-			if hero_hp <= 0.0:
+			if hero_hp <= 0.0 and not artifact_runtime.prevent_death(self):
 				_lose(stage == 10)
 				return
 	changed.emit()
@@ -110,7 +119,11 @@ func _hero_attack() -> void:
 			attack_started.emit(-1, i)
 			var critical := randf() < float(hero["crit_chance"])
 			var amount := float(hero["atk"]) * (float(hero["crit_damage"]) if critical else 1.0)
+			if stage == 10:
+				amount *= 1.0 + float(hero.get("boss_damage", 0.0))
+			var dealt := mini(roundi(amount), ceili(float(enemies[i]["current_hp"])))
 			_hit_enemy(i, roundi(amount), critical, false)
+			artifact_runtime.on_hero_attack(self, i, dealt, critical)
 			return
 
 func _hit_enemy(index: int, amount: int, critical: bool, bash: bool) -> void:

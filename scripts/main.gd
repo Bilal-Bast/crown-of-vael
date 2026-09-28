@@ -5,6 +5,8 @@ const BattlefieldScript = preload("res://scripts/battlefield.gd")
 const SkillBarScript = preload("res://scripts/skill_bar.gd")
 const SkillsScreenScript = preload("res://scripts/skills_screen.gd")
 const SummonScreenScript = preload("res://scripts/summon_screen.gd")
+const CompanionsScreenScript = preload("res://scripts/companions_screen.gd")
+const ArtifactsScreenScript = preload("res://scripts/artifacts_screen.gd")
 const HeroPortraitScript = preload("res://scripts/hero_portrait.gd")
 
 const INK := Color("172425")
@@ -25,8 +27,12 @@ var heroes_area: ScrollContainer
 var equipment_area: ScrollContainer
 var skills_area: ScrollContainer
 var summon_area: ScrollContainer
+var companions_area: ScrollContainer
+var artifacts_area: ScrollContainer
 var skills_screen: SkillsScreen
 var summon_screen: SummonScreen
+var companions_screen: CompanionsScreen
+var artifacts_screen: ArtifactsScreen
 var heroes_content: VBoxContainer
 var equipment_content: VBoxContainer
 var heroes_exp_text: Label
@@ -127,7 +133,19 @@ func _build_ui() -> void:
 	summon_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	summon_screen.add_theme_constant_override("separation", 12)
 	summon_area.add_child(summon_screen)
-	summon_screen.configure(profile, _on_summon_changed)
+	summon_screen.configure(profile, _on_summon_changed, _select_tab)
+	companions_area = _screen_scroll(root)
+	companions_screen = CompanionsScreenScript.new()
+	companions_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	companions_screen.add_theme_constant_override("separation", 12)
+	companions_area.add_child(companions_screen)
+	companions_screen.configure(profile, battle, _on_build_changed, _select_tab.bind("Summon"))
+	artifacts_area = _screen_scroll(root)
+	artifacts_screen = ArtifactsScreenScript.new()
+	artifacts_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	artifacts_screen.add_theme_constant_override("separation", 12)
+	artifacts_area.add_child(artifacts_screen)
+	artifacts_screen.configure(profile, battle, _on_build_changed, _select_tab.bind("Summon"))
 	_build_navigation(root)
 	_refresh_progression_screens()
 
@@ -323,10 +341,10 @@ func _label(value: String, font_size: int, color: Color) -> Label:
 func _refresh_ui() -> void:
 	if stage_text == null:
 		return
-	var stats := GameData.hero_stats(profile.level, profile.upgrades, profile.gear_stats())
+	var stats := profile.hero_stats()
 	gold_text.text = str(profile.gold)
 	gems_text.text = str(profile.gems)
-	power_text.text = str(GameData.hero_power(stats))
+	power_text.text = str(profile.power())
 	stage_text.text = "EASY  %d-%d" % [1, profile.stage]
 	road_text.text = "BOSS ROAD  %d/10" % profile.stage
 	for i in stage_markers.size():
@@ -349,7 +367,7 @@ func _refresh_ui() -> void:
 		heroes_exp_text.text = "HERO EXP  %d / %d" % [profile.exp, GameData.exp_to_next(profile.level)]
 		heroes_exp_bar.max_value = GameData.exp_to_next(profile.level)
 		heroes_exp_bar.value = profile.exp
-		heroes_level_text.text = "LEVEL %d    POWER %d" % [profile.level, GameData.hero_power(stats)]
+		heroes_level_text.text = "LEVEL %d    POWER %d" % [profile.level, profile.power()]
 	action_button.visible = profile.stage == 10 and profile.boss_retry_required and not battle.active and not profile.campaign_complete
 	tutorial_text.visible = profile.stage == 1 and not profile.campaign_complete
 	for stat in upgrade_buttons:
@@ -379,6 +397,8 @@ func _select_tab(tab_name: String) -> void:
 	equipment_area.visible = tab_name == "Equipment"
 	skills_area.visible = tab_name == "Skills"
 	summon_area.visible = tab_name == "Summon"
+	companions_area.visible = tab_name == "Companions"
+	artifacts_area.visible = tab_name == "Artifacts"
 	placeholder_area.visible = false
 	placeholder_title.text = tab_name.to_upper()
 	if tab_name in ["Heroes", "Equipment"]:
@@ -387,6 +407,10 @@ func _select_tab(tab_name: String) -> void:
 		skills_screen.refresh()
 	elif tab_name == "Summon":
 		summon_screen.refresh()
+	elif tab_name == "Companions":
+		companions_screen.refresh()
+	elif tab_name == "Artifacts":
+		artifacts_screen.refresh()
 	_update_navigation()
 
 func _clear_content(content: VBoxContainer) -> void:
@@ -415,7 +439,7 @@ func _build_heroes_screen() -> void:
 	identity_row.add_child(box)
 	box.add_child(_label("SQUIRE  •  THE FIRST VOW", 36, GOLD))
 	box.add_child(_label("Male  •  Black hair  •  Vanguard", 31, PALE))
-	heroes_level_text = _label("LEVEL %d    POWER %d" % [profile.level, GameData.hero_power(GameData.hero_stats(profile.level, profile.upgrades, profile.gear_stats()))], 31, Color("a9d6ad"))
+	heroes_level_text = _label("LEVEL %d    POWER %d" % [profile.level, profile.power()], 31, Color("a9d6ad"))
 	box.add_child(heroes_level_text)
 	box.add_child(_label("Evolution Crests: %d  •  Current form: Squire" % profile.evolution_crests, 29, MUTED))
 	heroes_exp_text = _label("HERO EXP  %d / %d" % [profile.exp, GameData.exp_to_next(profile.level)], 30, MUTED)
@@ -586,6 +610,18 @@ func _on_summon_changed() -> void:
 	_refresh_ui()
 	_refresh_progression_screens()
 	skills_screen.refresh()
+	companions_screen.refresh()
+	artifacts_screen.refresh()
+	if battle.active:
+		battle.refresh_hero_stats()
+
+func _on_build_changed() -> void:
+	_refresh_ui()
+	_refresh_progression_screens()
+	field_redraw()
+
+func field_redraw() -> void:
+	battlefield.queue_redraw()
 
 func _on_equipment_dropped(item: Dictionary) -> void:
 	_show_message("Equipment drop: %s!" % EquipmentData.title(item))

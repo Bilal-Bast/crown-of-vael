@@ -4,16 +4,18 @@ extends VBoxContainer
 var profile: SaveData
 var service: SummonService
 var on_change: Callable
+var on_open: Callable
 var results: Array[Dictionary] = []
 var result_banner := ""
 var revealing := false
 var reveal_token := 0
 var notice := ""
 
-func configure(new_profile: SaveData, changed: Callable) -> void:
+func configure(new_profile: SaveData, changed: Callable, open_screen: Callable = Callable()) -> void:
 	profile = new_profile
 	service = SummonService.new(profile)
 	on_change = changed
+	on_open = open_screen
 	refresh()
 
 func refresh() -> void:
@@ -27,7 +29,14 @@ func refresh() -> void:
 	var headbox := VBoxContainer.new()
 	heading.add_child(headbox)
 	headbox.add_child(_label("ARCANE SUMMONING", 37, Color("e9c87d")))
-	headbox.add_child(_label("Gems: %d  •  Two independent banners" % profile.gems, 29, Color("e9e8d7")))
+	headbox.add_child(_label("Gems: %d  •  Four independent banners" % profile.gems, 29, Color("e9e8d7")))
+	if on_open.is_valid():
+		var hub := HBoxContainer.new()
+		headbox.add_child(hub)
+		for screen_name in ["Companions", "Artifacts"]:
+			var open := _button("OPEN %s" % screen_name.to_upper())
+			open.pressed.connect(on_open.bind(screen_name))
+			hub.add_child(open)
 	if notice != "":
 		headbox.add_child(_label(notice, 27, Color("d8a399")))
 	if not results.is_empty():
@@ -35,14 +44,15 @@ func refresh() -> void:
 	for banner in SummonData.BANNERS:
 		_build_banner(banner)
 	add_child(_label("FUTURE SUMMONS", 32, Color("e9c87d")))
-	for name in ["Companions", "Artifacts", "Heroes"]:
+	for name in ["Heroes"]:
 		var locked := _panel(Color("52605c"))
 		add_child(locked)
 		locked.add_child(_label("%s  •  LOCKED  •  Unlocks later" % name.to_upper(), 29, Color("aebdb4")))
 
 func _build_banner(banner: String) -> void:
 	var state: Dictionary = profile.banners[banner]
-	var color := Color("78b9ec") if banner == "equipment" else Color("bb86e8")
+	var colors := {"equipment": Color("78b9ec"), "skills": Color("bb86e8"), "companions": Color("79c78b"), "artifacts": Color("efc36b")}
+	var color: Color = colors[banner]
 	var panel := _panel(color)
 	add_child(panel)
 	var box := VBoxContainer.new()
@@ -60,7 +70,7 @@ func _build_banner(banner: String) -> void:
 	box.add_child(bar)
 	box.add_child(_label("PITY %d/100  •  100th guarantees Legendary+" % state["pity"], 27, Color("e9c87d")))
 	var preview := PackedStringArray()
-	var weights := SummonData.rarity_weights(level)
+	var weights := SummonData.rarity_weights(level, banner)
 	for rarity in weights.size():
 		if int(weights[rarity]) > 0:
 			preview.append("%s %.2f%%" % [EquipmentData.RARITIES[rarity], float(weights[rarity]) / 100.0])
@@ -116,7 +126,12 @@ func _build_reveal() -> void:
 		card.custom_minimum_size = Vector2(0, 130 if results.size() == 1 else 108)
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		grid.add_child(card)
-		var name: String = EquipmentData.ITEMS[reward["kind"]]["name"] if result_banner == "equipment" else SkillData.SKILLS[reward["kind"]]["name"]
+		var name: String = ""
+		match result_banner:
+			"equipment": name = str(EquipmentData.ITEMS[reward["kind"]]["name"])
+			"skills": name = str(SkillData.SKILLS[reward["kind"]]["name"])
+			"companions": name = str(CompanionData.COMPANIONS[reward["kind"]]["name"])
+			"artifacts": name = str(ArtifactData.ARTIFACTS[reward["kind"]]["name"])
 		card.add_child(_label("%s\n%s" % [EquipmentData.RARITIES[rarity].to_upper(), name], 27, EquipmentData.COLORS[rarity]))
 	var close := _button("CLOSE RESULTS")
 	close.pressed.connect(_close_results)

@@ -10,6 +10,7 @@ var impacts: Array[Dictionary] = []
 var deaths: Array[Dictionary] = []
 var flashes: Dictionary = {}
 var lunges: Dictionary = {}
+var companion_lunges: Dictionary = {}
 var hero_lunge := 0.0
 var hero_bash := false
 var shake_time := 0.0
@@ -23,6 +24,8 @@ func set_battle(value: BattleController) -> void:
 	battle.damage_popup.connect(_on_damage_popup)
 	battle.attack_started.connect(_on_attack_started)
 	battle.enemy_defeated.connect(_on_enemy_defeated)
+	battle.companion_attack.connect(_on_companion_attack)
+	battle.artifact_proc.connect(_on_artifact_proc)
 	queue_redraw()
 
 func _process(delta: float) -> void:
@@ -30,6 +33,10 @@ func _process(delta: float) -> void:
 	shake_time = maxf(0.0, shake_time - delta)
 	for key in lunges.keys():
 		lunges[key] = maxf(0.0, float(lunges[key]) - delta)
+	for key in companion_lunges.keys():
+		companion_lunges[key] = maxf(0.0, float(companion_lunges[key]) - delta)
+		if float(companion_lunges[key]) <= 0.0:
+			companion_lunges.erase(key)
 	for key in flashes.keys():
 		flashes[key] = maxf(0.0, float(flashes[key]) - delta)
 	for group in [floaters, impacts, deaths]:
@@ -37,8 +44,17 @@ func _process(delta: float) -> void:
 			group[i]["age"] = float(group[i]["age"]) + delta
 			if float(group[i]["age"]) >= float(group[i]["life"]):
 				group.remove_at(i)
-	if hero_lunge > 0.0 or shake_time > 0.0 or not floaters.is_empty() or not impacts.is_empty() or not deaths.is_empty():
+	if hero_lunge > 0.0 or shake_time > 0.0 or not floaters.is_empty() or not impacts.is_empty() or not deaths.is_empty() or not companion_lunges.is_empty():
 		queue_redraw()
+
+func _on_companion_attack(slot: int, target: int, amount: int) -> void:
+	companion_lunges[slot] = 0.24
+	floaters.append({"pos": _enemy_position(target) + Vector2(0, -130), "text": "ALLY %d" % amount, "color": Color("a9e5c4"), "age": 0.0, "life": 0.8, "size": 23, "centered": true})
+	queue_redraw()
+
+func _on_artifact_proc(label: String, color: Color) -> void:
+	floaters.append({"pos": _hero_position() + Vector2(0, -190), "text": label, "color": color, "age": 0.0, "life": 1.1, "size": 28, "centered": true})
+	queue_redraw()
 
 func _on_attack_started(attacker_index: int, _target_index: int) -> void:
 	if attacker_index < 0:
@@ -88,6 +104,7 @@ func _draw() -> void:
 	var hero_pos := _hero_position() + shake
 	if hero_lunge > 0.0:
 		hero_pos.x += sin((1.0 - hero_lunge / (0.26 if hero_bash else 0.19)) * PI) * (75.0 if hero_bash else 49.0) * unit
+	_draw_companions(unit)
 	_draw_hero(hero_pos, unit, float(flashes.get(-1, 0.0)) > 0.0)
 	if battle != null:
 		for i in battle.enemies.size():
@@ -100,6 +117,59 @@ func _draw() -> void:
 				pos.x -= sin((1.0 - lunge / 0.18) * PI) * 24.0 * unit
 			_draw_enemy(pos, enemy, unit, float(flashes.get(i, 0.0)) > 0.0)
 	_draw_effects(unit)
+	_draw_artifact_indicators(unit)
+
+func _draw_companions(unit: float) -> void:
+	if battle == null or battle.profile == null:
+		return
+	for slot in 4:
+		var id := battle.profile.equipped_companion_slots[slot]
+		if id == "" or not battle.profile.companions.has(id):
+			continue
+		var record: Dictionary = battle.profile.companions[id]
+		var data: Dictionary = CompanionData.COMPANIONS[id]
+		var pos := Vector2(size.x * (0.09 + slot * 0.105), size.y * (0.66 if slot % 2 == 0 else 0.76))
+		var lunge := float(companion_lunges.get(slot, 0.0))
+		if lunge > 0.0:
+			pos.x += sin((1.0 - lunge / 0.24) * PI) * 42.0 * unit
+		var color: Color = EquipmentData.COLORS[int(record["rarity"])]
+		if id == "wolf":
+			match int(record["evolution"]):
+				1: color = Color("8195ae")
+				2: color = Color("725189")
+				3: color = Color("9ce9e8")
+		draw_set_transform(pos, 0.0, Vector2.ONE * unit * 1.20)
+		match str(data["visual"]):
+			"fairy":
+				draw_circle(Vector2(-19, -38), 27, Color(color, 0.55))
+				draw_circle(Vector2(19, -38), 27, Color(color, 0.55))
+				draw_circle(Vector2(0, -44), 20, color)
+			"humanoid":
+				draw_rect(Rect2(-18, -60, 36, 54), color.darkened(0.35))
+				draw_circle(Vector2(0, -73), 20, Color("d9b999"))
+			"dragon":
+				draw_colored_polygon(PackedVector2Array([Vector2(-47, -35), Vector2(-10, -88), Vector2(0, -40), Vector2(36, -84), Vector2(48, -25)]), color.darkened(0.25))
+				draw_circle(Vector2(0, -48), 24, color)
+			_:
+				draw_ellipse_placeholder(Vector2(0, -30), Vector2(38, 25), color)
+				draw_circle(Vector2(-24, -58), 21, color)
+				draw_colored_polygon(PackedVector2Array([Vector2(-37, -67), Vector2(-36, -94), Vector2(-18, -71)]), color)
+		if id == "wolf" and int(record["evolution"]) > 0:
+			draw_arc(Vector2(-12, -52), 30 + int(record["evolution"]) * 7, PI, TAU, 12, Color("b9a6eb"), 5)
+		draw_string(ThemeDB.fallback_font, Vector2(-20, 2), str(data["icon"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color.WHITE)
+		draw_set_transform(Vector2.ZERO)
+
+func _draw_artifact_indicators(unit: float) -> void:
+	if battle == null or battle.profile == null:
+		return
+	for slot in ArtifactData.MAX_ACTIVE_SLOTS:
+		var id := battle.profile.equipped_artifact_slots[slot]
+		if id == "" or not battle.profile.artifacts.has(id):
+			continue
+		var pos := Vector2(16 + slot * 68, 18)
+		draw_rect(Rect2(pos, Vector2(56, 50)), Color("253739"), true)
+		draw_rect(Rect2(pos, Vector2(56, 50)), EquipmentData.COLORS[int(battle.profile.artifacts[id]["rarity"])], false, 3.0)
+		draw_string(ThemeDB.fallback_font, pos + Vector2(13, 35), str(ArtifactData.ARTIFACTS[id]["icon"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 32, Color("efcf8e"))
 
 func _draw_landscape(w: float, h: float) -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), SKY)

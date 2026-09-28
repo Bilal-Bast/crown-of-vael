@@ -37,7 +37,11 @@ static func hero_stats(level: int, upgrades: Dictionary, gear: Dictionary = {}) 
 		"armor": 8.0 + (level - 1) * 1.0 + int(upgrades.get("armor", 0)) * 2.0,
 		"speed": 1.4,
 		"crit_chance": 0.15,
-		"crit_damage": 1.75
+		"crit_damage": 1.75,
+		"skill_damage": 0.0,
+		"boss_damage": 0.0,
+		"healing_bonus": 0.0,
+		"fire_burst_bonus": 0.0
 	}
 	for stat in gear:
 		if stats.has(stat):
@@ -45,7 +49,7 @@ static func hero_stats(level: int, upgrades: Dictionary, gear: Dictionary = {}) 
 	return stats
 
 static func hero_power(stats: Dictionary) -> int:
-	return roundi(float(stats["hp"]) * 0.12 + float(stats["atk"]) * 4.0 + float(stats["armor"]) * 6.0 + float(stats["speed"]) * 24.0 + float(stats["crit_chance"]) * 100.0 + float(stats["crit_damage"]) * 15.0)
+	return roundi(float(stats["hp"]) * 0.12 + float(stats["atk"]) * 4.0 + float(stats["armor"]) * 6.0 + float(stats["speed"]) * 24.0 + float(stats["crit_chance"]) * 100.0 + float(stats["crit_damage"]) * 15.0 + float(stats.get("skill_damage", 0.0)) * 90.0 + float(stats.get("boss_damage", 0.0)) * 60.0 + float(stats.get("healing_bonus", 0.0)) * 45.0 + float(stats.get("fire_burst_bonus", 0.0)) * 50.0)
 
 static func enemy_stats(kind: String, stage: int) -> Dictionary:
 	var base: Dictionary = ENEMIES[kind]

@@ -19,9 +19,16 @@ var first_clears: Array[int] = []
 var milestones: Array[String] = []
 var inventory: Array[Dictionary] = []
 var equipped := {}
-var banners := {"equipment": SummonData.new_banner(), "skills": SummonData.new_banner()}
+var banners := {"equipment": SummonData.new_banner(), "skills": SummonData.new_banner(), "companions": SummonData.new_banner(), "artifacts": SummonData.new_banner()}
 var skills := {"shield_bash": {"level": 1, "duplicates": 0, "rarity": 0}}
 var equipped_skill_slots: Array[String] = ["shield_bash", "", "", ""]
+var companion_essence := 0
+var companion_crests := 0
+var companions := {}
+var equipped_companion_slots: Array[String] = ["", "", "", ""]
+var artifact_dust := 0
+var artifacts := {}
+var equipped_artifact_slots: Array[String] = ["", "", "", "", "", ""]
 var save_path := SAVE_PATH
 
 static func load_profile() -> SaveData:
@@ -111,6 +118,41 @@ static func load_from(path: String) -> SaveData:
 				clean[index] = id
 				used[id] = true
 		profile.equipped_skill_slots = clean
+	profile.companion_essence = maxi(0, int(data.get("companion_essence", 0)))
+	profile.companion_crests = maxi(0, int(data.get("companion_crests", 0)))
+	var saved_companions: Variant = data.get("companions", {})
+	if saved_companions is Dictionary:
+		for id in saved_companions:
+			var raw: Variant = saved_companions[id]
+			if CompanionData.COMPANIONS.has(str(id)) and raw is Dictionary:
+				profile.companions[str(id)] = {"rarity": clampi(int(raw.get("rarity", 0)), 0, 7), "level": clampi(int(raw.get("level", 1)), 1, 99), "stars": clampi(int(raw.get("stars", 1)), 1, CompanionData.MAX_STARS), "pieces": maxi(0, int(raw.get("pieces", 0))), "evolution": clampi(int(raw.get("evolution", 0)), 0, 3 if str(id) == "wolf" else 0)}
+	var raw_companion_slots: Variant = data.get("equipped_companion_slots", [])
+	if raw_companion_slots is Array:
+		var clean_companions: Array[String] = ["", "", "", ""]
+		var used_companions := {}
+		for index in mini(4, raw_companion_slots.size()):
+			var id := str(raw_companion_slots[index])
+			if profile.companions.has(id) and not used_companions.has(id):
+				clean_companions[index] = id
+				used_companions[id] = true
+		profile.equipped_companion_slots = clean_companions
+	profile.artifact_dust = maxi(0, int(data.get("artifact_dust", 0)))
+	var saved_artifacts: Variant = data.get("artifacts", {})
+	if saved_artifacts is Dictionary:
+		for id in saved_artifacts:
+			var raw: Variant = saved_artifacts[id]
+			if ArtifactData.ARTIFACTS.has(str(id)) and raw is Dictionary:
+				profile.artifacts[str(id)] = {"rarity": clampi(int(raw.get("rarity", 2)), 2, 7), "level": clampi(int(raw.get("level", 1)), 1, 99), "duplicates": maxi(0, int(raw.get("duplicates", 0)))}
+	var raw_artifact_slots: Variant = data.get("equipped_artifact_slots", [])
+	if raw_artifact_slots is Array:
+		var clean_artifacts: Array[String] = ["", "", "", "", "", ""]
+		var used_artifacts := {}
+		for index in mini(ArtifactData.MAX_ACTIVE_SLOTS, raw_artifact_slots.size()):
+			var id := str(raw_artifact_slots[index])
+			if profile.artifacts.has(id) and not used_artifacts.has(id):
+				clean_artifacts[index] = id
+				used_artifacts[id] = true
+		profile.equipped_artifact_slots = clean_artifacts
 	return profile
 
 func save() -> void:
@@ -119,7 +161,7 @@ func save() -> void:
 		push_error("Could not save profile: %s" % error_string(FileAccess.get_open_error()))
 		return
 	file.store_string(JSON.stringify({
-		"phase4_version": 1,
+		"phase4_version": 1, "phase5_version": 1,
 		"stage": stage,
 		"gold": gold,
 		"gems": gems,
@@ -131,7 +173,10 @@ func save() -> void:
 		"enhancement_stones": enhancement_stones, "evolution": evolution,
 		"evolution_crests": evolution_crests, "first_clears": first_clears,
 		"milestones": milestones, "inventory": inventory, "equipped": equipped,
-		"banners": banners, "skills": skills, "equipped_skill_slots": equipped_skill_slots
+		"banners": banners, "skills": skills, "equipped_skill_slots": equipped_skill_slots,
+		"companion_essence": companion_essence, "companion_crests": companion_crests,
+		"companions": companions, "equipped_companion_slots": equipped_companion_slots,
+		"artifact_dust": artifact_dust, "artifacts": artifacts, "equipped_artifact_slots": equipped_artifact_slots
 	}))
 
 func add_skill_copy(id: String, rarity: int) -> void:
@@ -163,6 +208,146 @@ func unequip_skill(slot: int) -> bool:
 	equipped_skill_slots[slot] = ""
 	save()
 	return true
+
+func add_companion_copy(id: String, rarity: int) -> void:
+	if not CompanionData.COMPANIONS.has(id):
+		return
+	if not companions.has(id):
+		companions[id] = {"rarity": clampi(rarity, 0, 7), "level": 1, "stars": 1, "pieces": 0, "evolution": 0}
+		return
+	var record: Dictionary = companions[id]
+	record["rarity"] = maxi(int(record["rarity"]), rarity)
+	record["pieces"] = int(record["pieces"]) + 1
+
+func equip_companion(id: String, slot: int) -> bool:
+	if not companions.has(id) or slot < 0 or slot >= 4:
+		return false
+	for index in 4:
+		if equipped_companion_slots[index] == id:
+			equipped_companion_slots[index] = ""
+	equipped_companion_slots[slot] = id
+	save()
+	return true
+
+func unequip_companion(slot: int) -> bool:
+	if slot < 0 or slot >= 4 or equipped_companion_slots[slot] == "":
+		return false
+	equipped_companion_slots[slot] = ""
+	save()
+	return true
+
+func level_companion(id: String) -> bool:
+	if not companions.has(id):
+		return false
+	var record: Dictionary = companions[id]
+	if int(record["level"]) >= 99:
+		return false
+	var cost := CompanionData.level_cost(int(record["level"]))
+	if gold < int(cost["gold"]) or companion_essence < int(cost["essence"]):
+		return false
+	gold -= int(cost["gold"])
+	companion_essence -= int(cost["essence"])
+	record["level"] = int(record["level"]) + 1
+	save()
+	return true
+
+func star_companion(id: String) -> bool:
+	if not companions.has(id):
+		return false
+	var record: Dictionary = companions[id]
+	if int(record["stars"]) >= CompanionData.MAX_STARS:
+		return false
+	var cost := CompanionData.star_cost(int(record["stars"]))
+	if int(record["pieces"]) < cost:
+		return false
+	record["pieces"] = int(record["pieces"]) - cost
+	record["stars"] = int(record["stars"]) + 1
+	save()
+	return true
+
+func evolve_companion(id: String) -> bool:
+	if id != "wolf" or not companions.has(id):
+		return false
+	var record: Dictionary = companions[id]
+	var stage := int(record["evolution"])
+	if stage >= CompanionData.WOLF_EVOLUTION.size():
+		return false
+	var cost: Dictionary = CompanionData.WOLF_EVOLUTION[stage]
+	if int(record["level"]) < int(cost["level"]) or int(record["stars"]) < int(cost["stars"]) or companion_essence < int(cost["essence"]) or companion_crests < int(cost["crests"]):
+		return false
+	companion_essence -= int(cost["essence"])
+	companion_crests -= int(cost["crests"])
+	record["evolution"] = stage + 1
+	save()
+	return true
+
+func add_artifact_copy(id: String, rarity: int) -> void:
+	if not ArtifactData.ARTIFACTS.has(id):
+		return
+	if not artifacts.has(id):
+		artifacts[id] = {"rarity": clampi(rarity, 2, 7), "level": 1, "duplicates": 0}
+		return
+	var record: Dictionary = artifacts[id]
+	record["rarity"] = maxi(int(record["rarity"]), rarity)
+	record["duplicates"] = int(record["duplicates"]) + 1
+
+func equip_artifact(id: String, slot: int) -> bool:
+	if not artifacts.has(id) or slot < 0 or slot >= ArtifactData.MAX_ACTIVE_SLOTS:
+		return false
+	for index in ArtifactData.MAX_ACTIVE_SLOTS:
+		if equipped_artifact_slots[index] == id:
+			equipped_artifact_slots[index] = ""
+	equipped_artifact_slots[slot] = id
+	save()
+	return true
+
+func unequip_artifact(slot: int) -> bool:
+	if slot < 0 or slot >= ArtifactData.MAX_ACTIVE_SLOTS or equipped_artifact_slots[slot] == "":
+		return false
+	equipped_artifact_slots[slot] = ""
+	save()
+	return true
+
+func level_artifact(id: String) -> bool:
+	if not artifacts.has(id):
+		return false
+	var record: Dictionary = artifacts[id]
+	if int(record["level"]) >= 99:
+		return false
+	var cost := ArtifactData.level_cost(int(record["level"]))
+	if gold < int(cost["gold"]) or artifact_dust < int(cost["dust"]) or int(record["duplicates"]) < int(cost["copies"]):
+		return false
+	gold -= int(cost["gold"])
+	artifact_dust -= int(cost["dust"])
+	record["duplicates"] = int(record["duplicates"]) - int(cost["copies"])
+	record["level"] = int(record["level"]) + 1
+	save()
+	return true
+
+func combat_bonuses() -> Dictionary:
+	var total := gear_stats()
+	for id in equipped_companion_slots:
+		if id == "" or not companions.has(id):
+			continue
+		var stat := str(CompanionData.COMPANIONS[id]["passive"])
+		total[stat] = float(total.get(stat, 0.0)) + CompanionData.passive_value(id, companions[id])
+	for source in [ArtifactData.owned_stats(artifacts), ArtifactData.equipped_stats(artifacts, equipped_artifact_slots)]:
+		for stat in source:
+			total[stat] = float(total.get(stat, 0.0)) + float(source[stat])
+	return total
+
+func hero_stats() -> Dictionary:
+	return GameData.hero_stats(level, upgrades, combat_bonuses())
+
+func power() -> int:
+	var result := GameData.hero_power(hero_stats())
+	for id in equipped_companion_slots:
+		if id != "" and companions.has(id):
+			result += roundi(CompanionData.attack(id, companions[id]) * CompanionData.attack_speed(id, companions[id]) * 3.0)
+	for id in equipped_artifact_slots:
+		if id != "" and artifacts.has(id):
+			result += maxi(1, roundi(ArtifactData.effect_value(id, artifacts[id]) * 20.0))
+	return result
 
 func _grant_starters() -> void:
 	for kind in EquipmentData.STARTER_KINDS:

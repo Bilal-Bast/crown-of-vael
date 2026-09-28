@@ -41,7 +41,7 @@ func summon(banner: String, count: int, source: String = "gems", day: String = "
 		state["ad_count"] = int(state["ad_count"]) + 1
 	for i in count:
 		state["pity"] = int(state["pity"]) + 1
-		var rarity := SummonData.roll_rarity(int(state["level"]))
+		var rarity := SummonData.roll_rarity(int(state["level"]), banner)
 		if int(state["pity"]) >= SummonData.PITY_LIMIT:
 			rarity = maxi(rarity, 4)
 			state["pity"] = 0
@@ -49,10 +49,24 @@ func summon(banner: String, count: int, source: String = "gems", day: String = "
 		if banner == "equipment":
 			reward = EquipmentData.summon_item(rarity)
 			profile.inventory.append(reward)
-		else:
+		elif banner == "skills":
 			var keys := SkillData.SKILLS.keys()
 			var id := str(keys[randi_range(0, keys.size() - 1)])
 			profile.add_skill_copy(id, rarity)
+			reward = {"kind": id, "rarity": rarity}
+		elif banner == "companions":
+			var keys := CompanionData.COMPANIONS.keys()
+			var id := str(keys[randi_range(0, keys.size() - 1)])
+			profile.add_companion_copy(id, rarity)
+			profile.companion_essence += 2
+			if rarity >= 4:
+				profile.companion_crests += 1
+			reward = {"kind": id, "rarity": rarity}
+		else:
+			var keys := ArtifactData.ARTIFACTS.keys()
+			var id := str(keys[randi_range(0, keys.size() - 1)])
+			profile.add_artifact_copy(id, rarity)
+			profile.artifact_dust += 2
 			reward = {"kind": id, "rarity": rarity}
 		results.append(reward)
 		state["exp"] = int(state["exp"]) + SummonData.EXP_PER_SUMMON

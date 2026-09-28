@@ -75,6 +75,17 @@ func _run() -> void:
 		battle._process(0.05)
 	_assert(casts.has("shield_bash") and casts.has("iron_guard") and casts.has("healing_light") and casts.has("whirlwind_slash"), "Equipped effects auto-cast independently")
 	_assert(battle.hero_hp > float(battle.hero["hp"]) * 0.5, "Healing effect works")
+	for enemy in battle.enemies:
+		enemy["current_hp"] = 100000.0
+	_assert(battle.skill_runtime.cast("whirlwind_slash", battle), "Whirlwind cast")
+	var all_hit := true
+	for enemy in battle.enemies:
+		all_hit = all_hit and float(enemy["current_hp"]) < 100000.0
+	_assert(all_hit, "Whirlwind damages every living enemy")
+	battle.skill_runtime.defense_time = 0.0
+	battle.refresh_hero_stats()
+	var armor_before_guard := float(battle.hero["armor"])
+	_assert(battle.skill_runtime.cast("iron_guard", battle) and float(battle.hero["armor"]) > armor_before_guard, "Iron Guard raises Armor")
 	var atk_before_cry := float(battle.hero["atk"])
 	_assert(battle.skill_runtime.cast("battle_cry", battle) and float(battle.hero["atk"]) > atk_before_cry, "Temporary attack buff works")
 	profile.save()
