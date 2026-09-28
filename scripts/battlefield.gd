@@ -69,7 +69,10 @@ func _on_attack_started(attacker_index: int, target_index: int) -> void:
 		hero_lunge = 0.0 if style in ["magic", "arrow", "dark_bolt"] and attacker_index == -1 else (0.26 if attacker_index == -2 else 0.19)
 		hero_bash = attacker_index == -2
 	else:
-		lunges[attacker_index] = 0.18
+		if str(battle.enemies[attacker_index].get("archetype", "")) in ["RANGED", "MAGIC", "HEALER"]:
+			impacts.append({"pos": _hero_position() + Vector2(0, -50), "age": 0.0, "life": 0.3, "strong": false})
+		else:
+			lunges[attacker_index] = 0.18
 	queue_redraw()
 
 func _on_damage_popup(target_index: int, amount: int, critical: bool, bash: bool) -> void:
@@ -186,6 +189,9 @@ func _draw_artifact_indicators(unit: float) -> void:
 		draw_string(ThemeDB.fallback_font, pos + Vector2(13, 35), str(ArtifactData.ARTIFACTS[id]["icon"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 32, Color("efcf8e"))
 
 func _draw_landscape(w: float, h: float) -> void:
+	if battle != null and battle.profile != null and str(battle.mode_config.get("mode", "campaign")) == "campaign":
+		_draw_region_landscape(w, h)
+		return
 	draw_rect(Rect2(Vector2.ZERO, size), SKY)
 	draw_circle(Vector2(w * 0.8, h * 0.15), 62, Color("e8e6b5"))
 	draw_colored_polygon(PackedVector2Array([Vector2(0, h * 0.6), Vector2(w * 0.15, h * 0.32), Vector2(w * 0.32, h * 0.59), Vector2(w * 0.53, h * 0.36), Vector2(w * 0.76, h * 0.58), Vector2(w, h * 0.4), Vector2(w, h * 0.78), Vector2(0, h * 0.78)]), Color("91b69d"))
@@ -202,11 +208,48 @@ func _draw_landscape(w: float, h: float) -> void:
 		draw_line(Vector2(x, h * 0.88), Vector2(x + 7, h * 0.86), Color("a6bb79"), 3)
 	draw_rect(Rect2(Vector2.ZERO, size), Color("19332e", 0.08), false, 5)
 
+func _draw_region_landscape(w: float, h: float) -> void:
+	var info: Dictionary = CampaignData.REGIONS[battle.region - 1]
+	var sky := Color(str(info["sky"]))
+	var ground := Color(str(info["ground"]))
+	var accent := Color(str(info["accent"]))
+	draw_rect(Rect2(Vector2.ZERO, size), sky)
+	draw_circle(Vector2(w * 0.78, h * 0.17), 55, Color(accent, 0.65))
+	for layer in 3:
+		var points := PackedVector2Array()
+		points.append(Vector2(0, h))
+		for i in 7:
+			var x := w * float(i) / 6.0
+			var y := h * (0.51 + layer * 0.085) - (sin(float(i * 2 + battle.region * 3)) * 35.0 + (i % 2) * 24.0)
+			points.append(Vector2(x, y))
+		points.append(Vector2(w, h))
+		draw_colored_polygon(points, ground.lightened(0.17 - layer * 0.06))
+	for i in 7:
+		var x := w * (0.05 + i * 0.15)
+		var y := h * (0.50 + (i % 3) * 0.045)
+		match battle.region:
+			2, 5, 8:
+				draw_line(Vector2(x, y), Vector2(x + 5, y - 75), ground.darkened(0.35), 13)
+				draw_circle(Vector2(x + 5, y - 78), 34, Color(accent, 0.35))
+			3, 6, 10:
+				draw_colored_polygon(PackedVector2Array([Vector2(x - 22, y), Vector2(x + 3, y - 64), Vector2(x + 27, y)]), ground.darkened(0.38))
+			4, 9:
+				draw_colored_polygon(PackedVector2Array([Vector2(x - 42, y), Vector2(x + 2, y - 100), Vector2(x + 38, y)]), accent.lightened(0.2))
+			_:
+				draw_rect(Rect2(x - 16, y - 54, 33, 54), ground.darkened(0.4))
+				draw_colored_polygon(PackedVector2Array([Vector2(x - 23, y - 54), Vector2(x, y - 77), Vector2(x + 24, y - 54)]), ground.darkened(0.55))
+	draw_rect(Rect2(0, h * 0.77, w, h * 0.23), ground)
+	for i in 13:
+		var pos := Vector2(w * float((i * 47 + battle.region * 13) % 100) / 100.0, h * float((i * 19 + battle.region * 7) % 50) / 100.0)
+		draw_circle(pos, 3.0 + i % 3, Color(accent, 0.5))
+	if battle.difficulty >= 3:
+		draw_rect(Rect2(Vector2.ZERO, size), Color("371c3c", 0.12 + (battle.difficulty - 3) * 0.06))
+
 func _hero_position() -> Vector2:
 	return Vector2(size.x * 0.24, size.y * 0.72)
 
 func _enemy_position(index: int) -> Vector2:
-	if battle != null and (str(battle.mode_config.get("mode", "campaign")) == "boss_rush" or str(battle.mode_config.get("mode", "campaign")) == "campaign" and battle.stage == 10):
+	if battle != null and (str(battle.mode_config.get("mode", "campaign")) == "boss_rush" or str(battle.mode_config.get("mode", "campaign")) == "campaign" and battle.stage == 20):
 		return Vector2(size.x * 0.75, size.y * 0.71)
 	return Vector2(size.x * (0.59 + (index % 3) * 0.14), size.y * (0.54 + int(index / 3) * 0.20))
 
@@ -300,26 +343,135 @@ func _draw_hero_projectiles(unit: float) -> void:
 
 func _draw_enemy(pos: Vector2, enemy: Dictionary, unit: float, flash: bool) -> void:
 	var kind := str(enemy.get("visual", enemy["kind"]))
-	var boss := kind == "Goblin Warlord"
-	var actor_scale := unit * (1.65 if boss else 1.0)
+	var boss := str(enemy.get("archetype", "")) == "BOSS" or kind == "Goblin Warlord"
+	var actor_scale := unit * (1.65 if boss else (1.2 if str(enemy.get("archetype", "")) == "ELITE" else 1.0))
 	draw_set_transform(pos, 0.0, Vector2.ONE * actor_scale)
+	if int(enemy.get("difficulty", 0)) >= 3:
+		draw_arc(Vector2(0, -70), 65, 0, TAU, 24, Color("e3548b", 0.28 + 0.12 * (int(enemy["difficulty"]) - 3)), 7)
 	draw_ellipse_placeholder(Vector2(0, 15), Vector2(39, 10), Color("314d37", 0.33))
-	match kind:
-		"Skeleton": _draw_skeleton()
-		"Corrupted Wolf": _draw_wolf()
-		"Goblin Archer": _draw_archer()
-		"Goblin Warlord": _draw_warlord()
-		_: _draw_goblin()
+	if boss and enemy.has("region") and kind != "Goblin Warlord":
+		_draw_region_boss(enemy)
+	else:
+		match str(enemy.get("family", kind)):
+			"skeleton": _draw_skeleton(Color(enemy.get("color", Color("ebe4ce"))) if enemy.has("region") else Color("ebe4ce"))
+			"wolf": _draw_wolf(Color(enemy.get("color", Color("715675"))) if enemy.has("region") else Color("715675"))
+			"archer": _draw_archer(Color(enemy.get("color", Color("87ba67"))) if enemy.has("region") else Color("87ba67"))
+			"goblin":
+				if kind == "Goblin Warlord": _draw_warlord()
+				else: _draw_goblin(Color(enemy.get("color", Color("78b05e"))) if enemy.has("region") else Color("78b05e"))
+			"dragon", "demon", "beast", "knight", "humanoid": _draw_campaign_creature(enemy)
+			_:
+				match kind:
+					"Goblin Warlord": _draw_warlord()
+					_: _draw_campaign_creature(enemy)
+	if enemy.has("region"):
+		draw_circle(Vector2(0, -82), 43, Color(enemy["color"], 0.14))
+		if int(enemy.get("difficulty", 0)) == 1:
+			draw_arc(Vector2(0, -76), 49, PI * 0.15, PI * 0.85, 12, Color(enemy["color"], 0.55), 4)
+		if int(enemy.get("difficulty", 0)) >= 2:
+			draw_rect(Rect2(-23, -70, 46, 14), Color("252733", 0.48))
+			draw_circle(Vector2(-10, -99), 4, Color("ff547c"))
+			draw_circle(Vector2(10, -99), 4, Color("ff547c"))
+		if int(enemy.get("difficulty", 0)) >= 4:
+			draw_arc(Vector2(0, -75), 56, PI * 0.1, PI * 0.9, 15, Color("ff704f", 0.7), 5)
+		if str(enemy.get("archetype", "")) == "TREASURE":
+			draw_arc(Vector2(0, -91), 50, 0, TAU, 20, Color("ffdf80"), 6)
 	if flash:
 		draw_circle(Vector2(0, -62), 47, Color(1, 1, 1, 0.55))
 	var bar_width := 125.0 if boss else 85.0
 	_draw_hp_bar(Vector2(-bar_width * 0.5, -151 if boss else -116), bar_width, float(enemy["current_hp"]) / float(enemy["hp"]), Color("eb6f67"))
 	if boss:
-		draw_string(ThemeDB.fallback_font, Vector2(-76, -163), "WARLORD", HORIZONTAL_ALIGNMENT_LEFT, -1, 19, Color("2b2924"))
+		draw_string(ThemeDB.fallback_font, Vector2(-90, -163), kind.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color("f8dfbc"))
 	draw_set_transform(Vector2.ZERO)
 
-func _draw_goblin() -> void:
-	var skin := Color("78b05e")
+func _draw_campaign_creature(enemy: Dictionary) -> void:
+	var color: Color = enemy.get("color", Color("8d9b85"))
+	var family := str(enemy.get("family", "humanoid"))
+	var role := str(enemy.get("archetype", "MELEE"))
+	match family:
+		"dragon":
+			draw_colored_polygon(PackedVector2Array([Vector2(-45,-74),Vector2(-92,-128),Vector2(-74,-31),Vector2(-10,-51)]), color.darkened(0.3))
+			draw_colored_polygon(PackedVector2Array([Vector2(35,-74),Vector2(92,-128),Vector2(72,-31),Vector2(10,-51)]), color.darkened(0.3))
+			draw_rect(Rect2(-31,-75,62,66), color)
+			draw_circle(Vector2(0,-93), 29, color.lightened(0.13))
+			for x in [-20,0,20]:
+				draw_colored_polygon(PackedVector2Array([Vector2(x-8,-111),Vector2(x,-146),Vector2(x+8,-111)]), color.lightened(0.35))
+		"beast":
+			draw_ellipse_placeholder(Vector2(0,-45), Vector2(45,29), color)
+			for x in [-25,25]:
+				draw_line(Vector2(x,-34),Vector2(x*1.7,16),color.darkened(0.25),9)
+			draw_circle(Vector2(-24,-72), 22, color.lightened(0.1))
+		"demon":
+			draw_rect(Rect2(-27,-80,54,65), color.darkened(0.25))
+			draw_circle(Vector2(0,-102), 26, color)
+			draw_colored_polygon(PackedVector2Array([Vector2(-24,-112),Vector2(-32,-153),Vector2(-5,-126)]), color.darkened(0.35))
+			draw_colored_polygon(PackedVector2Array([Vector2(24,-112),Vector2(32,-153),Vector2(5,-126)]), color.darkened(0.35))
+			draw_circle(Vector2(-10,-105), 5, Color("ffdf85"))
+			draw_circle(Vector2(10,-105), 5, Color("ffdf85"))
+		_:
+			draw_rect(Rect2(-26,-76,52,64), color.darkened(0.23))
+			draw_circle(Vector2(0,-97), 24, color.lightened(0.2))
+			if family == "knight" or role == "TANK":
+				draw_rect(Rect2(-29,-110,58,24), color.darkened(0.5))
+				draw_rect(Rect2(-26,-70,52,50), color.lightened(0.1), false, 6)
+			elif role == "MAGIC" or role == "HEALER":
+				draw_colored_polygon(PackedVector2Array([Vector2(-33,-107),Vector2(0,-154),Vector2(35,-107)]), color.darkened(0.4))
+	for x in [-15,15]:
+		draw_line(Vector2(x,-15),Vector2(x+3,20),color.darkened(0.37),12)
+	if family != "demon":
+		draw_circle(Vector2(-9,-99), 3, Color("f8d58e"))
+		draw_circle(Vector2(9,-99), 3, Color("f8d58e"))
+	if role in ["RANGED", "MAGIC", "HEALER"]:
+		draw_line(Vector2(30,-67),Vector2(48,-121),color.lightened(0.35),6)
+		draw_circle(Vector2(48,-125), 9, Color("c4d9ec"))
+	else:
+		draw_line(Vector2(26,-66),Vector2(53,-33),color.darkened(0.3),9)
+		draw_line(Vector2(53,-33),Vector2(75,-65),Color("d8d9d1"),5)
+
+func _draw_region_boss(enemy: Dictionary) -> void:
+	var color: Color = enemy["color"]
+	var region_id := int(enemy["region"])
+	match region_id:
+		2:
+			draw_rect(Rect2(-35,-115,70,130), color.darkened(0.55))
+			for side in [-1,1]:
+				draw_line(Vector2(side*25,-90),Vector2(side*78,-153),color.darkened(0.5),15)
+				draw_circle(Vector2(side*78,-154),28,color.darkened(0.15))
+			draw_circle(Vector2(0,-151),42,color.darkened(0.1))
+		3, 4:
+			_draw_campaign_creature(enemy)
+			draw_colored_polygon(PackedVector2Array([Vector2(-20,-118),Vector2(-36,-166),Vector2(-2,-125)]),color.lightened(0.3))
+			draw_colored_polygon(PackedVector2Array([Vector2(20,-118),Vector2(36,-166),Vector2(2,-125)]),color.lightened(0.3))
+		5:
+			draw_ellipse_placeholder(Vector2(0,-25),Vector2(52,38),color.darkened(0.3))
+			for side in [-1,0,1]:
+				draw_line(Vector2(side*24,-50),Vector2(side*37,-115-abs(side)*15),color,18)
+				draw_circle(Vector2(side*37,-126-abs(side)*15),20,color.lightened(0.1))
+		6:
+			draw_arc(Vector2(0,-45),70,PI*0.1,PI*1.75,25,color,25)
+			draw_circle(Vector2(64,-30),28,color.lightened(0.1))
+			draw_colored_polygon(PackedVector2Array([Vector2(50,-50),Vector2(71,-87),Vector2(76,-42)]),color.darkened(0.2))
+		7:
+			_draw_campaign_creature(enemy)
+			draw_colored_polygon(PackedVector2Array([Vector2(-28,-121),Vector2(-22,-159),Vector2(0,-139),Vector2(21,-159),Vector2(29,-121)]),Color("e7b96a"))
+		8:
+			draw_colored_polygon(PackedVector2Array([Vector2(-15,-140),Vector2(15,-140),Vector2(68,13),Vector2(-68,13)]),color.darkened(0.55))
+			draw_circle(Vector2(0,-122),26,color.darkened(0.2))
+			draw_arc(Vector2(0,-92),65,0,TAU,24,color.lightened(0.35),5)
+		9:
+			_draw_campaign_creature(enemy)
+			draw_arc(Vector2(0,-75),83,PI*0.1,PI*0.9,18,Color("f8cf78"),7)
+		10:
+			_draw_campaign_creature(enemy)
+			draw_colored_polygon(PackedVector2Array([Vector2(-54,-73),Vector2(-102,-147),Vector2(-86,-25)]),color.darkened(0.4))
+			draw_colored_polygon(PackedVector2Array([Vector2(54,-73),Vector2(102,-147),Vector2(86,-25)]),color.darkened(0.4))
+		_:
+			_draw_campaign_creature(enemy)
+	if region_id != 8:
+		draw_circle(Vector2(-11,-103),5,Color("fff2ba"))
+		draw_circle(Vector2(11,-103),5,Color("fff2ba"))
+
+func _draw_goblin(skin: Color = Color("78b05e")) -> void:
 	draw_line(Vector2(-12, -28), Vector2(-16, 24), Color("5e6940"), 13)
 	draw_line(Vector2(12, -28), Vector2(17, 24), Color("5e6940"), 13)
 	draw_rect(Rect2(-26, -80, 51, 56), Color("805c3d"))
@@ -331,8 +483,7 @@ func _draw_goblin() -> void:
 	draw_line(Vector2(25, -71), Vector2(49, -37), Color("735c42"), 10)
 	draw_line(Vector2(49, -37), Vector2(69, -68), Color("b9b6a7"), 6)
 
-func _draw_skeleton() -> void:
-	var bone := Color("ebe4ce")
+func _draw_skeleton(bone: Color = Color("ebe4ce")) -> void:
 	draw_line(Vector2(-11, -30), Vector2(-18, 25), bone, 11)
 	draw_line(Vector2(11, -30), Vector2(18, 25), bone, 11)
 	draw_line(Vector2(0, -80), Vector2(0, -30), bone, 9)
@@ -347,8 +498,7 @@ func _draw_skeleton() -> void:
 	draw_circle(Vector2(10, -106), 6, Color("34413f"))
 	draw_line(Vector2(0, -99), Vector2(0, -92), Color("34413f"), 4)
 
-func _draw_wolf() -> void:
-	var fur := Color("715675")
+func _draw_wolf(fur: Color = Color("715675")) -> void:
 	draw_line(Vector2(25, -57), Vector2(66, -91), fur.darkened(0.2), 16)
 	draw_colored_polygon(PackedVector2Array([Vector2(-38, -81), Vector2(23, -86), Vector2(47, -61), Vector2(16, -42), Vector2(-42, -43)]), fur)
 	for x in [-24, -2, 23, 39]:
@@ -360,8 +510,7 @@ func _draw_wolf() -> void:
 	draw_circle(Vector2(-49, -98), 4, Color("f67b84"))
 	draw_line(Vector2(-45, -72), Vector2(-18, -73), Color("bd6b87"), 4)
 
-func _draw_archer() -> void:
-	var skin := Color("87ba67")
+func _draw_archer(skin: Color = Color("87ba67")) -> void:
 	draw_line(Vector2(-12, -28), Vector2(-15, 22), Color("4e6540"), 12)
 	draw_line(Vector2(12, -28), Vector2(16, 22), Color("4e6540"), 12)
 	draw_rect(Rect2(-24, -82, 48, 58), Color("536b45"))

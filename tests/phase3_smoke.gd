@@ -66,8 +66,8 @@ func _run() -> void:
 	var stones_before_clear := profile.enhancement_stones
 	_assert(profile.record_stage_clear(3) == 1 and profile.record_stage_clear(3) == 0, "First clear Gems")
 	_assert(profile.enhancement_stones == stones_before_clear + 1, "First clear Stone awarded once")
-	_assert(profile.record_stage_clear(10) == 5, "Boss Gems")
-	_assert(profile.record_stage_clear(10) == 0 and profile.enhancement_stones == stones_before_clear + 3, "Boss reward awarded once")
+	_assert(profile.record_stage_clear(20) == 5, "Region boss stage Gems")
+	_assert(profile.record_stage_clear(20) == 0 and profile.enhancement_stones == stones_before_clear + 5, "Boss and region rewards awarded once")
 	for i in 5:
 		profile.inventory.append(EquipmentData.create_item("rusted_sword", 0))
 	_assert(profile.merge_count("rusted_sword", 0) >= 1, "Merge availability")
@@ -92,8 +92,8 @@ func _run() -> void:
 			higher_stage_uncommon += 1
 	_assert(boss_drops > 50 and higher_stage_uncommon > 3, "Boss and higher-stage drops")
 	var restored := SaveData.load_from(TEST_SAVE)
-	_assert(restored.level == 5 and restored.gems == 8 and restored.enhancement_stones > 0, "Saved progression")
-	_assert(restored.first_clears.has(10) and restored.milestones.has("level_5") and restored.exp == profile.exp, "Saved reward claims and EXP")
+	_assert(restored.level == 5 and restored.gems == 11 and restored.enhancement_stones > 0, "Saved progression")
+	_assert(restored.first_clears.has(20) and restored.milestones.has("level_5") and restored.exp == profile.exp, "Saved reward claims and EXP")
 	_assert(restored.get_item(str(merged["id"]))["rarity"] == 1, "Saved inventory")
 	_assert(restored.equipped.get("Weapon", "") == sword["id"] and restored.get_item(str(sword["id"]))["level"] == 2, "Saved equipped ID and item level")
 	_assert(GameData.hero_power(GameData.hero_stats(restored.level, restored.upgrades, restored.gear_stats())) == GameData.hero_power(GameData.hero_stats(profile.level, profile.upgrades, profile.gear_stats())), "Saved Power")

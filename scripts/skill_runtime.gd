@@ -70,8 +70,10 @@ func cast(id: String, battle: BattleController) -> bool:
 				battle.enemies[target]["stun_time"] = float(data["stun"])
 			battle.attack_started.emit(-2, target)
 			var damage := float(battle.hero["atk"]) * strength * (1.0 + float(battle.hero.get("skill_damage", 0.0)))
-			if battle.stage == 10:
+			if battle.stage == 20 and str(battle.mode_config.get("mode", "campaign")) == "campaign":
 				damage *= 1.0 + float(battle.hero.get("boss_damage", 0.0))
+			var attack_element := str(data.get("element", HeroData.element(battle.profile.selected_hero_id, battle.profile.heroes[battle.profile.selected_hero_id])))
+			damage = battle.modified_element_damage(damage, target, attack_element)
 			battle._hit_enemy(target, roundi(damage), false, id == "shield_bash")
 			if not battle.active:
 				break

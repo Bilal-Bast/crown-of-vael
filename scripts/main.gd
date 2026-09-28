@@ -84,10 +84,10 @@ func _ready() -> void:
 	battle.hero_leveled.connect(_on_hero_leveled)
 	_build_ui()
 	if profile.campaign_complete:
-		_show_message("Greenvale Outskirts cleared. More adventures are coming.")
+		_show_message("Infernal campaign complete.")
 		_refresh_ui()
-	elif profile.stage == 10 and profile.boss_retry_required:
-		_show_message("The Warlord awaits. Tap Retry Boss to begin.")
+	elif profile.stage == 20 and profile.boss_retry_required:
+		_show_message("The region boss awaits. Tap Retry Boss to begin.")
 		_refresh_ui()
 	else:
 		battle.start(profile)
@@ -167,7 +167,7 @@ func _build_ui() -> void:
 	adventure_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	adventure_screen.add_theme_constant_override("separation", 14)
 	adventure_area.add_child(adventure_screen)
-	adventure_screen.configure(profile, _start_pve, _return_campaign)
+	adventure_screen.configure(profile, _start_pve, _return_campaign, _select_campaign_stage)
 	_build_navigation(root)
 	_refresh_progression_screens()
 
@@ -228,7 +228,7 @@ func _build_stage_card(root: VBoxContainer) -> void:
 	heading.add_child(stage_text)
 	boss_text = _label("", 34, Color("ff9f84"))
 	heading.add_child(boss_text)
-	region_text = _label(GameData.REGION, 30, Color("a9d6ad"))
+	region_text = _label(str(CampaignData.REGIONS[0]["name"]), 30, Color("a9d6ad"))
 	box.add_child(region_text)
 	wave_text = _label("", 29, MUTED)
 	box.add_child(wave_text)
@@ -237,11 +237,11 @@ func _build_stage_card(root: VBoxContainer) -> void:
 	road_text = _label("", 25, GOLD)
 	road_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	road_row.add_child(road_text)
-	road_row.add_child(_label("WARLORD 1-10", 25, Color("d8a399")))
+	road_row.add_child(_label("5 E  10 E  15 E  20 BOSS", 23, Color("d8a399")))
 	road_track = HBoxContainer.new()
 	road_track.add_theme_constant_override("separation", 6)
 	box.add_child(road_track)
-	for i in 10:
+	for i in 20:
 		var marker := ColorRect.new()
 		marker.color = Color("52605c")
 		marker.custom_minimum_size.y = 17
@@ -369,22 +369,22 @@ func _refresh_ui() -> void:
 	gems_text.text = str(profile.gems)
 	power_text.text = str(profile.power())
 	var campaign := str(battle.mode_config.get("mode", "campaign")) == "campaign"
-	stage_text.text = "EASY  %d-%d" % [1, profile.stage] if campaign else PveData.mode_label(battle.mode_config)
-	region_text.text = GameData.REGION if campaign else battle.mode_detail()
+	stage_text.text = CampaignData.label(profile.campaign_difficulty, profile.region, profile.stage).to_upper() if campaign else PveData.mode_label(battle.mode_config)
+	region_text.text = CampaignData.REGIONS[profile.region - 1]["name"] if campaign else battle.mode_detail()
 	road_row.visible = campaign
 	road_track.visible = campaign
-	road_text.text = "BOSS ROAD  %d/10" % profile.stage
+	road_text.text = "REGION ROAD  %d/20" % profile.stage
 	for i in stage_markers.size():
-		stage_markers[i].color = (Color("d48463") if i == 9 else GOLD) if i < profile.stage else Color("52605c")
+		stage_markers[i].color = (Color("d48463") if i == 19 else (Color("bf9bcf") if (i + 1) in [5, 10, 15] else GOLD)) if i < profile.stage else Color("52605c")
 	if not campaign:
 		wave_text.text = "%s  |  %d enemies remaining" % [battle.mode_detail(), _living_enemies()]
 	elif profile.campaign_complete:
 		wave_text.text = "Region complete"
-	elif profile.stage == 10:
-		wave_text.text = "Boss encounter | Goblin Warlord"
+	elif profile.stage == 20:
+		wave_text.text = "BOSS | %s" % CampaignData.REGIONS[profile.region - 1]["boss"]
 	else:
 		wave_text.text = "Wave %d/3  |  %d enemies remaining" % [battle.wave, _living_enemies()]
-	boss_text.visible = campaign and profile.stage == 10 and battle.active
+	boss_text.visible = campaign and profile.stage == 20 and battle.active
 	boss_text.text = "00:%02d" % ceili(battle.boss_time)
 	var hp := battle.hero_hp if battle.active else float(stats["hp"])
 	var hero_id := profile.selected_hero_id
@@ -401,8 +401,8 @@ func _refresh_ui() -> void:
 		heroes_exp_bar.max_value = GameData.exp_to_next(profile.level)
 		heroes_exp_bar.value = profile.exp
 		heroes_level_text.text = "LEVEL %d    POWER %d" % [profile.level, profile.power()]
-	action_button.visible = campaign and profile.stage == 10 and profile.boss_retry_required and not battle.active and not profile.campaign_complete
-	tutorial_text.visible = campaign and profile.stage == 1 and not profile.campaign_complete
+	action_button.visible = campaign and profile.stage == 20 and profile.boss_retry_required and not battle.active and not profile.campaign_complete
+	tutorial_text.visible = campaign and profile.region == 1 and profile.stage == 1 and not profile.campaign_complete
 	for stat in upgrade_buttons:
 		var rank := int(profile.upgrades[stat])
 		var cost := GameData.upgrade_cost(rank)
@@ -469,6 +469,13 @@ func _return_campaign() -> void:
 		_refresh_ui()
 	else:
 		battle.start(profile)
+	_select_tab("Battle")
+
+func _select_campaign_stage(difficulty: int, region: int, stage: int) -> void:
+	if not profile.select_campaign(difficulty, region, stage): return
+	transition_id += 1
+	current_run = {}
+	battle.start(profile)
 	_select_tab("Battle")
 
 func _on_mode_finished(result: Dictionary) -> void:
@@ -745,26 +752,38 @@ func _buy_upgrade(stat: String) -> void:
 func _on_stage_cleared() -> void:
 	transition_id += 1
 	var this_transition := transition_id
-	var gem_reward := profile.record_stage_clear(profile.stage)
+	var cleared_difficulty := profile.campaign_difficulty
+	var cleared_region := profile.region
+	var cleared_stage := profile.stage
+	var gem_reward := profile.record_stage_clear(cleared_stage)
 	summon_screen.refresh()
 	if selected_tab == "Equipment":
 		_refresh_progression_screens()
-	if profile.stage == 10:
-		profile.campaign_complete = true
+	profile.selected_replay_stage = 0
+	if cleared_stage == 20:
 		profile.boss_retry_required = false
-		profile.save()
-		_show_message("Victory! Greenvale cleared. +%d Gems, +%d Stones." % [gem_reward, 2 if gem_reward > 0 else 0])
-		_refresh_ui()
-		return
-	_show_message("Easy 1-%d cleared! +%d Gem, +%d Stone." % [profile.stage, gem_reward, 1 if gem_reward > 0 else 0])
-	profile.stage += 1
+		if cleared_region < 10:
+			profile.region += 1
+			profile.stage = 1
+		else:
+			if cleared_difficulty < 5:
+				profile.campaign_difficulty = cleared_difficulty + 1
+				profile.region = 1
+				profile.stage = 1
+			else:
+				profile.campaign_complete = true
+	else:
+		profile.stage += 1
+	profile.world_map_region = profile.region
 	profile.save()
+	_show_message("%s cleared! +%d first-clear Gems." % [CampaignData.label(cleared_difficulty, cleared_region, cleared_stage), gem_reward])
 	_refresh_ui()
+	if profile.campaign_complete: return
 	await get_tree().create_timer(1.2).timeout
 	if this_transition != transition_id:
 		return
-	if profile.stage == 10 and profile.boss_retry_required:
-		_show_message("The Warlord awaits. Tap Retry Boss to begin.")
+	if profile.stage == 20 and profile.boss_retry_required:
+		_show_message("The region boss awaits. Tap Retry Boss to begin.")
 		_refresh_ui()
 	else:
 		battle.start(profile)
@@ -777,14 +796,14 @@ func _on_battle_lost(boss_failure: bool) -> void:
 	if boss_failure:
 		profile.boss_retry_required = true
 	profile.save()
-	_show_message("Easy 1-%d failed. Returning to Easy 1-%d." % [failed_stage, profile.stage])
+	_show_message("%s failed. Returning to stage %d." % [CampaignData.label(profile.campaign_difficulty, profile.region, failed_stage), profile.stage])
 	_refresh_ui()
 	await get_tree().create_timer(1.5).timeout
 	if this_transition == transition_id:
 		battle.start(profile)
 
 func _on_action_pressed() -> void:
-	if profile.stage != 10 or not profile.boss_retry_required:
+	if profile.stage != 20 or not profile.boss_retry_required:
 		return
 	profile.boss_retry_required = false
 	profile.save()

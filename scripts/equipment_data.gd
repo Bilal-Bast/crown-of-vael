@@ -116,3 +116,23 @@ static func roll_drop(stage: int, boss: bool) -> Dictionary:
 		rarity = 1
 	var keys := ITEMS.keys()
 	return create_item(str(keys[randi_range(0, keys.size() - 1)]), rarity)
+
+static func campaign_rarity_weights(region: int, difficulty: int) -> Array[float]:
+	var tier := float(region - 1) / 9.0 + float(difficulty) * 0.65
+	return [maxf(8.0, 80.0 - tier * 24.0), 18.0 + tier * 7.0, 2.0 + tier * 11.0, maxf(0.0, tier - 0.4) * 4.0, maxf(0.0, tier - 1.2) * 0.7, maxf(0.0, tier - 2.0) * 0.08, 0.002 if difficulty >= 3 else 0.0, 0.0002 if difficulty >= 5 else 0.0]
+
+static func roll_campaign_drop(region: int, stage: int, difficulty: int, boss: bool, treasure: bool = false) -> Dictionary:
+	var chance := minf(0.8, 0.04 + region * 0.004 + stage * 0.002 + difficulty * 0.008 + (0.45 if boss else 0.0) + (0.35 if treasure else 0.0))
+	if randf() >= chance: return {}
+	var weights := campaign_rarity_weights(region, difficulty)
+	var total := 0.0
+	for weight in weights: total += weight
+	var roll := randf() * total
+	var rarity := 0
+	for index in weights.size():
+		roll -= weights[index]
+		if roll <= 0.0:
+			rarity = index
+			break
+	var keys := ITEMS.keys()
+	return create_item(str(keys[randi_range(0, keys.size() - 1)]), rarity)

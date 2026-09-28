@@ -5,16 +5,20 @@ var profile: SaveData
 var service: PveService
 var on_start: Callable
 var on_campaign: Callable
+var on_campaign_select: Callable
 var view := "hub"
 var dungeon_id := "gold"
+var map_region := 1
+var map_difficulty := 0
 var last_run := {}
 var last_result := {}
 
-func configure(value: SaveData, start_callback: Callable, campaign_callback: Callable) -> void:
+func configure(value: SaveData, start_callback: Callable, campaign_callback: Callable, select_callback: Callable = Callable()) -> void:
 	profile = value
 	service = PveService.new(profile)
 	on_start = start_callback
 	on_campaign = campaign_callback
+	on_campaign_select = select_callback
 	refresh()
 
 func refresh() -> void:
@@ -25,6 +29,9 @@ func refresh() -> void:
 		remove_child(child)
 		child.queue_free()
 	match view:
+		"campaign": _campaign_overview()
+		"map": _world_map()
+		"stages": _stage_select()
 		"dungeons": _dungeons()
 		"tiers": _tiers()
 		"tower": _tower()
@@ -41,11 +48,97 @@ func show_result(run: Dictionary, result: Dictionary) -> void:
 
 func _hub() -> void:
 	_heading("ADVENTURE", "Choose a path. Your current build joins every battle.")
-	_card("CAMPAIGN  •  OPEN", "Greenvale, Easy 1-%d" % profile.stage, "Gems • Gear • Hero EXP", "ENTER", on_campaign)
+	_card("CAMPAIGN  •  OPEN", "%s • %s" % [CampaignData.label(profile.campaign_difficulty, profile.region, profile.stage), CampaignData.REGIONS[profile.region - 1]["name"]], "200 stages per difficulty • Gems • Gear • Hero EXP", "ENTER", _open.bind("campaign"))
 	_card("DUNGEONS  •  OPEN", "Six daily challenges • 2 attempts each", "Gold • Materials • Gear", "EXPLORE", _open.bind("dungeons"))
 	_card("PERMANENT TOWER  •  OPEN", "Highest floor %d • next floor %d" % [profile.tower_highest, profile.tower_highest + 1], "First-clear chests • Slot 3 at Floor 20", "ASCEND", _open.bind("tower"))
 	_card("BOSS RUSH  •  OPEN", "5 bosses • %d/2 attempts • best %d/5" % [profile.boss_rush_state["remaining"], profile.boss_rush_state["best_boss"]], "Gems • Dust • Essence", "CHALLENGE", _open.bind("boss_rush"))
 	_card("ENDLESS SURVIVAL  •  OPEN", "Best wave %d • %d/2 reward runs" % [profile.endless_state["best_wave"], profile.endless_state["reward_remaining"]], "Gold • EXP • Small materials", "SURVIVE", _open.bind("endless"))
+
+func _campaign_overview() -> void:
+	_heading("CAMPAIGN", "%s • %s" % [CampaignData.label(profile.campaign_difficulty, profile.region, profile.stage), CampaignData.REGIONS[profile.region - 1]["name"]])
+	_back()
+	var completed := 0
+	for index in CampaignData.REGIONS.size():
+		if int(profile.highest_stages.get(CampaignData.region_key(profile.campaign_difficulty, index + 1), 0)) >= 20: completed += 1
+	var reward := CampaignData.region_reward(profile.campaign_difficulty, profile.region)
+	_card("WORLD PROGRESS", "%d/10 regions complete • %d/200 stages" % [completed, _cleared_count(profile.campaign_difficulty)], "Next region reward: %d Gems • %d Gold • %d Crests" % [reward["gems"], reward["gold"], reward["crests"]], "WORLD MAP", _open.bind("map"))
+	var complete := bool(profile.difficulty_completions.get(str(profile.campaign_difficulty), false))
+	add_child(_label("%s: %s" % [CampaignData.DIFFICULTIES[profile.campaign_difficulty].to_upper(), "COMPLETE" if complete else "IN PROGRESS"], 30, Color("e9c87d")))
+	var continue_button := _button("CONTINUE %s" % CampaignData.label(profile.campaign_difficulty, profile.region, profile.stage).to_upper())
+	continue_button.pressed.connect(on_campaign)
+	add_child(continue_button)
+
+func _cleared_count(difficulty: int) -> int:
+	var total := 0
+	for index in CampaignData.REGIONS.size():
+		total += int(profile.highest_stages.get(CampaignData.region_key(difficulty, index + 1), 0))
+	return total
+
+func _world_map() -> void:
+	_heading("WORLD MAP", "%s • %d/200 stages" % [CampaignData.DIFFICULTIES[map_difficulty].to_upper(), _cleared_count(map_difficulty)])
+	var back := _button("BACK TO CAMPAIGN")
+	back.pressed.connect(_open.bind("campaign"))
+	add_child(back)
+	var difficulty_row := HBoxContainer.new()
+	add_child(difficulty_row)
+	for index in CampaignData.DIFFICULTIES.size():
+		var difficulty_button := _button(CampaignData.DIFFICULTIES[index].substr(0, 3).to_upper())
+		difficulty_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		difficulty_button.disabled = index > profile.highest_difficulty_unlocked
+		difficulty_button.pressed.connect(_choose_difficulty.bind(index))
+		difficulty_row.add_child(difficulty_button)
+	for index in CampaignData.REGIONS.size():
+		var number := index + 1
+		var info: Dictionary = CampaignData.REGIONS[index]
+		var unlocked := profile.unlocked_region(map_difficulty, number)
+		var highest := int(profile.highest_stages.get(CampaignData.region_key(map_difficulty, number), 0))
+		var selected := number == profile.world_map_region and map_difficulty == profile.campaign_difficulty
+		var marker := "  ◆ %s" % HeroData.title(profile.selected_hero_id, profile.heroes[profile.selected_hero_id]) if number == profile.region and map_difficulty == profile.campaign_difficulty else ""
+		var state := "FOG • LOCKED" if not unlocked else ("COMPLETE" if highest >= 20 else "STAGE %d/20" % (highest + 1))
+		var title := "%s  %d. %s%s" % [info["icon"], number, info["name"], marker]
+		var detail := "%s • %s • BOSS: %s" % [info["theme"], state, info["boss"]]
+		_card(title, detail, "●" if selected else "│  path to next region", "STAGES" if unlocked else "FOG", _select_region.bind(number), not unlocked)
+		if unlocked and number > 1 and highest == 0:
+			var card := get_child(get_child_count() - 1) as Control
+			card.modulate.a = 0.35
+			create_tween().tween_property(card, "modulate:a", 1.0, 0.45)
+
+func _choose_difficulty(value: int) -> void:
+	if value > profile.highest_difficulty_unlocked: return
+	map_difficulty = value
+	refresh()
+
+func _select_region(number: int) -> void:
+	if not profile.unlocked_region(map_difficulty, number): return
+	map_region = number
+	profile.world_map_region = number
+	profile.save()
+	_open("stages")
+
+func _stage_select() -> void:
+	var info: Dictionary = CampaignData.REGIONS[map_region - 1]
+	_heading("%d • %s" % [map_region, info["name"]], "%s • %s" % [CampaignData.DIFFICULTIES[map_difficulty].to_upper(), info["theme"]])
+	var back := _button("BACK TO WORLD MAP")
+	back.pressed.connect(_open.bind("map"))
+	add_child(back)
+	for row in 5:
+		var buttons := HBoxContainer.new()
+		buttons.add_theme_constant_override("separation", 8)
+		add_child(buttons)
+		for column in 4:
+			var number := row * 4 + column + 1
+			var state := profile.stage_state(map_difficulty, map_region, number)
+			var tag := " BOSS" if number == 20 else (" E" if CampaignData.is_elite(number) else "")
+			var button := _button("%d%s\n%s" % [number, tag, state.to_upper()])
+			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			button.disabled = state == "locked"
+			button.pressed.connect(_start_campaign_stage.bind(map_region, number))
+			buttons.add_child(button)
+	add_child(_label("Elite: 5, 10, 15  •  Region boss: 20", 27, Color("e9c87d")))
+
+func _start_campaign_stage(region_number: int, stage_number: int) -> void:
+	if on_campaign_select.is_valid():
+		on_campaign_select.call(map_difficulty, region_number, stage_number)
 
 func _dungeons() -> void:
 	_heading("DUNGEONS", "Two free attempts per dungeon, refreshed by local date.")
@@ -130,6 +223,7 @@ func _select_dungeon(id: String) -> void:
 	_open("tiers")
 
 func _open(next: String) -> void:
+	if next == "map" and view != "stages": map_difficulty = profile.campaign_difficulty
 	view = next
 	refresh()
 
@@ -145,7 +239,7 @@ func _heading(title: String, subtitle: String) -> void:
 func _card(title: String, detail: String, reward: String, action: String, callback: Callable, disabled: bool = false) -> void:
 	var panel := PanelContainer.new()
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("253739")
+	style.bg_color = Color("182426") if disabled else Color("253739")
 	style.border_color = Color("786947") if not disabled else Color("4a5554")
 	style.set_border_width_all(3)
 	style.set_corner_radius_all(12)
@@ -155,8 +249,8 @@ func _card(title: String, detail: String, reward: String, action: String, callba
 	var box := VBoxContainer.new()
 	panel.add_child(box)
 	box.add_child(_label(title, 34, Color("e9c87d") if not disabled else Color("aebdb4")))
-	box.add_child(_label(detail, 28, Color("e9e8d7")))
-	box.add_child(_label(reward, 27, Color("a9d6ad")))
+	box.add_child(_label(detail, 28, Color("73827d") if disabled else Color("e9e8d7")))
+	box.add_child(_label(reward, 27, Color("6a7774") if disabled else Color("a9d6ad")))
 	var button := _button(action)
 	button.disabled = disabled
 	button.pressed.connect(callback)

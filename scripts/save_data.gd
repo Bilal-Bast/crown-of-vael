@@ -4,6 +4,15 @@ extends RefCounted
 const SAVE_PATH := "user://crown_of_vael.save"
 
 var stage := 1
+var campaign_difficulty := 0
+var highest_difficulty_unlocked := 0
+var region := 1
+var highest_stages := {}
+var campaign_first_clears := {}
+var region_rewards_claimed := {}
+var difficulty_completions := {}
+var selected_replay_stage := 0
+var world_map_region := 1
 var gold := 0
 var gems := 0
 var exp := 0
@@ -62,6 +71,23 @@ static func load_from(path: String) -> SaveData:
 		return profile
 	var data: Dictionary = value
 	profile.stage = clampi(int(data.get("stage", 1)), 1, GameData.MAX_STAGE)
+	profile.campaign_difficulty = clampi(int(data.get("campaign_difficulty", 0)), 0, 5)
+	profile.highest_difficulty_unlocked = clampi(int(data.get("highest_difficulty_unlocked", profile.campaign_difficulty)), profile.campaign_difficulty, 5)
+	profile.region = clampi(int(data.get("region", 1)), 1, CampaignData.REGIONS.size())
+	profile.world_map_region = clampi(int(data.get("world_map_region", profile.region)), 1, CampaignData.REGIONS.size())
+	profile.selected_replay_stage = clampi(int(data.get("selected_replay_stage", 0)), 0, 20)
+	var phase8 := int(data.get("phase8_version", 0)) >= 1
+	if phase8:
+		var raw_highest: Variant = data.get("highest_stages", {})
+		if raw_highest is Dictionary:
+			for key in raw_highest:
+				profile.highest_stages[str(key)] = clampi(int(raw_highest[key]), 0, 20)
+		for key in data.get("campaign_first_clears", {}).keys():
+			profile.campaign_first_clears[str(key)] = true
+		for key in data.get("region_rewards_claimed", {}).keys():
+			profile.region_rewards_claimed[str(key)] = true
+		for key in data.get("difficulty_completions", {}).keys():
+			profile.difficulty_completions[str(key)] = true
 	profile.gold = maxi(0, int(data.get("gold", 0)))
 	profile.gems = maxi(0, int(data.get("gems", 0)))
 	profile.exp = maxi(0, int(data.get("exp", 0)))
@@ -111,9 +137,19 @@ static func load_from(path: String) -> SaveData:
 		if cleared >= 1 and cleared <= GameData.MAX_STAGE and not profile.first_clears.has(cleared):
 			profile.first_clears.append(cleared)
 	if not data.has("first_clears"):
-		var historical_limit := GameData.MAX_STAGE + 1 if profile.campaign_complete else profile.stage
+		var historical_limit := 11 if not phase8 and profile.campaign_complete else profile.stage
 		for cleared in range(1, historical_limit):
 			profile.first_clears.append(cleared)
+	if not phase8:
+		var old_highest := 10 if profile.campaign_complete else maxi(profile.stage - 1, profile.first_clears.max() if not profile.first_clears.is_empty() else 0)
+		profile.highest_stages[CampaignData.region_key(0, 1)] = clampi(old_highest, 0, 10)
+		profile.boss_retry_required = false
+		for cleared in profile.first_clears:
+			profile.campaign_first_clears[CampaignData.stage_key(0, 1, cleared)] = true
+		if profile.campaign_complete:
+			profile.stage = 11
+			profile.campaign_complete = false
+			profile.boss_retry_required = false
 	for key in data.get("milestones", []):
 		if not profile.milestones.has(str(key)):
 			profile.milestones.append(str(key))
@@ -210,8 +246,12 @@ func save() -> void:
 		push_error("Could not save profile: %s" % error_string(FileAccess.get_open_error()))
 		return
 	file.store_string(JSON.stringify({
-		"phase4_version": 1, "phase5_version": 1, "phase6_version": 1, "phase7_version": 1,
+		"phase4_version": 1, "phase5_version": 1, "phase6_version": 1, "phase7_version": 1, "phase8_version": 1,
 		"stage": stage,
+		"campaign_difficulty": campaign_difficulty, "highest_difficulty_unlocked": highest_difficulty_unlocked,
+		"region": region, "highest_stages": highest_stages, "campaign_first_clears": campaign_first_clears,
+		"region_rewards_claimed": region_rewards_claimed, "difficulty_completions": difficulty_completions,
+		"selected_replay_stage": selected_replay_stage, "world_map_region": world_map_region,
 		"gold": gold,
 		"gems": gems,
 		"exp": exp,
@@ -485,14 +525,61 @@ func merge_items(kind: String, rarity: int, item_level: int = 1) -> Dictionary:
 	return merged
 
 func record_stage_clear(cleared_stage: int) -> int:
-	if first_clears.has(cleared_stage):
-		return 0
-	first_clears.append(cleared_stage)
-	var award := 5 if cleared_stage == 10 else 1
-	gems += award
-	enhancement_stones += 2 if cleared_stage == 10 else 1
+	var key := CampaignData.stage_key(campaign_difficulty, region, cleared_stage)
+	var award := 0
+	if not campaign_first_clears.has(key):
+		campaign_first_clears[key] = true
+		award = 5 + campaign_difficulty if cleared_stage == 20 else 1
+		gems += award
+		enhancement_stones += 2 if cleared_stage == 20 else 1
+	if campaign_difficulty == 0 and region == 1 and not first_clears.has(cleared_stage):
+		first_clears.append(cleared_stage)
+	var progress_key := CampaignData.region_key(campaign_difficulty, region)
+	var previous := int(highest_stages.get(progress_key, 0))
+	highest_stages[progress_key] = maxi(previous, cleared_stage)
+	if cleared_stage == 20 and previous < 20:
+		var reward_key := CampaignData.region_key(campaign_difficulty, region)
+		if not region_rewards_claimed.has(reward_key):
+			region_rewards_claimed[reward_key] = true
+			var rewards := CampaignData.region_reward(campaign_difficulty, region)
+			gems += int(rewards["gems"])
+			gold += int(rewards["gold"])
+			evolution_crests += int(rewards["crests"])
+			enhancement_stones += int(rewards["stones"])
+			companion_essence += int(rewards["essence"])
+			artifact_dust += int(rewards["dust"])
+		if region == CampaignData.REGIONS.size():
+			difficulty_completions[str(campaign_difficulty)] = true
+			if campaign_difficulty < 5:
+				highest_difficulty_unlocked = maxi(highest_difficulty_unlocked, campaign_difficulty + 1)
+		else:
+			pass
 	save()
 	return award
+
+func unlocked_region(difficulty: int, target_region: int) -> bool:
+	if difficulty > highest_difficulty_unlocked or target_region < 1 or target_region > CampaignData.REGIONS.size():
+		return false
+	return target_region == 1 or int(highest_stages.get(CampaignData.region_key(difficulty, target_region - 1), 0)) >= 20
+
+func stage_state(difficulty: int, target_region: int, target_stage: int) -> String:
+	if not unlocked_region(difficulty, target_region) or target_stage < 1 or target_stage > 20:
+		return "locked"
+	var highest := int(highest_stages.get(CampaignData.region_key(difficulty, target_region), 0))
+	if target_stage <= highest: return "cleared"
+	if target_stage == highest + 1: return "current"
+	return "locked"
+
+func select_campaign(difficulty: int, target_region: int, target_stage: int) -> bool:
+	if stage_state(difficulty, target_region, target_stage) == "locked": return false
+	campaign_difficulty = difficulty
+	region = target_region
+	stage = target_stage
+	world_map_region = target_region
+	selected_replay_stage = target_stage if stage_state(difficulty, target_region, target_stage) == "cleared" else 0
+	boss_retry_required = false
+	save()
+	return true
 
 func check_level_milestones() -> int:
 	var award := 0

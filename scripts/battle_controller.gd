@@ -17,6 +17,11 @@ signal mode_finished(result: Dictionary)
 
 var profile: SaveData
 var stage := 1
+var region := 1
+var difficulty := 0
+var force_treasure := false
+var force_elite := false
+var force_boss := false
 var wave := 1
 var active := false
 var hero: Dictionary = {}
@@ -37,7 +42,7 @@ var pending_hero_hits: Array[Dictionary] = []
 func start(new_profile: SaveData) -> void:
 	mode_config = {"mode": "campaign"}
 	_start_shared(new_profile)
-	message.emit("Goblin Warlord! Defeat him in 30 seconds." if stage == 10 else "%s | Wave 1/3" % GameData.stage_label(stage))
+	message.emit("%s! Defeat it in 30 seconds." % CampaignData.REGIONS[region - 1]["boss"] if stage == 20 else "%s | Wave 1/3" % CampaignData.label(difficulty, region, stage))
 	changed.emit()
 
 func start_mode(new_profile: SaveData, config: Dictionary) -> void:
@@ -49,6 +54,8 @@ func start_mode(new_profile: SaveData, config: Dictionary) -> void:
 func _start_shared(new_profile: SaveData) -> void:
 	profile = new_profile
 	stage = profile.stage
+	region = profile.region
+	difficulty = profile.campaign_difficulty
 	wave = 1
 	hero = profile.hero_stats()
 	hero_hp = float(hero["hp"])
@@ -94,16 +101,11 @@ func _spawn_wave() -> void:
 		changed.emit()
 		return
 
-	var kinds: Array[String] = []
-
-	if stage == 10:
-		kinds = ["Goblin Warlord"]
-	else:
-		for kind in GameData.wave_kinds(stage, wave):
-			kinds.append(str(kind))
+	var kinds := CampaignData.wave_kinds(region, 20 if force_boss else stage, wave, force_elite, force_treasure)
+	force_treasure = false
 
 	for kind in kinds:
-		var enemy := GameData.enemy_stats(kind, stage)
+		var enemy := CampaignData.enemy_stats(kind, difficulty, region, stage, wave)
 		enemy["current_hp"] = enemy["hp"]
 		enemy["attack_time"] = 0.7 + randf_range(0.0, 0.5)
 		enemy["stun_time"] = 0.0
@@ -115,7 +117,7 @@ func _process(delta: float) -> void:
 	if not active:
 		return
 	run_time += delta
-	if str(mode_config.get("mode", "campaign")) == "campaign" and stage == 10:
+	if str(mode_config.get("mode", "campaign")) == "campaign" and stage == 20:
 		boss_time = maxf(0.0, boss_time - delta)
 		if boss_time <= 0.0:
 			_lose(true)
@@ -143,12 +145,23 @@ func _process(delta: float) -> void:
 		enemy["attack_time"] = float(enemy["attack_time"]) - delta
 		if float(enemy["attack_time"]) <= 0.0:
 			enemy["attack_time"] = 1.0 / float(enemy["speed"])
+			if str(enemy.get("archetype", "")) == "HEALER":
+				var target := -1
+				var lowest := 1.0
+				for ally in enemies.size():
+					var ratio := float(enemies[ally]["current_hp"]) / float(enemies[ally]["hp"])
+					if ratio > 0.0 and ratio < lowest:
+						lowest = ratio
+						target = ally
+				if target >= 0:
+					enemies[target]["current_hp"] = minf(float(enemies[target]["hp"]), float(enemies[target]["current_hp"]) + float(enemy["atk"]) * 2.0)
+					continue
 			attack_started.emit(i, -1)
-			var damage := maxi(1, roundi(float(enemy["atk"]) - float(hero["armor"])))
+			var damage := maxi(1, roundi(float(enemy["atk"]) * (1.1 if str(enemy.get("archetype", "")) == "MAGIC" else 1.0) - float(hero["armor"]) * (0.5 if str(enemy.get("archetype", "")) == "MAGIC" else 1.0)))
 			hero_hp = maxf(0.0, hero_hp - damage)
 			damage_popup.emit(-1, damage, false, false)
 			if hero_hp <= 0.0 and not artifact_runtime.prevent_death(self):
-				_lose(stage == 10 and str(mode_config.get("mode", "campaign")) == "campaign")
+				_lose(stage == 20 and str(mode_config.get("mode", "campaign")) == "campaign")
 				return
 	changed.emit()
 
@@ -158,8 +171,9 @@ func _hero_attack() -> void:
 			attack_started.emit(-1, i)
 			var critical := randf() < float(hero["crit_chance"])
 			var amount := float(hero["atk"]) * (float(hero["crit_damage"]) if critical else 1.0)
-			if stage == 10 and str(mode_config.get("mode", "campaign")) == "campaign":
+			if stage == 20 and str(mode_config.get("mode", "campaign")) == "campaign":
 				amount *= 1.0 + float(hero.get("boss_damage", 0.0))
+			amount = modified_element_damage(amount, i, HeroData.element(profile.selected_hero_id, profile.heroes[profile.selected_hero_id]))
 			if HeroData.HEROES[profile.selected_hero_id]["style"] in ["magic", "arrow", "dark_bolt"]:
 				pending_hero_hits.append({"time": 0.22, "wave": wave, "target": i, "amount": roundi(amount), "critical": critical})
 			else:
@@ -184,6 +198,7 @@ func _resolve_hero_hit(target: int, amount: int, critical: bool) -> void:
 
 func _hit_enemy(index: int, amount: int, critical: bool, bash: bool) -> void:
 	var enemy := enemies[index]
+	amount = maxi(1, roundi(amount - float(enemy.get("armor", 0.0))))
 	if str(mode_config.get("mode", "campaign")) != "campaign":
 		run_damage += mini(amount, ceili(float(enemy["current_hp"])))
 	enemy["current_hp"] = maxf(0.0, float(enemy["current_hp"]) - amount)
@@ -198,7 +213,10 @@ func _hit_enemy(index: int, amount: int, critical: bool, bash: bool) -> void:
 			return
 		var gems_before := profile.gems
 		var leveled_up := profile.add_rewards(int(enemy["gold"]), int(enemy["exp"]))
-		var drop := EquipmentData.roll_drop(stage, stage == 10)
+		var treasure := str(enemy.get("archetype", "")) == "TREASURE"
+		if treasure:
+			_grant_treasure_reward()
+		var drop := EquipmentData.roll_campaign_drop(region, stage, difficulty, stage == 20, treasure)
 		if not drop.is_empty():
 			profile.inventory.append(drop)
 			profile.save()
@@ -208,7 +226,7 @@ func _hit_enemy(index: int, amount: int, critical: bool, bash: bool) -> void:
 			hero_leveled.emit(profile.level, profile.gems - gems_before)
 			message.emit("Level up! Squire is now level %d." % profile.level)
 		if _all_enemies_defeated():
-			if stage == 10 or wave >= GameData.WAVES_PER_STAGE:
+			if stage == 20 or wave >= GameData.WAVES_PER_STAGE:
 				active = false
 				stage_cleared.emit()
 			else:
@@ -254,3 +272,21 @@ func _lose(boss_failure: bool) -> void:
 	active = false
 	battle_lost.emit(boss_failure)
 	changed.emit()
+
+func modified_element_damage(amount: float, target: int, attack_element: String) -> float:
+	if str(mode_config.get("mode", "campaign")) != "campaign": return amount
+	return amount * CampaignData.element_multiplier(attack_element, str(enemies[target].get("element", "Physical")))
+
+func _grant_treasure_reward() -> void:
+	var roll := randf()
+	if roll < 0.03:
+		profile.gems += 1
+	elif roll < 0.26:
+		profile.enhancement_stones += 2 + difficulty
+	elif roll < 0.49:
+		profile.companion_essence += 2 + difficulty
+	elif roll < 0.72:
+		profile.artifact_dust += 2 + difficulty
+	else:
+		profile.gold += 25 * region * (difficulty + 1)
+	profile.save()

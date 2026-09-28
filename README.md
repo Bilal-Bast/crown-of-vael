@@ -2,7 +2,15 @@
 
 Open `project.godot` in Godot 4.7.1 and run the project. The 1080 × 1920 portrait viewport scales to 360 × 640. Characters, the Squire portrait, item icons, and effects use procedural Godot drawing and text.
 
-The Squire fights automatically and casts Shield Bash every eight seconds. Easy 1-1 through Easy 1-9 each have three waves of five enemies. Easy 1-10 is a 30-second Goblin Warlord fight. Stage progression, death rollback, boss retry, the HUD, and account-wide Gold upgrades continue from Phase 2.
+The selected hero fights automatically with equipped skills, companions, and artifacts. Campaign stages have three waves of five enemies; each region's Stage 20 is a 30-second boss fight. Stage progression, death rollback, boss retry, the HUD, and account-wide Gold upgrades continue from earlier phases.
+
+## Phase 8 campaign world
+
+The campaign spans ten regions with 20 stages each: Greenvale Outskirts, Whispering Forest, Ashen Highlands, Frostfang Mountains, Sunken Marshes, Crimson Desert, Ruined Kingdom, Shadowlands, Dragon Peaks, and Demon Realm. Each of the six difficulties (Easy, Normal, Hard, Nightmare, Hell, Infernal) has 200 stages, for 1,200 difficulty-stage combinations. Every region's Stages 5, 10, and 15 include an elite in the final wave; Stage 20 is a named region boss. A rare treasure enemy can replace a normal enemy and award extra resources.
+
+Adventure → Campaign opens the overview, world map, and 20-stage selection for each unlocked region. Defeating a region boss opens the next region. Defeating the Demon Lord opens the next difficulty at 1-1 while keeping all account progress. Previous stages and regions remain replayable. Stage and region first-clear rewards, completion, unlocks, selected replay stage, and map position are saved per difficulty. Phase 7 Easy 1-10 saves continue at Easy 1-11 without treating the new Stage 20 as cleared.
+
+`scripts/campaign_data.gd` centralizes regions, enemy pools, archetypes, element matchups, difficulty multipliers, rewards, treasure probability, and placeholder music paths. `tests/phase8_smoke.gd` checks structure, scaling, migration, map and stage states, boss retry, and save persistence. `tests/phase8_visual_capture.gd` creates portrait captures for the overview, map, stage selection, ten region battles, elite, treasure, boss, and Infernal variant. Debug-only helpers are in `tests/phase8_debug.gd`. Music assets and complex boss mechanics are not included.
 
 ## Phase 3 progression
 
