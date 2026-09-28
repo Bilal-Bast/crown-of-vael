@@ -18,10 +18,27 @@ No purchases or online systems are included.
 - **Summoning:** Equipment, Skills, Companions, and Artifacts have separate banner levels, rarity tables, daily free claims, simulated rewarded-ad claims, and 100-pull Legendary pity. Paid 1x, 10x, and 50x pulls cost Gems. The Summon screen opens the Companion Hall and Artifact Vault. Hero summons remain locked.
 - **Skills:** Four active slots auto-cast in battle. Shield Bash is the Squire's starting skill. Summoned copies unlock and level the eight initial skills.
 - **Companions:** Four active allies appear and attack automatically. Copies grant pieces for star ranks; Gold and Companion Essence raise levels. Wolf can evolve through Dire Wolf, Shadow Wolf, and Fenrir using levels, stars, Essence, and Companion Crests. Other evolution paths remain locked.
-- **Artifacts:** Every owned relic grants a small permanent bonus. Two equipped slots activate stronger combat effects, including critical healing, faster skill recovery, fire bursts, extra critical effects, periodic guarding, and a once-per-battle Phoenix revive. Dragon Relics grant a two-piece Crit Damage bonus; the three-piece fire bonus is implemented for a future third slot. Artifact copies, Gold, and Dust raise artifact levels.
+- **Artifacts:** Every owned relic grants a small permanent bonus. Two equipped slots activate stronger combat effects, including critical healing, faster skill recovery, fire bursts, extra critical effects, periodic guarding, and a once-per-battle Phoenix revive. Tower Floor 20 unlocks a third slot, enabling the Dragon Relics three-piece fire bonus. Artifact copies, Gold, and Dust raise artifact levels.
 - **Persistence:** Phase 4 saves migrate to the new banners, materials, collections, levels, pieces, evolution stages, and equipped slots without losing earlier progress.
 
 The rewarded-ad provider is a development simulation, and daily claims use the device's local calendar. Debug grants live only in `tests/phase5_debug.gd`.
+
+## Phase 6 Adventure
+
+The Adventure tab opens Campaign, six Dungeons, Permanent Tower, Boss Rush, and Endless Survival. Every mode uses the existing hero, skills, companions, artifacts, and battle scene.
+
+| Dungeon | Main reward |
+| --- | --- |
+| Gold Dungeon | Gold |
+| EXP Dungeon | Hero EXP, small Gold |
+| Equipment Dungeon | Enhancement Stones and an equipment item |
+| Companion Dungeon | Companion Essence, higher-tier Crests, occasional pieces |
+| Artifact Dungeon | Artifact Dust, rare duplicate progress |
+| Hero Trial | Evolution Crests, Hero EXP, generic Hero Pieces |
+
+Each Dungeon has two daily attempts and five tiers unlocked by campaign progress. Daily resets use the device's local date. Tower floors scale procedurally beyond Floor 100; first clears grant Gold, Gems, and materials, with milestone chests every ten floors. Boss Rush has five consecutive bosses, keeps HP between fights, heals 10% between bosses, and allows two daily entries. Endless Survival has two rewarded runs per day and unlimited unrewarded practice. Rewards, records, and attempts are saved. Tower Floor 20 unlocks Artifact Slot 3 and the Dragon Relics three-piece effect.
+
+`scripts/pve_data.gd` holds mode scaling and rewards, `scripts/pve_service.gd` owns attempts and records, and `scripts/adventure_screen.gd` presents the modes. `tests/phase6_smoke.gd`, `tests/phase6_layout_smoke.gd`, and `tests/phase6_visual_capture.gd` cover the new systems. Debug-only helpers live in `tests/phase6_debug.gd`.
 
 ## Structure and checks
 

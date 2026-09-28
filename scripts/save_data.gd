@@ -15,6 +15,14 @@ var campaign_complete := false
 var enhancement_stones := 0
 var evolution := 0
 var evolution_crests := 0
+var hero_pieces := 0
+var dungeon_attempts := {}
+var unlocked_dungeon_tier := 1
+var tower_highest := 0
+var tower_first_clears: Array[int] = []
+var boss_rush_state := {"day": "", "remaining": 2, "best_boss": 0, "full_clear": false}
+var endless_state := {"day": "", "reward_remaining": 2, "best_wave": 0}
+var artifact_slot3_unlocked := false
 var first_clears: Array[int] = []
 var milestones: Array[String] = []
 var inventory: Array[Dictionary] = []
@@ -57,6 +65,27 @@ static func load_from(path: String) -> SaveData:
 	profile.enhancement_stones = maxi(0, int(data.get("enhancement_stones", 0)))
 	profile.evolution = clampi(int(data.get("evolution", 0)), 0, GameData.EVOLUTION_PATH.size() - 1)
 	profile.evolution_crests = maxi(0, int(data.get("evolution_crests", 0)))
+	profile.hero_pieces = maxi(0, int(data.get("hero_pieces", 0)))
+	profile.unlocked_dungeon_tier = clampi(int(data.get("unlocked_dungeon_tier", 1)), 1, 5)
+	profile.tower_highest = maxi(0, int(data.get("tower_highest", 0)))
+	profile.artifact_slot3_unlocked = profile.tower_highest >= 20 or bool(data.get("artifact_slot3_unlocked", false))
+	for raw_floor in data.get("tower_first_clears", []):
+		var floor := int(raw_floor)
+		if floor > 0 and not profile.tower_first_clears.has(floor):
+			profile.tower_first_clears.append(floor)
+	if not data.has("tower_first_clears"):
+		for floor in range(1, profile.tower_highest + 1):
+			profile.tower_first_clears.append(floor)
+	var raw_dungeons: Variant = data.get("dungeon_attempts", {})
+	for id in PveData.DUNGEONS:
+		var raw: Dictionary = raw_dungeons.get(id, {}) if raw_dungeons is Dictionary else {}
+		profile.dungeon_attempts[id] = {"day": str(raw.get("day", "")), "remaining": clampi(int(raw.get("remaining", 2)), 0, 2)}
+	var raw_boss: Variant = data.get("boss_rush_state", {})
+	if raw_boss is Dictionary:
+		profile.boss_rush_state = {"day": str(raw_boss.get("day", "")), "remaining": clampi(int(raw_boss.get("remaining", 2)), 0, 2), "best_boss": clampi(int(raw_boss.get("best_boss", 0)), 0, 5), "full_clear": bool(raw_boss.get("full_clear", false))}
+	var raw_endless: Variant = data.get("endless_state", {})
+	if raw_endless is Dictionary:
+		profile.endless_state = {"day": str(raw_endless.get("day", "")), "reward_remaining": clampi(int(raw_endless.get("reward_remaining", 2)), 0, 2), "best_wave": maxi(0, int(raw_endless.get("best_wave", 0)))}
 	for value_stage in data.get("first_clears", []):
 		var cleared := int(value_stage)
 		if cleared >= 1 and cleared <= GameData.MAX_STAGE and not profile.first_clears.has(cleared):
@@ -147,7 +176,7 @@ static func load_from(path: String) -> SaveData:
 	if raw_artifact_slots is Array:
 		var clean_artifacts: Array[String] = ["", "", "", "", "", ""]
 		var used_artifacts := {}
-		for index in mini(ArtifactData.MAX_ACTIVE_SLOTS, raw_artifact_slots.size()):
+		for index in mini(profile.artifact_slot_limit(), raw_artifact_slots.size()):
 			var id := str(raw_artifact_slots[index])
 			if profile.artifacts.has(id) and not used_artifacts.has(id):
 				clean_artifacts[index] = id
@@ -161,7 +190,7 @@ func save() -> void:
 		push_error("Could not save profile: %s" % error_string(FileAccess.get_open_error()))
 		return
 	file.store_string(JSON.stringify({
-		"phase4_version": 1, "phase5_version": 1,
+		"phase4_version": 1, "phase5_version": 1, "phase6_version": 1,
 		"stage": stage,
 		"gold": gold,
 		"gems": gems,
@@ -171,7 +200,11 @@ func save() -> void:
 		"boss_retry_required": boss_retry_required,
 		"campaign_complete": campaign_complete,
 		"enhancement_stones": enhancement_stones, "evolution": evolution,
-		"evolution_crests": evolution_crests, "first_clears": first_clears,
+		"evolution_crests": evolution_crests, "hero_pieces": hero_pieces,
+		"dungeon_attempts": dungeon_attempts, "unlocked_dungeon_tier": unlocked_dungeon_tier,
+		"tower_highest": tower_highest, "tower_first_clears": tower_first_clears,
+		"boss_rush_state": boss_rush_state, "endless_state": endless_state,
+		"artifact_slot3_unlocked": artifact_slot3_unlocked, "first_clears": first_clears,
 		"milestones": milestones, "inventory": inventory, "equipped": equipped,
 		"banners": banners, "skills": skills, "equipped_skill_slots": equipped_skill_slots,
 		"companion_essence": companion_essence, "companion_crests": companion_crests,
@@ -292,9 +325,9 @@ func add_artifact_copy(id: String, rarity: int) -> void:
 	record["duplicates"] = int(record["duplicates"]) + 1
 
 func equip_artifact(id: String, slot: int) -> bool:
-	if not artifacts.has(id) or slot < 0 or slot >= ArtifactData.MAX_ACTIVE_SLOTS:
+	if not artifacts.has(id) or slot < 0 or slot >= artifact_slot_limit():
 		return false
-	for index in ArtifactData.MAX_ACTIVE_SLOTS:
+	for index in artifact_slot_limit():
 		if equipped_artifact_slots[index] == id:
 			equipped_artifact_slots[index] = ""
 	equipped_artifact_slots[slot] = id
@@ -302,11 +335,14 @@ func equip_artifact(id: String, slot: int) -> bool:
 	return true
 
 func unequip_artifact(slot: int) -> bool:
-	if slot < 0 or slot >= ArtifactData.MAX_ACTIVE_SLOTS or equipped_artifact_slots[slot] == "":
+	if slot < 0 or slot >= artifact_slot_limit() or equipped_artifact_slots[slot] == "":
 		return false
 	equipped_artifact_slots[slot] = ""
 	save()
 	return true
+
+func artifact_slot_limit() -> int:
+	return 3 if artifact_slot3_unlocked or tower_highest >= 20 else 2
 
 func level_artifact(id: String) -> bool:
 	if not artifacts.has(id):

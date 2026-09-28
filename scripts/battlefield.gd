@@ -162,7 +162,7 @@ func _draw_companions(unit: float) -> void:
 func _draw_artifact_indicators(unit: float) -> void:
 	if battle == null or battle.profile == null:
 		return
-	for slot in ArtifactData.MAX_ACTIVE_SLOTS:
+	for slot in battle.profile.artifact_slot_limit():
 		var id := battle.profile.equipped_artifact_slots[slot]
 		if id == "" or not battle.profile.artifacts.has(id):
 			continue
@@ -230,7 +230,7 @@ func _draw_hero(pos: Vector2, unit: float, flash: bool) -> void:
 	draw_set_transform(Vector2.ZERO)
 
 func _draw_enemy(pos: Vector2, enemy: Dictionary, unit: float, flash: bool) -> void:
-	var kind := str(enemy["kind"])
+	var kind := str(enemy.get("visual", enemy["kind"]))
 	var boss := kind == "Goblin Warlord"
 	var actor_scale := unit * (1.65 if boss else 1.0)
 	draw_set_transform(pos, 0.0, Vector2.ONE * actor_scale)

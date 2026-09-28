@@ -8,6 +8,7 @@ const SummonScreenScript = preload("res://scripts/summon_screen.gd")
 const CompanionsScreenScript = preload("res://scripts/companions_screen.gd")
 const ArtifactsScreenScript = preload("res://scripts/artifacts_screen.gd")
 const HeroPortraitScript = preload("res://scripts/hero_portrait.gd")
+const AdventureScreenScript = preload("res://scripts/adventure_screen.gd")
 
 const INK := Color("172425")
 const PANEL := Color("253739")
@@ -29,6 +30,13 @@ var skills_area: ScrollContainer
 var summon_area: ScrollContainer
 var companions_area: ScrollContainer
 var artifacts_area: ScrollContainer
+var adventure_area: ScrollContainer
+var adventure_screen: AdventureScreen
+var pve_service: PveService
+var current_run := {}
+var road_row: HBoxContainer
+var road_track: HBoxContainer
+var stage_panel: PanelContainer
 var skills_screen: SkillsScreen
 var summon_screen: SummonScreen
 var companions_screen: CompanionsScreen
@@ -62,12 +70,14 @@ var transition_id := 0
 
 func _ready() -> void:
 	profile = SaveData.load_profile()
+	pve_service = PveService.new(profile)
 	battle = BattleScript.new()
 	add_child(battle)
 	battle.changed.connect(_refresh_ui)
 	battle.message.connect(_show_message)
 	battle.stage_cleared.connect(_on_stage_cleared)
 	battle.battle_lost.connect(_on_battle_lost)
+	battle.mode_finished.connect(_on_mode_finished)
 	battle.equipment_dropped.connect(_on_equipment_dropped)
 	battle.hero_leveled.connect(_on_hero_leveled)
 	_build_ui()
@@ -146,6 +156,12 @@ func _build_ui() -> void:
 	artifacts_screen.add_theme_constant_override("separation", 12)
 	artifacts_area.add_child(artifacts_screen)
 	artifacts_screen.configure(profile, battle, _on_build_changed, _select_tab.bind("Summon"))
+	adventure_area = _screen_scroll(root)
+	adventure_screen = AdventureScreenScript.new()
+	adventure_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	adventure_screen.add_theme_constant_override("separation", 14)
+	adventure_area.add_child(adventure_screen)
+	adventure_screen.configure(profile, _start_pve, _return_campaign)
 	_build_navigation(root)
 	_refresh_progression_screens()
 
@@ -194,6 +210,7 @@ func _metric(parent: HBoxContainer, heading: String, value_color: Color) -> Labe
 
 func _build_stage_card(root: VBoxContainer) -> void:
 	var panel := _panel()
+	stage_panel = panel
 	root.add_child(panel)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 7)
@@ -209,21 +226,21 @@ func _build_stage_card(root: VBoxContainer) -> void:
 	box.add_child(region_text)
 	wave_text = _label("", 29, MUTED)
 	box.add_child(wave_text)
-	var road_row := HBoxContainer.new()
+	road_row = HBoxContainer.new()
 	box.add_child(road_row)
 	road_text = _label("", 25, GOLD)
 	road_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	road_row.add_child(road_text)
 	road_row.add_child(_label("WARLORD 1-10", 25, Color("d8a399")))
-	var track := HBoxContainer.new()
-	track.add_theme_constant_override("separation", 6)
-	box.add_child(track)
+	road_track = HBoxContainer.new()
+	road_track.add_theme_constant_override("separation", 6)
+	box.add_child(road_track)
 	for i in 10:
 		var marker := ColorRect.new()
 		marker.color = Color("52605c")
 		marker.custom_minimum_size.y = 17
 		marker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		track.add_child(marker)
+		road_track.add_child(marker)
 		stage_markers.append(marker)
 
 func _build_battle_area() -> void:
@@ -306,12 +323,12 @@ func _build_navigation(root: VBoxContainer) -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 6)
 	panel.add_child(row)
-	for tab_name in ["Battle", "Heroes", "Equipment", "Skills", "Summon"]:
+	for tab_name in ["Battle", "Adventure", "Heroes", "Equipment", "Skills", "Summon"]:
 		var button := Button.new()
 		button.text = tab_name
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.custom_minimum_size.y = 120
-		button.add_theme_font_size_override("font_size", 28)
+		button.add_theme_font_size_override("font_size", 25)
 		button.pressed.connect(_select_tab.bind(tab_name))
 		row.add_child(button)
 		nav_buttons[tab_name] = button
@@ -345,17 +362,23 @@ func _refresh_ui() -> void:
 	gold_text.text = str(profile.gold)
 	gems_text.text = str(profile.gems)
 	power_text.text = str(profile.power())
-	stage_text.text = "EASY  %d-%d" % [1, profile.stage]
+	var campaign := str(battle.mode_config.get("mode", "campaign")) == "campaign"
+	stage_text.text = "EASY  %d-%d" % [1, profile.stage] if campaign else PveData.mode_label(battle.mode_config)
+	region_text.text = GameData.REGION if campaign else battle.mode_detail()
+	road_row.visible = campaign
+	road_track.visible = campaign
 	road_text.text = "BOSS ROAD  %d/10" % profile.stage
 	for i in stage_markers.size():
 		stage_markers[i].color = (Color("d48463") if i == 9 else GOLD) if i < profile.stage else Color("52605c")
-	if profile.campaign_complete:
+	if not campaign:
+		wave_text.text = "%s  |  %d enemies remaining" % [battle.mode_detail(), _living_enemies()]
+	elif profile.campaign_complete:
 		wave_text.text = "Region complete"
 	elif profile.stage == 10:
 		wave_text.text = "Boss encounter | Goblin Warlord"
 	else:
 		wave_text.text = "Wave %d/3  |  %d enemies remaining" % [battle.wave, _living_enemies()]
-	boss_text.visible = profile.stage == 10 and battle.active
+	boss_text.visible = campaign and profile.stage == 10 and battle.active
 	boss_text.text = "00:%02d" % ceili(battle.boss_time)
 	var hp := battle.hero_hp if battle.active else float(stats["hp"])
 	hero_level_text.text = "SQUIRE  |  LEVEL %d" % profile.level
@@ -368,8 +391,8 @@ func _refresh_ui() -> void:
 		heroes_exp_bar.max_value = GameData.exp_to_next(profile.level)
 		heroes_exp_bar.value = profile.exp
 		heroes_level_text.text = "LEVEL %d    POWER %d" % [profile.level, profile.power()]
-	action_button.visible = profile.stage == 10 and profile.boss_retry_required and not battle.active and not profile.campaign_complete
-	tutorial_text.visible = profile.stage == 1 and not profile.campaign_complete
+	action_button.visible = campaign and profile.stage == 10 and profile.boss_retry_required and not battle.active and not profile.campaign_complete
+	tutorial_text.visible = campaign and profile.stage == 1 and not profile.campaign_complete
 	for stat in upgrade_buttons:
 		var rank := int(profile.upgrades[stat])
 		var cost := GameData.upgrade_cost(rank)
@@ -392,6 +415,7 @@ func _show_message(value: String) -> void:
 
 func _select_tab(tab_name: String) -> void:
 	selected_tab = tab_name
+	stage_panel.visible = tab_name != "Adventure"
 	battle_area.visible = tab_name == "Battle"
 	heroes_area.visible = tab_name == "Heroes"
 	equipment_area.visible = tab_name == "Equipment"
@@ -399,6 +423,7 @@ func _select_tab(tab_name: String) -> void:
 	summon_area.visible = tab_name == "Summon"
 	companions_area.visible = tab_name == "Companions"
 	artifacts_area.visible = tab_name == "Artifacts"
+	adventure_area.visible = tab_name == "Adventure"
 	placeholder_area.visible = false
 	placeholder_title.text = tab_name.to_upper()
 	if tab_name in ["Heroes", "Equipment"]:
@@ -411,7 +436,40 @@ func _select_tab(tab_name: String) -> void:
 		companions_screen.refresh()
 	elif tab_name == "Artifacts":
 		artifacts_screen.refresh()
+	elif tab_name == "Adventure":
+		adventure_screen.refresh()
 	_update_navigation()
+
+func _start_pve(config: Dictionary) -> void:
+	var run := pve_service.begin(config)
+	if run.is_empty():
+		adventure_screen.refresh()
+		return
+	transition_id += 1
+	current_run = run
+	battle.start_mode(profile, run)
+	_select_tab("Battle")
+
+func _return_campaign() -> void:
+	transition_id += 1
+	current_run = {}
+	if profile.campaign_complete:
+		battle.active = false
+		battle.mode_config = {"mode": "campaign"}
+		_refresh_ui()
+	else:
+		battle.start(profile)
+	_select_tab("Battle")
+
+func _on_mode_finished(result: Dictionary) -> void:
+	if current_run.is_empty():
+		current_run = battle.mode_config.duplicate(true)
+	var completed := pve_service.complete(current_run, result)
+	adventure_screen.show_result(current_run, completed)
+	artifacts_screen.refresh()
+	_refresh_progression_screens()
+	_select_tab("Adventure")
+	_refresh_ui()
 
 func _clear_content(content: VBoxContainer) -> void:
 	for child in content.get_children():
@@ -441,7 +499,7 @@ func _build_heroes_screen() -> void:
 	box.add_child(_label("Male  •  Black hair  •  Vanguard", 31, PALE))
 	heroes_level_text = _label("LEVEL %d    POWER %d" % [profile.level, profile.power()], 31, Color("a9d6ad"))
 	box.add_child(heroes_level_text)
-	box.add_child(_label("Evolution Crests: %d  •  Current form: Squire" % profile.evolution_crests, 29, MUTED))
+	box.add_child(_label("Evolution Crests: %d  •  Hero Pieces: %d" % [profile.evolution_crests, profile.hero_pieces], 29, MUTED))
 	heroes_exp_text = _label("HERO EXP  %d / %d" % [profile.exp, GameData.exp_to_next(profile.level)], 30, MUTED)
 	box.add_child(heroes_exp_text)
 	heroes_exp_bar = ProgressBar.new()
@@ -476,7 +534,7 @@ func _build_heroes_screen() -> void:
 		var copy := VBoxContainer.new()
 		card.add_child(copy)
 		copy.add_child(_label("♢  %s  •  LOCKED" % name.to_upper(), 29, PALE))
-		copy.add_child(_label("Rarity: TBA  •  Hero pieces: TBA", 30, MUTED))
+		copy.add_child(_label("Future hero  •  Generic pieces saved: %d" % profile.hero_pieces, 30, MUTED))
 	_section_title(heroes_content, "HERO MILESTONES")
 	for threshold in [5, 10, 20]:
 		var claimed: bool = profile.milestones.has("level_%d" % threshold)

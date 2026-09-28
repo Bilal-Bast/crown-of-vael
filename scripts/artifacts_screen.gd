@@ -37,12 +37,16 @@ func refresh() -> void:
 	add_child(slots)
 	for index in ArtifactData.FUTURE_SLOTS:
 		var id := profile.equipped_artifact_slots[index]
-		var short_name := "LOCKED" if index >= ArtifactData.MAX_ACTIVE_SLOTS else ("EMPTY" if id == "" else str(id).split("_")[-1].to_upper())
+		var short_name := "LOCKED" if index >= profile.artifact_slot_limit() else ("EMPTY" if id == "" else str(id).split("_")[-1].to_upper())
+		if index == 2 and profile.artifact_slot_limit() < 3:
+			short_name = "FLOOR 20"
 		var button := _button("%d\n%s" % [index + 1, short_name])
 		button.custom_minimum_size.y = 107
-		button.disabled = index >= ArtifactData.MAX_ACTIVE_SLOTS
+		button.disabled = index >= profile.artifact_slot_limit()
 		button.pressed.connect(_slot_pressed.bind(index))
 		slots.add_child(button)
+	if profile.artifact_slot_limit() < 3:
+		add_child(_label("Slot 3 unlocks at Tower Floor 20.", 27, Color("d8a399")))
 	var count := ArtifactData.set_count("dragon_relics", profile.equipped_artifact_slots)
 	var set_panel := _panel(Color("d09548"))
 	add_child(set_panel)
@@ -50,7 +54,7 @@ func refresh() -> void:
 	set_panel.add_child(set_box)
 	set_box.add_child(_label("DRAGON RELICS  •  %d/3 EQUIPPED" % count, 30, Color("e9c87d")))
 	set_box.add_child(_label("2 pieces: +10%% Crit Damage %s" % ["ACTIVE" if count >= 2 else "LOCKED"], 27, Color("aebdb4")))
-	set_box.add_child(_label("3 pieces: +50%% fire burst damage %s" % ["ACTIVE" if count >= 3 else "LOCKED UNTIL SLOT 3"], 27, Color("aebdb4")))
+	set_box.add_child(_label("3 pieces: +50%% fire burst damage %s" % ["ACTIVE" if count >= 3 else ("LOCKED UNTIL TOWER 20" if profile.artifact_slot_limit() < 3 else "INACTIVE")], 27, Color("aebdb4")))
 	if selected_id != "" and profile.artifacts.has(selected_id):
 		_build_detail()
 	add_child(_label("RELIC COLLECTION", 32, Color("e9c87d")))

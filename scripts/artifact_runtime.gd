@@ -72,7 +72,7 @@ func on_hero_attack(battle: BattleController, target: int, amount: int, critical
 					for index in battle.enemies.size():
 						if battle.active and float(battle.enemies[index]["current_hp"]) > 0.0:
 							battle._hit_enemy(index, burst, false, false)
-					battle.artifact_proc.emit("FIRE BURST", Color("ff9f68"))
+					battle.artifact_proc.emit("FIRE BURST • SET" if float(battle.hero.get("fire_burst_bonus", 0.0)) > 0.0 else "FIRE BURST", Color("ffce6e") if float(battle.hero.get("fire_burst_bonus", 0.0)) > 0.0 else Color("ff9f68"))
 
 func prevent_death(battle: BattleController) -> bool:
 	if revive_used:
