@@ -15,6 +15,10 @@ const SKILLS := {
 static func copies_to_level(level: int) -> int:
 	return 2 ** level
 
+# Empty means every hero may equip the skill. Future skills can set hero_tags.
+static func hero_tags(id: String) -> Array:
+	return SKILLS[id].get("hero_tags", [])
+
 static func strength(id: String, level: int) -> float:
 	return float(SKILLS[id]["power"]) * (1.0 + 0.25 * (level - 1))
 

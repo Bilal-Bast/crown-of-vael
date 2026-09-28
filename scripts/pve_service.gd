@@ -107,5 +107,10 @@ func complete(run: Dictionary, result: Dictionary) -> Dictionary:
 					var id: String = ArtifactData.ARTIFACTS.keys().pick_random()
 					profile.add_artifact_copy(id, 2)
 					reward["artifact_progress"] = id
+			"hero_trial":
+				if tier >= 2:
+					var id: String = ["mage", "ranger", "assassin", "necromancer"].pick_random()
+					HeroProgress.new(profile).add_pieces(id, 1)
+					reward["hero_piece"] = id
 	profile.save()
 	return {"reward": reward, "equipment": drops, "first_clear": first, "won": won, "progress": progress, "time": float(result.get("time", 0.0)), "kills": int(result.get("kills", 0)), "damage": int(result.get("damage", 0))}

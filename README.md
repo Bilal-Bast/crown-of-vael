@@ -40,6 +40,24 @@ Each Dungeon has two daily attempts and five tiers unlocked by campaign progress
 
 `scripts/pve_data.gd` holds mode scaling and rewards, `scripts/pve_service.gd` owns attempts and records, and `scripts/adventure_screen.gd` presents the modes. `tests/phase6_smoke.gd`, `tests/phase6_layout_smoke.gd`, and `tests/phase6_visual_capture.gd` cover the new systems. Debug-only helpers live in `tests/phase6_debug.gd`.
 
+## Phase 7 heroes
+
+Hero Level, EXP, Gold upgrades, equipment, skills, companions, and artifacts remain account-wide. The Heroes screen manages five launch archetypes with separate unlock pieces, stars, permanent evolution state, active passives, and owned account bonuses:
+
+| Hero | Base rarity | Unlock | Active identity | Owned bonus |
+| --- | --- | --- | --- | --- |
+| Knight | Rare | Starts as Squire | HP and Armor | Armor |
+| Mage | Epic | 50 Mage Pieces | Skill Damage | Skill Damage |
+| Ranger | Epic | 50 Ranger Pieces | Attack Speed | Attack Speed |
+| Assassin | Legendary | 75 Assassin Pieces | Crit Chance and Crit Damage | Crit Damage |
+| Necromancer | Legendary | 100 Necromancer Pieces | Companion Damage | Companion Damage |
+
+Hero stars cost 20, 40, 80, and 160 specific pieces. Five Generic Hero Pieces convert into one selected hero piece after confirmation. Hero Trial also awards specific hero pieces at Tier 2 and above. Hero switching is free at camp and blocked during active combat; a retreat action is available when the Heroes screen is opened during a fight.
+
+The permanent Knight path is Squire → Knight → Royal Knight → Paladin → Divine Paladin. Its four steps require Level 20/40/70/100, 10/25/60/150 Evolution Crests, and 5,000/25,000/100,000/500,000 Gold. Each step updates stats, passive strength, title, element identity, portrait, battle appearance, and Power. Mage, Ranger, Assassin, and Necromancer each expose a five-stage future evolution path in data and UI.
+
+Mage, Ranger, and Necromancer use lightweight traveling projectiles; Assassin uses a fast melee dash; Knight retains sword-and-shield combat. Existing skills remain unrestricted, with optional hero tags available for future restrictions. `tests/phase7_smoke.gd`, `tests/phase7_layout_smoke.gd`, and `tests/phase7_visual_capture.gd` cover progression, combat, migration, layout, and visual states. Phase 7 debug grants live only in `tests/phase7_debug.gd`.
+
 ## Structure and checks
 
 - `scripts/game_data.gd`: enemy, hero, evolution, and progression values.

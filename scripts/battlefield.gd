@@ -11,6 +11,7 @@ var deaths: Array[Dictionary] = []
 var flashes: Dictionary = {}
 var lunges: Dictionary = {}
 var companion_lunges: Dictionary = {}
+var hero_projectiles: Array[Dictionary] = []
 var hero_lunge := 0.0
 var hero_bash := false
 var shake_time := 0.0
@@ -44,7 +45,11 @@ func _process(delta: float) -> void:
 			group[i]["age"] = float(group[i]["age"]) + delta
 			if float(group[i]["age"]) >= float(group[i]["life"]):
 				group.remove_at(i)
-	if hero_lunge > 0.0 or shake_time > 0.0 or not floaters.is_empty() or not impacts.is_empty() or not deaths.is_empty() or not companion_lunges.is_empty():
+	for i in range(hero_projectiles.size() - 1, -1, -1):
+		hero_projectiles[i]["age"] = float(hero_projectiles[i]["age"]) + delta
+		if float(hero_projectiles[i]["age"]) >= 0.22:
+			hero_projectiles.remove_at(i)
+	if hero_lunge > 0.0 or shake_time > 0.0 or not floaters.is_empty() or not impacts.is_empty() or not deaths.is_empty() or not companion_lunges.is_empty() or not hero_projectiles.is_empty():
 		queue_redraw()
 
 func _on_companion_attack(slot: int, target: int, amount: int) -> void:
@@ -56,9 +61,12 @@ func _on_artifact_proc(label: String, color: Color) -> void:
 	floaters.append({"pos": _hero_position() + Vector2(0, -190), "text": label, "color": color, "age": 0.0, "life": 1.1, "size": 28, "centered": true})
 	queue_redraw()
 
-func _on_attack_started(attacker_index: int, _target_index: int) -> void:
+func _on_attack_started(attacker_index: int, target_index: int) -> void:
 	if attacker_index < 0:
-		hero_lunge = 0.26 if attacker_index == -2 else 0.19
+		var style := str(HeroData.HEROES[battle.profile.selected_hero_id]["style"])
+		if attacker_index == -1 and style in ["magic", "arrow", "dark_bolt"]:
+			hero_projectiles.append({"target": target_index, "age": 0.0, "style": style})
+		hero_lunge = 0.0 if style in ["magic", "arrow", "dark_bolt"] and attacker_index == -1 else (0.26 if attacker_index == -2 else 0.19)
 		hero_bash = attacker_index == -2
 	else:
 		lunges[attacker_index] = 0.18
@@ -95,6 +103,11 @@ func show_level_up(level: int, gem_bonus: int) -> void:
 	floaters.append({"pos": Vector2(size.x * 0.5, size.y * 0.28), "text": note, "color": Color("f7e9af"), "age": 0.0, "life": 2.0, "size": 39, "centered": true})
 	queue_redraw()
 
+func show_hero_switch(title: String) -> void:
+	floaters.append({"pos": Vector2(size.x * 0.5, size.y * 0.28), "text": "%s SELECTED" % title.to_upper(), "color": Color("f7e9af"), "age": 0.0, "life": 1.0, "size": 34, "centered": true})
+	flashes[-1] = 0.35
+	queue_redraw()
+
 func _draw() -> void:
 	var w := size.x
 	var h := size.y
@@ -116,6 +129,7 @@ func _draw() -> void:
 			if lunge > 0.0:
 				pos.x -= sin((1.0 - lunge / 0.18) * PI) * 24.0 * unit
 			_draw_enemy(pos, enemy, unit, float(flashes.get(i, 0.0)) > 0.0)
+	_draw_hero_projectiles(unit)
 	_draw_effects(unit)
 	_draw_artifact_indicators(unit)
 
@@ -192,12 +206,23 @@ func _hero_position() -> Vector2:
 	return Vector2(size.x * 0.24, size.y * 0.72)
 
 func _enemy_position(index: int) -> Vector2:
-	if battle != null and battle.stage == 10:
+	if battle != null and (str(battle.mode_config.get("mode", "campaign")) == "boss_rush" or str(battle.mode_config.get("mode", "campaign")) == "campaign" and battle.stage == 10):
 		return Vector2(size.x * 0.75, size.y * 0.71)
 	return Vector2(size.x * (0.59 + (index % 3) * 0.14), size.y * (0.54 + int(index / 3) * 0.20))
 
 func _draw_hero(pos: Vector2, unit: float, flash: bool) -> void:
 	draw_set_transform(pos, 0.0, Vector2.ONE * unit)
+	var hero_id := battle.profile.selected_hero_id if battle != null and battle.profile != null else "knight"
+	var hero_record: Dictionary = battle.profile.heroes[hero_id] if battle != null and battle.profile != null else {"evolution": 0}
+	if hero_id != "knight":
+		_draw_other_hero(hero_id, flash)
+		draw_set_transform(Vector2.ZERO)
+		return
+	var form := int(hero_record.get("evolution", 0))
+	if form >= 3:
+		draw_arc(Vector2(0, -85), 80 if form == 4 else 68, 0, TAU, 36, Color("fff2a3", 0.65), 6)
+	if form >= 2:
+		draw_colored_polygon(PackedVector2Array([Vector2(-29, -101), Vector2(-70, -38), Vector2(-53, 38), Vector2(27, -88)]), Color("772f4c") if form == 2 else Color("f5edd4"))
 	draw_ellipse_placeholder(Vector2(0, 21), Vector2(47, 12), Color("334e3a", 0.35))
 	# Boots and plain trousers.
 	draw_rect(Rect2(-27, -25, 20, 64), Color("514a3d"))
@@ -206,7 +231,9 @@ func _draw_hero(pos: Vector2, unit: float, flash: bool) -> void:
 	draw_rect(Rect2(5, 28, 27, 13), Color("342d2a"))
 	# Linen tunic, leather vest and belt; no plate armor.
 	draw_colored_polygon(PackedVector2Array([Vector2(-36, -100), Vector2(32, -100), Vector2(27, -24), Vector2(-33, -24)]), Color("d8cfaa"))
-	draw_colored_polygon(PackedVector2Array([Vector2(-25, -96), Vector2(23, -96), Vector2(19, -28), Vector2(-22, -28)]), Color("6d7861"))
+	draw_colored_polygon(PackedVector2Array([Vector2(-25, -96), Vector2(23, -96), Vector2(19, -28), Vector2(-22, -28)]), [Color("6d7861"), Color("84929a"), Color("526c9a"), Color("e9e4ce"), Color("fff9dd")][form])
+	if form > 0:
+		draw_rect(Rect2(-22, -87, 44, 42), Color("a8adb1") if form == 1 else (Color("edc873") if form >= 3 else Color("9fb7d0")), false, 6)
 	draw_rect(Rect2(-27, -50, 52, 10), Color("745332"))
 	draw_circle(Vector2(1, -45), 5, Color("d7b578"))
 	# Exposed arms and young face.
@@ -217,17 +244,59 @@ func _draw_hero(pos: Vector2, unit: float, flash: bool) -> void:
 	draw_circle(Vector2(-8, -126), 2, Color("26302a"))
 	draw_circle(Vector2(8, -126), 2, Color("26302a"))
 	# Simple iron sword and small wooden shield.
-	draw_line(Vector2(40, -59), Vector2(81, -141), Color("b9c5c7"), 10)
+	draw_line(Vector2(40, -59), Vector2(89 if form >= 2 else 81, -155 if form >= 2 else -141), Color("fff5b5") if form >= 3 else Color("b9c5c7"), 14 if form == 4 else 10)
 	draw_line(Vector2(38, -66), Vector2(55, -58), Color("7c5938"), 7)
-	draw_colored_polygon(PackedVector2Array([Vector2(-64, -84), Vector2(-34, -92), Vector2(-27, -69), Vector2(-34, -42), Vector2(-52, -31), Vector2(-68, -52)]), Color("785337"))
+	draw_colored_polygon(PackedVector2Array([Vector2(-64, -84), Vector2(-34, -92), Vector2(-27, -69), Vector2(-34, -42), Vector2(-52, -31), Vector2(-68, -52)]), Color("785337") if form == 0 else (Color("d9b761") if form >= 3 else Color("8797a2")))
 	draw_line(Vector2(-56, -78), Vector2(-48, -40), Color("b99059"), 4)
 	draw_circle(Vector2(-48, -65), 6, Color("c8b88b"))
 	if flash:
 		draw_circle(Vector2(0, -91), 45, Color(1, 1, 1, 0.5))
 	var ratio := battle.hero_hp / float(battle.hero["hp"]) if battle != null and not battle.hero.is_empty() else 1.0
 	_draw_hp_bar(Vector2(-57, -190), 114, ratio, Color("65d78c"))
-	draw_string(ThemeDB.fallback_font, Vector2(-43, -202), "SQUIRE", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("1d3030"))
+	draw_string(ThemeDB.fallback_font, Vector2(-57, -202), HeroData.title("knight", hero_record).to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 16 if form >= 2 else 20, Color("1d3030"))
 	draw_set_transform(Vector2.ZERO)
+
+func _draw_other_hero(id: String, flash: bool) -> void:
+	var robe := Color("5363a3") if id == "mage" else (Color("576b46") if id == "ranger" else (Color("393947") if id == "assassin" else Color("423551")))
+	var accent := Color("85d9ec") if id == "mage" else (Color("c5a568") if id == "ranger" else (Color("a27bb2") if id == "assassin" else Color("8cc977")))
+	draw_ellipse_placeholder(Vector2(0, 21), Vector2(47, 12), Color("334e3a", 0.35))
+	draw_line(Vector2(-16, -25), Vector2(-21, 36), robe.darkened(0.4), 20)
+	draw_line(Vector2(16, -25), Vector2(21, 36), robe.darkened(0.4), 20)
+	draw_colored_polygon(PackedVector2Array([Vector2(-34, -97), Vector2(34, -97), Vector2(43, 16), Vector2(-43, 16)]), robe)
+	draw_line(Vector2(-31, -81), Vector2(-47, -43), robe.lightened(0.18), 15)
+	draw_line(Vector2(31, -81), Vector2(48, -43), robe.lightened(0.18), 15)
+	draw_circle(Vector2(0, -126), 25, Color("dbb38f"))
+	draw_colored_polygon(PackedVector2Array([Vector2(-29, -134), Vector2(-18, -156), Vector2(16, -156), Vector2(31, -132), Vector2(11, -144), Vector2(-14, -143)]), robe.darkened(0.42))
+	if id == "ranger":
+		draw_arc(Vector2(56, -91), 46, -PI * 0.48, PI * 0.48, 18, accent, 5)
+		draw_line(Vector2(59, -137), Vector2(59, -45), Color("d6dfd0"), 2)
+	elif id == "assassin":
+		draw_line(Vector2(-48, -47), Vector2(-73, -106), accent, 8)
+		draw_line(Vector2(48, -47), Vector2(74, -106), accent, 8)
+	else:
+		draw_line(Vector2(48, -42), Vector2(59, -158), accent, 7)
+		draw_circle(Vector2(59, -163), 12, accent)
+	if flash:
+		draw_circle(Vector2(0, -85), 46, Color(1, 1, 1, 0.4))
+	var ratio := battle.hero_hp / float(battle.hero["hp"]) if battle != null and not battle.hero.is_empty() else 1.0
+	_draw_hp_bar(Vector2(-57, -190), 114, ratio, Color("65d78c"))
+	draw_string(ThemeDB.fallback_font, Vector2(-56, -202), HeroData.title(id, battle.profile.heroes[id]).to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("1d3030"))
+
+func _draw_hero_projectiles(unit: float) -> void:
+	for projectile in hero_projectiles:
+		var target := int(projectile["target"])
+		var progress := clampf(float(projectile["age"]) / 0.22, 0.0, 1.0)
+		var origin := _hero_position() + Vector2(35, -90) * unit
+		var destination := _enemy_position(target) + Vector2(0, -85) * unit
+		var pos := origin.lerp(destination, progress)
+		var style := str(projectile["style"])
+		if style == "arrow":
+			draw_line(pos - Vector2(22, 2) * unit, pos + Vector2(15, -2) * unit, Color("e8d4a2"), 5 * unit)
+			draw_colored_polygon(PackedVector2Array([pos + Vector2(20, -2) * unit, pos + Vector2(10, -9) * unit, pos + Vector2(10, 5) * unit]), Color("edf2e7"))
+		else:
+			var color := Color("91ebf5") if style == "magic" else Color("a375d2")
+			draw_line(origin.lerp(destination, maxf(0.0, progress - 0.12)), pos, color.darkened(0.2), 7 * unit)
+			draw_circle(pos, 12 * unit, color)
 
 func _draw_enemy(pos: Vector2, enemy: Dictionary, unit: float, flash: bool) -> void:
 	var kind := str(enemy.get("visual", enemy["kind"]))

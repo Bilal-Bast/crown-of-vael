@@ -96,7 +96,7 @@ func _result() -> void:
 	var reward: Dictionary = last_result.get("reward", {})
 	var lines: Array[String] = []
 	for key in reward:
-		if key in ["companion_piece", "artifact_progress"]:
+		if key in ["companion_piece", "artifact_progress", "hero_piece"]:
 			lines.append("%s: %s" % [str(key).replace("_", " ").capitalize(), reward[key]])
 		elif int(reward[key]) > 0:
 			lines.append("%s +%d" % [str(key).replace("_", " ").capitalize(), int(reward[key])])

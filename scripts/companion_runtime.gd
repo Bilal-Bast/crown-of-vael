@@ -33,7 +33,7 @@ func process(delta: float, battle: BattleController) -> void:
 		for target in battle.enemies.size():
 			if float(battle.enemies[target]["current_hp"]) <= 0.0:
 				continue
-			var amount := CompanionData.attack(id, battle.profile.companions[id])
+			var amount := CompanionData.attack(id, battle.profile.companions[id]) * (1.0 + float(battle.hero.get("companion_damage", 0.0)))
 			if battle.stage == 10:
 				amount *= 1.0 + float(battle.hero.get("boss_damage", 0.0))
 			battle.companion_attack.emit(slot, target, roundi(amount))

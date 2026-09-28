@@ -2,7 +2,6 @@ class_name SaveData
 extends RefCounted
 
 const SAVE_PATH := "user://crown_of_vael.save"
-const EVOLUTION_RELEASED := false
 
 var stage := 1
 var gold := 0
@@ -14,6 +13,9 @@ var boss_retry_required := false
 var campaign_complete := false
 var enhancement_stones := 0
 var evolution := 0
+var selected_hero_id := "knight"
+var heroes := {}
+var hero_milestones: Array[String] = []
 var evolution_crests := 0
 var hero_pieces := 0
 var dungeon_attempts := {}
@@ -38,6 +40,10 @@ var artifact_dust := 0
 var artifacts := {}
 var equipped_artifact_slots: Array[String] = ["", "", "", "", "", ""]
 var save_path := SAVE_PATH
+
+func _init() -> void:
+	for id in HeroData.HEROES:
+		heroes[id] = HeroData.starter_record(id)
 
 static func load_profile() -> SaveData:
 	return load_from(SAVE_PATH)
@@ -64,6 +70,20 @@ static func load_from(path: String) -> SaveData:
 	profile.campaign_complete = bool(data.get("campaign_complete", false))
 	profile.enhancement_stones = maxi(0, int(data.get("enhancement_stones", 0)))
 	profile.evolution = clampi(int(data.get("evolution", 0)), 0, GameData.EVOLUTION_PATH.size() - 1)
+	profile.heroes["knight"]["evolution"] = profile.evolution
+	var saved_heroes: Variant = data.get("heroes", {})
+	if saved_heroes is Dictionary:
+		for id in HeroData.HEROES:
+			var raw: Variant = saved_heroes.get(id, {})
+			if raw is Dictionary:
+				profile.heroes[id] = {"unlocked": true if id == "knight" else bool(raw.get("unlocked", false)), "pieces": maxi(0, int(raw.get("pieces", 0))), "stars": clampi(int(raw.get("stars", 1)), 1, HeroData.MAX_STARS), "evolution": clampi(int(raw.get("evolution", profile.evolution if id == "knight" else 0)), 0, 4)}
+	profile.evolution = int(profile.heroes["knight"]["evolution"])
+	var requested_hero := str(data.get("selected_hero_id", "knight"))
+	if profile.heroes.has(requested_hero) and bool(profile.heroes[requested_hero]["unlocked"]):
+		profile.selected_hero_id = requested_hero
+	for key in data.get("hero_milestones", []):
+		if HeroData.MILESTONES.has(str(key)) and not profile.hero_milestones.has(str(key)):
+			profile.hero_milestones.append(str(key))
 	profile.evolution_crests = maxi(0, int(data.get("evolution_crests", 0)))
 	profile.hero_pieces = maxi(0, int(data.get("hero_pieces", 0)))
 	profile.unlocked_dungeon_tier = clampi(int(data.get("unlocked_dungeon_tier", 1)), 1, 5)
@@ -190,7 +210,7 @@ func save() -> void:
 		push_error("Could not save profile: %s" % error_string(FileAccess.get_open_error()))
 		return
 	file.store_string(JSON.stringify({
-		"phase4_version": 1, "phase5_version": 1, "phase6_version": 1,
+		"phase4_version": 1, "phase5_version": 1, "phase6_version": 1, "phase7_version": 1,
 		"stage": stage,
 		"gold": gold,
 		"gems": gems,
@@ -200,6 +220,7 @@ func save() -> void:
 		"boss_retry_required": boss_retry_required,
 		"campaign_complete": campaign_complete,
 		"enhancement_stones": enhancement_stones, "evolution": evolution,
+		"selected_hero_id": selected_hero_id, "heroes": heroes, "hero_milestones": hero_milestones,
 		"evolution_crests": evolution_crests, "hero_pieces": hero_pieces,
 		"dungeon_attempts": dungeon_attempts, "unlocked_dungeon_tier": unlocked_dungeon_tier,
 		"tower_highest": tower_highest, "tower_first_clears": tower_first_clears,
@@ -373,13 +394,14 @@ func combat_bonuses() -> Dictionary:
 	return total
 
 func hero_stats() -> Dictionary:
-	return GameData.hero_stats(level, upgrades, combat_bonuses())
+	return HeroData.apply_stats(GameData.hero_stats(level, upgrades, combat_bonuses()), self)
 
 func power() -> int:
-	var result := GameData.hero_power(hero_stats())
+	var live_stats := hero_stats()
+	var result := GameData.hero_power(live_stats)
 	for id in equipped_companion_slots:
 		if id != "" and companions.has(id):
-			result += roundi(CompanionData.attack(id, companions[id]) * CompanionData.attack_speed(id, companions[id]) * 3.0)
+			result += roundi(CompanionData.attack(id, companions[id]) * CompanionData.attack_speed(id, companions[id]) * 3.0 * (1.0 + float(live_stats.get("companion_damage", 0.0))))
 	for id in equipped_artifact_slots:
 		if id != "" and artifacts.has(id):
 			result += maxi(1, roundi(ArtifactData.effect_value(id, artifacts[id]) * 20.0))
@@ -485,20 +507,10 @@ func check_level_milestones() -> int:
 	return award
 
 func can_evolve() -> bool:
-	# Phase 3 keeps the next forms visible while their acquisition is disabled.
-	if not EVOLUTION_RELEASED or evolution >= GameData.EVOLUTION_PATH.size() - 1:
-		return false
-	var next_form: Dictionary = GameData.EVOLUTION_PATH[evolution + 1]
-	return level >= int(next_form["level"]) and evolution_crests >= int(next_form["crests"])
+	return HeroProgress.new(self).can_evolve("knight")
 
 func evolve() -> bool:
-	if not can_evolve():
-		return false
-	var next_form: Dictionary = GameData.EVOLUTION_PATH[evolution + 1]
-	evolution_crests -= int(next_form["crests"])
-	evolution += 1
-	save()
-	return true
+	return not HeroProgress.new(self).evolve("knight").is_empty()
 
 func add_rewards(reward_gold: int, reward_exp: int) -> bool:
 	gold += reward_gold

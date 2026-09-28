@@ -32,6 +32,7 @@ var mode_config := {"mode": "campaign"}
 var run_time := 0.0
 var run_kills := 0
 var run_damage := 0
+var pending_hero_hits: Array[Dictionary] = []
 
 func start(new_profile: SaveData) -> void:
 	mode_config = {"mode": "campaign"}
@@ -57,6 +58,7 @@ func _start_shared(new_profile: SaveData) -> void:
 	run_time = 0.0
 	run_kills = 0
 	run_damage = 0
+	pending_hero_hits.clear()
 	active = true
 	skill_runtime.start(profile)
 	companion_runtime.start(profile)
@@ -121,6 +123,7 @@ func _process(delta: float) -> void:
 	artifact_runtime.process(delta, self)
 	skill_runtime.process(delta, self)
 	companion_runtime.process(delta, self)
+	_process_hero_projectiles(delta)
 	bash_time = float(skill_runtime.cooldowns.get("shield_bash", 0.0))
 	if not active:
 		return
@@ -157,10 +160,27 @@ func _hero_attack() -> void:
 			var amount := float(hero["atk"]) * (float(hero["crit_damage"]) if critical else 1.0)
 			if stage == 10 and str(mode_config.get("mode", "campaign")) == "campaign":
 				amount *= 1.0 + float(hero.get("boss_damage", 0.0))
-			var dealt := mini(roundi(amount), ceili(float(enemies[i]["current_hp"])))
-			_hit_enemy(i, roundi(amount), critical, false)
-			artifact_runtime.on_hero_attack(self, i, dealt, critical)
+			if HeroData.HEROES[profile.selected_hero_id]["style"] in ["magic", "arrow", "dark_bolt"]:
+				pending_hero_hits.append({"time": 0.22, "wave": wave, "target": i, "amount": roundi(amount), "critical": critical})
+			else:
+				_resolve_hero_hit(i, roundi(amount), critical)
 			return
+
+func _process_hero_projectiles(delta: float) -> void:
+	for index in range(pending_hero_hits.size() - 1, -1, -1):
+		var hit: Dictionary = pending_hero_hits[index]
+		hit["time"] = float(hit["time"]) - delta
+		if float(hit["time"]) > 0.0:
+			continue
+		pending_hero_hits.remove_at(index)
+		var target := int(hit["target"])
+		if int(hit["wave"]) == wave and target < enemies.size() and float(enemies[target]["current_hp"]) > 0.0:
+			_resolve_hero_hit(target, int(hit["amount"]), bool(hit["critical"]))
+
+func _resolve_hero_hit(target: int, amount: int, critical: bool) -> void:
+	var dealt := mini(amount, ceili(float(enemies[target]["current_hp"])))
+	_hit_enemy(target, amount, critical, false)
+	artifact_runtime.on_hero_attack(self, target, dealt, critical)
 
 func _hit_enemy(index: int, amount: int, critical: bool, bash: bool) -> void:
 	var enemy := enemies[index]

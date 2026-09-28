@@ -9,6 +9,7 @@ const CompanionsScreenScript = preload("res://scripts/companions_screen.gd")
 const ArtifactsScreenScript = preload("res://scripts/artifacts_screen.gd")
 const HeroPortraitScript = preload("res://scripts/hero_portrait.gd")
 const AdventureScreenScript = preload("res://scripts/adventure_screen.gd")
+const HeroesScreenScript = preload("res://scripts/heroes_screen.gd")
 
 const INK := Color("172425")
 const PANEL := Color("253739")
@@ -38,6 +39,7 @@ var road_row: HBoxContainer
 var road_track: HBoxContainer
 var stage_panel: PanelContainer
 var skills_screen: SkillsScreen
+var heroes_screen: HeroesScreen
 var summon_screen: SummonScreen
 var companions_screen: CompanionsScreen
 var artifacts_screen: ArtifactsScreen
@@ -129,7 +131,11 @@ func _build_ui() -> void:
 	unlock_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	placeholder_box.add_child(unlock_note)
 	heroes_area = _screen_scroll(root)
-	heroes_content = _screen_content(heroes_area)
+	heroes_screen = HeroesScreenScript.new()
+	heroes_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	heroes_screen.add_theme_constant_override("separation", 12)
+	heroes_area.add_child(heroes_screen)
+	heroes_screen.configure(profile, battle, _on_hero_changed, _retreat_for_hero)
 	equipment_area = _screen_scroll(root)
 	equipment_content = _screen_content(equipment_area)
 	skills_area = _screen_scroll(root)
@@ -381,9 +387,13 @@ func _refresh_ui() -> void:
 	boss_text.visible = campaign and profile.stage == 10 and battle.active
 	boss_text.text = "00:%02d" % ceili(battle.boss_time)
 	var hp := battle.hero_hp if battle.active else float(stats["hp"])
-	hero_level_text.text = "SQUIRE  |  LEVEL %d" % profile.level
-	hero_hp_text.text = "HP %d/%d" % [ceili(hp), roundi(float(stats["hp"]))]
-	hero_stats_text.text = "ATK %d    ARMOR %d    SPEED %.2f/s\nCRIT %d%%    CRIT DMG %d%%" % [roundi(float(stats["atk"])), roundi(float(stats["armor"])), float(stats["speed"]), roundi(float(stats["crit_chance"]) * 100), roundi(float(stats["crit_damage"]) * 100)]
+	var hero_id := profile.selected_hero_id
+	var hero_record: Dictionary = profile.heroes[hero_id]
+	var rarity := int(HeroData.HEROES[hero_id]["rarity"])
+	hero_level_text.text = "◆ %s  |  LV %d" % [HeroData.title(hero_id, hero_record).to_upper(), profile.level]
+	hero_level_text.add_theme_color_override("font_color", EquipmentData.COLORS[rarity])
+	hero_hp_text.text = "HP %d/%d" % [ceili(hp), ceili(float(stats["hp"]))]
+	hero_stats_text.text = "%s  •  %s  |  ATK %d    ARMOR %d    SPEED %.2f/s\nCRIT %d%%    CRIT DMG %d%%" % [EquipmentData.RARITIES[rarity].to_upper(), HeroData.element(hero_id, hero_record).to_upper(), roundi(float(stats["atk"])), roundi(float(stats["armor"])), float(stats["speed"]), roundi(float(stats["crit_chance"]) * 100), roundi(float(stats["crit_damage"]) * 100)]
 	exp_bar.max_value = GameData.exp_to_next(profile.level)
 	exp_bar.value = profile.exp
 	if heroes_exp_text != null:
@@ -477,10 +487,30 @@ func _clear_content(content: VBoxContainer) -> void:
 		child.queue_free()
 
 func _refresh_progression_screens() -> void:
-	if heroes_content == null:
+	if heroes_screen == null:
 		return
-	_build_heroes_screen()
+	heroes_screen.refresh()
 	_build_equipment_screen()
+
+func _on_hero_changed() -> void:
+	if battle.active:
+		battle.refresh_hero_stats()
+	_refresh_ui()
+	_refresh_progression_screens()
+	battlefield.queue_redraw()
+	battlefield.show_hero_switch(HeroData.title(profile.selected_hero_id, profile.heroes[profile.selected_hero_id]))
+	_show_message("%s joins the battle." % HeroData.title(profile.selected_hero_id, profile.heroes[profile.selected_hero_id]))
+
+func _retreat_for_hero() -> void:
+	if not battle.active:
+		return
+	if str(battle.mode_config.get("mode", "campaign")) == "campaign":
+		battle.active = false
+		_show_message("At camp. Choose another hero, then return to Campaign.")
+	else:
+		battle._lose(false)
+	heroes_screen.refresh()
+	_refresh_ui()
 
 func _build_heroes_screen() -> void:
 	_clear_content(heroes_content)
@@ -551,7 +581,7 @@ func _build_equipment_screen() -> void:
 	equipment_content.add_child(heading)
 	var headbox := VBoxContainer.new()
 	heading.add_child(headbox)
-	headbox.add_child(_label("ARMORY  •  SQUIRE", 36, GOLD))
+	headbox.add_child(_label("ARMORY  •  %s" % HeroData.title(profile.selected_hero_id, profile.heroes[profile.selected_hero_id]).to_upper(), 36, GOLD))
 	headbox.add_child(_label("%d Gold    •    %d Enhancement Stones" % [profile.gold, profile.enhancement_stones], 30, PALE))
 	headbox.add_child(_label("Swipe to browse slots and inventory.", 28, MUTED))
 	var selected := profile.get_item(selected_item_id)
