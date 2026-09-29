@@ -14,6 +14,8 @@ const QuestsScreenScript = preload("res://scripts/progression/quests_screen.gd")
 const LoginScreenScript = preload("res://scripts/progression/login_screen.gd")
 const BattlePassScreenScript = preload("res://scripts/monetization/battle_pass_screen.gd")
 const ShopScreenScript = preload("res://scripts/monetization/shop_screen.gd")
+const AccountScreenScript = preload("res://scripts/online/account_screen.gd")
+const SocialScreenScript = preload("res://scripts/online/social_screen.gd")
 
 const INK := Color("172425")
 const PANEL := Color("253739")
@@ -40,8 +42,13 @@ var quests_area: ScrollContainer
 var login_area: ScrollContainer
 var battle_pass_area: ScrollContainer
 var shop_area: ScrollContainer
+var account_area: ScrollContainer
+var social_area: ScrollContainer
 var battle_pass_screen: BattlePassScreen
 var shop_screen: ShopScreen
+var account_screen: AccountScreen
+var social_screen: SocialScreen
+var cloud_sync_timer: Timer
 var quests_screen: QuestsScreen
 var login_screen: LoginScreen
 var login_popup: PopupPanel
@@ -102,6 +109,11 @@ func _ready() -> void:
 	battle.skill_cast.connect(_on_skill_cast)
 	battle.companion_attack.connect(_on_companion_attack)
 	_build_ui()
+	cloud_sync_timer = Timer.new()
+	cloud_sync_timer.one_shot = true
+	cloud_sync_timer.wait_time = 4.0
+	cloud_sync_timer.timeout.connect(_auto_cloud_sync)
+	add_child(cloud_sync_timer)
 	if profile.last_login_reward_date != CalendarService.day():
 		call_deferred("_show_login_popup")
 	if profile.campaign_complete:
@@ -112,6 +124,10 @@ func _ready() -> void:
 		_refresh_ui()
 	else:
 		battle.start(profile)
+
+func _notification(what: int) -> void:
+	if what in [NOTIFICATION_WM_CLOSE_REQUEST, NOTIFICATION_APPLICATION_PAUSED] and profile != null and str(profile.account_meta.get("account_type", "Guest")) == "Linked":
+		AccountService.new(profile).sync_now()
 
 func _build_ui() -> void:
 	var backdrop := ColorRect.new()
@@ -209,6 +225,16 @@ func _build_ui() -> void:
 	shop_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	shop_area.add_child(shop_screen)
 	shop_screen.configure(profile, _on_progression_claimed)
+	account_area = _screen_scroll(root)
+	account_screen = AccountScreenScript.new()
+	account_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	account_area.add_child(account_screen)
+	account_screen.configure(profile, _on_account_social_changed)
+	social_area = _screen_scroll(root)
+	social_screen = SocialScreenScript.new()
+	social_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	social_area.add_child(social_screen)
+	social_screen.configure(profile, _on_account_social_changed)
 	_build_navigation(root)
 	_refresh_progression_screens()
 
@@ -372,7 +398,7 @@ func _build_navigation(root: VBoxContainer) -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 6)
 	rows.add_child(row)
-	for tab_name in ["Battle", "Adventure", "Heroes", "Equipment", "Skills", "Summon", "Quests", "Login", "Pass", "Shop"]:
+	for tab_name in ["Battle", "Adventure", "Heroes", "Equipment", "Skills", "Summon", "Quests", "Login", "Pass", "Shop", "Account", "Social"]:
 		if tab_name in ["Skills", "Pass"]:
 			row = HBoxContainer.new()
 			row.add_theme_constant_override("separation", 6)
@@ -475,7 +501,7 @@ func _show_message(value: String) -> void:
 
 func _select_tab(tab_name: String) -> void:
 	selected_tab = tab_name
-	stage_panel.visible = tab_name not in ["Adventure", "Quests", "Login", "Pass", "Shop"]
+	stage_panel.visible = tab_name not in ["Adventure", "Quests", "Login", "Pass", "Shop", "Account", "Social"]
 	battle_area.visible = tab_name == "Battle"
 	heroes_area.visible = tab_name == "Heroes"
 	equipment_area.visible = tab_name == "Equipment"
@@ -488,6 +514,8 @@ func _select_tab(tab_name: String) -> void:
 	login_area.visible = tab_name == "Login"
 	battle_pass_area.visible = tab_name == "Pass"
 	shop_area.visible = tab_name == "Shop"
+	account_area.visible = tab_name == "Account"
+	social_area.visible = tab_name == "Social"
 	placeholder_area.visible = false
 	placeholder_title.text = tab_name.to_upper()
 	if tab_name in ["Heroes", "Equipment"]:
@@ -510,6 +538,10 @@ func _select_tab(tab_name: String) -> void:
 		battle_pass_screen.refresh()
 	elif tab_name == "Shop":
 		shop_screen.refresh()
+	elif tab_name == "Account":
+		account_screen.refresh()
+	elif tab_name == "Social":
+		social_screen.refresh()
 	_update_navigation()
 
 func _show_login_popup() -> void:
@@ -539,6 +571,23 @@ func _claim_login_popup() -> void:
 func _on_progression_claimed() -> void:
 	_refresh_ui()
 	_update_navigation()
+	_schedule_cloud_sync()
+
+func _on_account_social_changed() -> void:
+	_refresh_ui()
+	_update_navigation()
+	account_screen.refresh()
+	social_screen.refresh()
+	_schedule_cloud_sync()
+
+func _schedule_cloud_sync() -> void:
+	if cloud_sync_timer == null or str(profile.account_meta.get("account_type", "Guest")) != "Linked": return
+	cloud_sync_timer.start()
+
+func _auto_cloud_sync() -> void:
+	if str(profile.account_meta.get("account_type", "Guest")) == "Linked":
+		var result := AccountService.new(profile).sync_now()
+		if selected_tab == "Account": account_screen.refresh()
 
 func _start_pve(config: Dictionary) -> void:
 	var run := pve_service.begin(config)
@@ -577,6 +626,7 @@ func _on_mode_finished(result: Dictionary) -> void:
 	_refresh_progression_screens()
 	_select_tab("Adventure")
 	_refresh_ui()
+	_schedule_cloud_sync()
 
 func _clear_content(content: VBoxContainer) -> void:
 	for child in content.get_children():
@@ -593,6 +643,7 @@ func _on_hero_changed() -> void:
 	if battle.active:
 		battle.refresh_hero_stats()
 	_refresh_ui()
+	_schedule_cloud_sync()
 	_refresh_progression_screens()
 	battlefield.queue_redraw()
 	battlefield.show_hero_switch(HeroData.title(profile.selected_hero_id, profile.heroes[profile.selected_hero_id]))
@@ -786,10 +837,12 @@ func _gear_changed(note: String) -> void:
 	_show_message(note)
 	_refresh_ui()
 	_refresh_progression_screens()
+	_schedule_cloud_sync()
 
 func _on_skills_changed() -> void:
 	skill_bar.queue_redraw()
 	_refresh_ui()
+	_schedule_cloud_sync()
 
 func _on_summon_changed() -> void:
 	_refresh_ui()
@@ -797,12 +850,14 @@ func _on_summon_changed() -> void:
 	skills_screen.refresh()
 	companions_screen.refresh()
 	artifacts_screen.refresh()
+	_schedule_cloud_sync()
 	if battle.active:
 		battle.refresh_hero_stats()
 
 func _on_build_changed() -> void:
 	_refresh_ui()
 	_refresh_progression_screens()
+	_schedule_cloud_sync()
 	field_redraw()
 
 func field_redraw() -> void:
@@ -837,7 +892,7 @@ func _update_navigation() -> void:
 		button.add_theme_stylebox_override("normal", style)
 		button.add_theme_color_override("font_color", GOLD if selected else MUTED)
 		button.add_theme_color_override("font_hover_color", PALE)
-		var badge := MonetizationService.new(profile).bp_badge() if tab_name == "Pass" else MonetizationService.new(profile).shop_badge() if tab_name == "Shop" else ProgressionService.new(profile).badge(tab_name)
+		var badge := MonetizationService.new(profile).bp_badge() if tab_name == "Pass" else MonetizationService.new(profile).shop_badge() if tab_name == "Shop" else SocialService.new(profile).badge() if tab_name == "Social" else ProgressionService.new(profile).badge(tab_name)
 		button.text = tab_name
 		var dot := button.get_node_or_null("BadgeDot") as ColorRect
 		if dot == null:
@@ -860,8 +915,10 @@ func _buy_upgrade(stat: String) -> void:
 			battle.refresh_hero_stats()
 		_show_message("%s upgraded! Your power increased." % stat.to_upper())
 		_refresh_ui()
+		_schedule_cloud_sync()
 
 func _on_stage_cleared() -> void:
+	_schedule_cloud_sync()
 	transition_id += 1
 	var this_transition := transition_id
 	var cleared_difficulty := profile.campaign_difficulty
@@ -909,6 +966,7 @@ func _on_battle_lost(boss_failure: bool) -> void:
 	if boss_failure:
 		profile.boss_retry_required = true
 	profile.save()
+	_schedule_cloud_sync()
 	_show_message("%s failed. Returning to stage %d." % [CampaignData.label(profile.campaign_difficulty, profile.region, failed_stage), profile.stage])
 	_refresh_ui()
 	await get_tree().create_timer(1.5).timeout

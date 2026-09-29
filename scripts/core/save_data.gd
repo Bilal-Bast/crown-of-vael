@@ -91,10 +91,16 @@ var owned_cosmetics := {}
 var equipped_cosmetics := {}
 var purchase_entitlements := {}
 var offline_last_claim := 0
+var account_meta := {}
+var cloud_meta := {"last_cloud_sync": "", "progression_timestamp": 0, "sync_status": "Local only"}
+var friends_state := {"friends": [], "incoming": [], "outgoing": []}
+var guild_state := {}
+var pvp_state := {"season_id": "development_1", "rating": 1000, "wins": 0, "losses": 0, "highest_rank": "Bronze", "attempt_day": "", "attempts": 5, "tokens": 0, "claimed_rewards": {}}
 
 func _init() -> void:
 	for id in HeroData.HEROES:
 		heroes[id] = HeroData.starter_record(id)
+	_ensure_account_meta()
 
 static func load_profile() -> SaveData:
 	return load_from(SAVE_PATH)
@@ -142,6 +148,9 @@ static func load_from(path: String) -> SaveData:
 		if data.get(key, []) is Array: profile.set(key, data.get(key, []).duplicate(true))
 	profile.gold_boost_expiry = maxi(0, int(data.get("gold_boost_expiry", 0)))
 	profile.offline_last_claim = maxi(0, int(data.get("offline_last_claim", 0)))
+	for key in ["account_meta", "cloud_meta", "friends_state", "guild_state", "pvp_state"]:
+		if data.get(key, {}) is Dictionary: profile.set(key, data.get(key, {}).duplicate(true))
+	profile._ensure_account_meta()
 	var saved_tickets: Variant = data.get("summon_tickets", {})
 	if saved_tickets is Dictionary:
 		for banner in profile.summon_tickets:
@@ -320,12 +329,23 @@ static func load_from(path: String) -> SaveData:
 	return profile
 
 func save() -> void:
+	_ensure_account_meta()
+	account_meta["last_local_save"] = Time.get_datetime_string_from_system()
+	account_meta["selected_hero"] = selected_hero_id
+	account_meta["hero_level"] = level
+	account_meta["power"] = power()
+	account_meta["highest_campaign_difficulty"] = CampaignData.DIFFICULTIES[campaign_difficulty]
+	account_meta["highest_campaign_region"] = region
+	account_meta["highest_campaign_stage"] = int(highest_stages.get(CampaignData.region_key(campaign_difficulty, region), maxi(0, stage - 1)))
+	account_meta["profile_frame"] = str(equipped_cosmetics.get("Profile Frame", ""))
+	cloud_meta["progression_timestamp"] = int(Time.get_unix_time_from_system())
 	var file := FileAccess.open(save_path, FileAccess.WRITE)
 	if file == null:
 		push_error("Could not save profile: %s" % error_string(FileAccess.get_open_error()))
 		return
 	file.store_string(JSON.stringify({
-		"phase4_version": 1, "phase5_version": 1, "phase6_version": 1, "phase7_version": 1, "phase8_version": 1, "phase9_version": 1, "phase10_version": 1,
+		"phase4_version": 1, "phase5_version": 1, "phase6_version": 1, "phase7_version": 1, "phase8_version": 1, "phase9_version": 1, "phase10_version": 1, "phase11_version": 1,
+		"account_meta": account_meta, "cloud_meta": cloud_meta, "friends_state": friends_state, "guild_state": guild_state, "pvp_state": pvp_state,
 		"bp_season": bp_season, "premium_pass_owned": premium_pass_owned, "starter_pack_purchased": starter_pack_purchased,
 		"subscription_active": subscription_active, "subscription_expiry_date": subscription_expiry_date, "subscription_last_claim": subscription_last_claim,
 		"ad_usage": ad_usage, "dungeon_ad_usage": dungeon_ad_usage, "daily_bonus_ad_claim": daily_bonus_ad_claim,
@@ -368,6 +388,21 @@ func save() -> void:
 		"companions": companions, "equipped_companion_slots": equipped_companion_slots,
 		"artifact_dust": artifact_dust, "artifacts": artifacts, "equipped_artifact_slots": equipped_artifact_slots
 	}))
+
+func _ensure_account_meta() -> void:
+	if account_meta.is_empty():
+		var rng := RandomNumberGenerator.new()
+		rng.randomize()
+		account_meta = {"player_id": "VAEL-%08X" % rng.randi(), "display_name": "Wanderer", "account_type": "Guest", "provider": "", "created_at": Time.get_datetime_string_from_system(), "avatar": "knight", "profile_frame": "", "selected_hero": selected_hero_id, "guild_id": "", "pvp_rank": "Bronze"}
+	var defaults := {"player_id": "VAEL-LOCAL", "display_name": "Wanderer", "account_type": "Guest", "provider": "", "created_at": Time.get_datetime_string_from_system(), "avatar": selected_hero_id, "profile_frame": "", "selected_hero": selected_hero_id, "hero_level": level, "power": 0, "highest_campaign_difficulty": "Easy", "highest_campaign_region": region, "highest_campaign_stage": 0, "guild_id": "", "pvp_rank": "Bronze"}
+	for key in defaults:
+		if not account_meta.has(key): account_meta[key] = defaults[key]
+	if not cloud_meta.has("sync_status"): cloud_meta["sync_status"] = "Local only"
+	if not cloud_meta.has("last_cloud_sync"): cloud_meta["last_cloud_sync"] = ""
+	if not cloud_meta.has("progression_timestamp"): cloud_meta["progression_timestamp"] = 0
+	var pvp_defaults := {"season_id": "development_1", "rating": 1000, "wins": 0, "losses": 0, "highest_rank": "Bronze", "attempt_day": "", "attempts": 5, "tokens": 0, "claimed_rewards": {}}
+	for key in pvp_defaults:
+		if not pvp_state.has(key): pvp_state[key] = pvp_defaults[key].duplicate(true) if pvp_defaults[key] is Dictionary else pvp_defaults[key]
 
 func add_skill_copy(id: String, rarity: int) -> void:
 	if not SkillData.SKILLS.has(id):
