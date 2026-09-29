@@ -47,6 +47,7 @@ func claim_quest(period: String, id: String) -> bool:
 			return false
 		claimed[id] = true
 		grant(entry[6])
+		MonetizationService.new(profile).grant_bp_xp(MonetizationData.DAILY_QUEST_XP if period == "daily" else MonetizationData.WEEKLY_QUEST_XP)
 		profile.save()
 		return true
 	return false

@@ -12,6 +12,8 @@ const AdventureScreenScript = preload("res://scripts/adventure/adventure_screen.
 const HeroesScreenScript = preload("res://scripts/heroes/heroes_screen.gd")
 const QuestsScreenScript = preload("res://scripts/progression/quests_screen.gd")
 const LoginScreenScript = preload("res://scripts/progression/login_screen.gd")
+const BattlePassScreenScript = preload("res://scripts/monetization/battle_pass_screen.gd")
+const ShopScreenScript = preload("res://scripts/monetization/shop_screen.gd")
 
 const INK := Color("172425")
 const PANEL := Color("253739")
@@ -36,6 +38,10 @@ var artifacts_area: ScrollContainer
 var adventure_area: ScrollContainer
 var quests_area: ScrollContainer
 var login_area: ScrollContainer
+var battle_pass_area: ScrollContainer
+var shop_area: ScrollContainer
+var battle_pass_screen: BattlePassScreen
+var shop_screen: ShopScreen
 var quests_screen: QuestsScreen
 var login_screen: LoginScreen
 var login_popup: PopupPanel
@@ -80,6 +86,9 @@ var transition_id := 0
 func _ready() -> void:
 	profile = SaveData.load_profile()
 	ProgressionService.new(profile).refresh()
+	if profile.offline_last_claim == 0:
+		profile.offline_last_claim = int(Time.get_unix_time_from_system())
+		profile.save()
 	pve_service = PveService.new(profile)
 	battle = BattleScript.new()
 	add_child(battle)
@@ -190,6 +199,16 @@ func _build_ui() -> void:
 	login_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	login_area.add_child(login_screen)
 	login_screen.configure(profile, _on_progression_claimed)
+	battle_pass_area = _screen_scroll(root)
+	battle_pass_screen = BattlePassScreenScript.new()
+	battle_pass_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	battle_pass_area.add_child(battle_pass_screen)
+	battle_pass_screen.configure(profile, _on_progression_claimed)
+	shop_area = _screen_scroll(root)
+	shop_screen = ShopScreenScript.new()
+	shop_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	shop_area.add_child(shop_screen)
+	shop_screen.configure(profile, _on_progression_claimed)
 	_build_navigation(root)
 	_refresh_progression_screens()
 
@@ -353,8 +372,8 @@ func _build_navigation(root: VBoxContainer) -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 6)
 	rows.add_child(row)
-	for tab_name in ["Battle", "Adventure", "Heroes", "Equipment", "Skills", "Summon", "Quests", "Login"]:
-		if tab_name == "Skills":
+	for tab_name in ["Battle", "Adventure", "Heroes", "Equipment", "Skills", "Summon", "Quests", "Login", "Pass", "Shop"]:
+		if tab_name in ["Skills", "Pass"]:
 			row = HBoxContainer.new()
 			row.add_theme_constant_override("separation", 6)
 			rows.add_child(row)
@@ -456,7 +475,7 @@ func _show_message(value: String) -> void:
 
 func _select_tab(tab_name: String) -> void:
 	selected_tab = tab_name
-	stage_panel.visible = tab_name not in ["Adventure", "Quests", "Login"]
+	stage_panel.visible = tab_name not in ["Adventure", "Quests", "Login", "Pass", "Shop"]
 	battle_area.visible = tab_name == "Battle"
 	heroes_area.visible = tab_name == "Heroes"
 	equipment_area.visible = tab_name == "Equipment"
@@ -467,6 +486,8 @@ func _select_tab(tab_name: String) -> void:
 	adventure_area.visible = tab_name == "Adventure"
 	quests_area.visible = tab_name == "Quests"
 	login_area.visible = tab_name == "Login"
+	battle_pass_area.visible = tab_name == "Pass"
+	shop_area.visible = tab_name == "Shop"
 	placeholder_area.visible = false
 	placeholder_title.text = tab_name.to_upper()
 	if tab_name in ["Heroes", "Equipment"]:
@@ -485,6 +506,10 @@ func _select_tab(tab_name: String) -> void:
 		quests_screen.refresh()
 	elif tab_name == "Login":
 		login_screen.refresh()
+	elif tab_name == "Pass":
+		battle_pass_screen.refresh()
+	elif tab_name == "Shop":
+		shop_screen.refresh()
 	_update_navigation()
 
 func _show_login_popup() -> void:
@@ -812,7 +837,7 @@ func _update_navigation() -> void:
 		button.add_theme_stylebox_override("normal", style)
 		button.add_theme_color_override("font_color", GOLD if selected else MUTED)
 		button.add_theme_color_override("font_hover_color", PALE)
-		var badge := ProgressionService.new(profile).badge(tab_name)
+		var badge := MonetizationService.new(profile).bp_badge() if tab_name == "Pass" else MonetizationService.new(profile).shop_badge() if tab_name == "Shop" else ProgressionService.new(profile).badge(tab_name)
 		button.text = tab_name
 		var dot := button.get_node_or_null("BadgeDot") as ColorRect
 		if dot == null:

@@ -30,6 +30,10 @@ func refresh() -> void:
 	daily.disabled = profile.last_login_reward_date == today
 	daily.pressed.connect(_claim_daily)
 	add_child(daily)
+	var bonus := _button("SIMULATED AD  •  BONUS REWARD")
+	bonus.disabled = profile.daily_bonus_ad_claim == today
+	bonus.pressed.connect(_claim_bonus)
+	add_child(bonus)
 	add_child(_label("28-DAY LOGIN CALENDAR", 34, Color("e9c87d")))
 	var grid := GridContainer.new()
 	grid.columns = 4
@@ -60,6 +64,12 @@ func _claim_monthly() -> void:
 	var gems_before := profile.gems
 	if service.claim_monthly():
 		notice = ("Gems! " if profile.gems > gems_before else "") + "Calendar reward claimed!"
+		refresh()
+		if on_change.is_valid(): on_change.call()
+
+func _claim_bonus() -> void:
+	if MonetizationService.new(profile).claim_daily_bonus():
+		notice = "Bonus reward claimed!"
 		refresh()
 		if on_change.is_valid(): on_change.call()
 

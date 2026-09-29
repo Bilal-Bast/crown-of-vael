@@ -2,11 +2,11 @@ class_name SummonService
 extends RefCounted
 
 var profile: SaveData
-var ad_provider: RewardedAdService
+var ad_provider: RewardedAdProvider
 
-func _init(new_profile: SaveData, provider: RewardedAdService = null) -> void:
+func _init(new_profile: SaveData, provider: RewardedAdProvider = null) -> void:
 	profile = new_profile
-	ad_provider = provider if provider != null else RewardedAdService.new()
+	ad_provider = provider if provider != null else DevelopmentRewardedAdProvider.new()
 
 static func local_day() -> String:
 	var date := Time.get_date_dict_from_system()
@@ -30,7 +30,7 @@ func summon(banner: String, count: int, source: String = "gems", day: String = "
 		return results
 	var today := day if day != "" else local_day()
 	var state: Dictionary = profile.banners[banner]
-	if source == "ad" and not ad_provider.show_rewarded_ad():
+	if source == "ad" and not (MonetizationService.new(profile).subscription_valid() and MonetizationData.SUBSCRIBER_SKIP_AD.has("summon")) and not ad_provider.show_rewarded_ad("summon"):
 		return results
 	if source == "gems":
 		if int(profile.summon_tickets.get(banner, 0)) >= count:

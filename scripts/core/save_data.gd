@@ -71,6 +71,26 @@ var last_login_reward_date := ""
 var last_monthly_reward_date := ""
 var summon_tickets := {"equipment": 0, "skills": 0, "companions": 0, "artifacts": 0}
 var quest_intro_seen := false
+var bp_season := {"id": "season_1", "start": "2026-09-29", "end": "2026-10-29", "xp": 0, "level": 0, "free_claimed": {}, "premium_claimed": {}}
+var premium_pass_owned := false
+var starter_pack_purchased := false
+var subscription_active := false
+var subscription_expiry_date := ""
+var subscription_last_claim := ""
+var ad_usage := {}
+var dungeon_ad_usage := {}
+var daily_bonus_ad_claim := ""
+var gold_boost_expiry := 0
+var daily_offers: Array = []
+var weekly_offers: Array = []
+var offer_daily_reset := ""
+var offer_weekly_reset := ""
+var offer_daily_viewed := ""
+var offer_weekly_viewed := ""
+var owned_cosmetics := {}
+var equipped_cosmetics := {}
+var purchase_entitlements := {}
+var offline_last_claim := 0
 
 func _init() -> void:
 	for id in HeroData.HEROES:
@@ -108,6 +128,20 @@ static func load_from(path: String) -> SaveData:
 	profile.last_login_reward_date = str(data.get("last_login_reward_date", ""))
 	profile.last_monthly_reward_date = str(data.get("last_monthly_reward_date", ""))
 	profile.quest_intro_seen = bool(data.get("quest_intro_seen", false))
+	var saved_bp: Variant = data.get("bp_season", {})
+	if saved_bp is Dictionary:
+		for key in profile.bp_season:
+			if saved_bp.has(key) and (key not in ["free_claimed", "premium_claimed"] or saved_bp[key] is Dictionary): profile.bp_season[key] = saved_bp[key]
+	profile.bp_season["xp"] = maxi(0, int(profile.bp_season["xp"]))
+	profile.bp_season["level"] = clampi(int(profile.bp_season["level"]), 0, 50)
+	for key in ["premium_pass_owned", "starter_pack_purchased", "subscription_active"]: profile.set(key, bool(data.get(key, false)))
+	for key in ["subscription_expiry_date", "subscription_last_claim", "daily_bonus_ad_claim", "offer_daily_reset", "offer_weekly_reset", "offer_daily_viewed", "offer_weekly_viewed"]: profile.set(key, str(data.get(key, "")))
+	for key in ["ad_usage", "dungeon_ad_usage", "owned_cosmetics", "equipped_cosmetics", "purchase_entitlements"]:
+		if data.get(key, {}) is Dictionary: profile.set(key, data.get(key, {}).duplicate(true))
+	for key in ["daily_offers", "weekly_offers"]:
+		if data.get(key, []) is Array: profile.set(key, data.get(key, []).duplicate(true))
+	profile.gold_boost_expiry = maxi(0, int(data.get("gold_boost_expiry", 0)))
+	profile.offline_last_claim = maxi(0, int(data.get("offline_last_claim", 0)))
 	var saved_tickets: Variant = data.get("summon_tickets", {})
 	if saved_tickets is Dictionary:
 		for banner in profile.summon_tickets:
@@ -291,7 +325,14 @@ func save() -> void:
 		push_error("Could not save profile: %s" % error_string(FileAccess.get_open_error()))
 		return
 	file.store_string(JSON.stringify({
-		"phase4_version": 1, "phase5_version": 1, "phase6_version": 1, "phase7_version": 1, "phase8_version": 1, "phase9_version": 1,
+		"phase4_version": 1, "phase5_version": 1, "phase6_version": 1, "phase7_version": 1, "phase8_version": 1, "phase9_version": 1, "phase10_version": 1,
+		"bp_season": bp_season, "premium_pass_owned": premium_pass_owned, "starter_pack_purchased": starter_pack_purchased,
+		"subscription_active": subscription_active, "subscription_expiry_date": subscription_expiry_date, "subscription_last_claim": subscription_last_claim,
+		"ad_usage": ad_usage, "dungeon_ad_usage": dungeon_ad_usage, "daily_bonus_ad_claim": daily_bonus_ad_claim,
+		"gold_boost_expiry": gold_boost_expiry, "daily_offers": daily_offers, "weekly_offers": weekly_offers,
+		"offer_daily_reset": offer_daily_reset, "offer_weekly_reset": offer_weekly_reset, "offer_daily_viewed": offer_daily_viewed, "offer_weekly_viewed": offer_weekly_viewed,
+		"owned_cosmetics": owned_cosmetics, "equipped_cosmetics": equipped_cosmetics, "purchase_entitlements": purchase_entitlements,
+		"offline_last_claim": offline_last_claim,
 		"daily_reset_date": daily_reset_date, "weekly_reset_week": weekly_reset_week,
 		"daily_quest_ids": daily_quest_ids, "weekly_quest_ids": weekly_quest_ids,
 		"lifetime_stats": lifetime_stats, "daily_counters": daily_counters, "weekly_counters": weekly_counters,
@@ -662,8 +703,9 @@ func can_evolve() -> bool:
 func evolve() -> bool:
 	return not HeroProgress.new(self).evolve("knight").is_empty()
 
-func add_rewards(reward_gold: int, reward_exp: int) -> bool:
+func add_rewards(reward_gold: int, reward_exp: int, combat_gold: bool = true) -> bool:
 	var previous_level := level
+	if combat_gold and gold_boost_expiry > int(Time.get_unix_time_from_system()): reward_gold = int(round(reward_gold * 1.5))
 	gold += reward_gold
 	exp += reward_exp
 	var leveled_up := false

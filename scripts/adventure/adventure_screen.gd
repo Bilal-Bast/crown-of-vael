@@ -147,12 +147,19 @@ func _dungeons() -> void:
 		var data: Dictionary = PveData.DUNGEONS[id]
 		_card(str(data["name"]).to_upper(), "%s • Attempts %d/2" % [data["theme"], profile.dungeon_attempts[id]["remaining"]], str(data["reward"]), "SELECT", _select_dungeon.bind(id))
 
+func _extra_dungeon(id: String) -> void:
+	if MonetizationService.new(profile).grant_dungeon_attempt(id): refresh()
+
 func _tiers() -> void:
 	var data: Dictionary = PveData.DUNGEONS[dungeon_id]
 	_heading(str(data["name"]).to_upper(), "Attempts %d/2 • %s" % [profile.dungeon_attempts[dungeon_id]["remaining"], data["reward"]])
 	var back := _button("BACK TO DUNGEONS")
 	back.pressed.connect(_open.bind("dungeons"))
 	add_child(back)
+	var extra := _button("SIMULATED AD • +1 DUNGEON ATTEMPT")
+	extra.disabled = profile.dungeon_ad_usage.get(dungeon_id, "") == CalendarService.day()
+	extra.pressed.connect(_extra_dungeon.bind(dungeon_id))
+	add_child(extra)
 	for tier in range(1, 6):
 		var unlocked := tier <= profile.unlocked_dungeon_tier
 		var config := {"mode": "dungeon", "dungeon": dungeon_id, "tier": tier}

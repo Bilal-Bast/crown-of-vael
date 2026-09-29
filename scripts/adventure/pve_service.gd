@@ -95,7 +95,7 @@ func complete(run: Dictionary, result: Dictionary) -> Dictionary:
 	if mode == "dungeon" and not won or mode == "endless" and not bool(run.get("rewarded", false)):
 		for key in reward:
 			reward[key] = 0
-	profile.add_rewards(int(reward["gold"]), int(reward["exp"]))
+	profile.add_rewards(int(reward["gold"]), int(reward["exp"]), false)
 	for key in ["gems", "enhancement_stones", "companion_essence", "companion_crests", "artifact_dust", "evolution_crests", "hero_pieces"]:
 		profile.set(key, int(profile.get(key)) + int(reward[key]))
 	var drops: Array[Dictionary] = []
