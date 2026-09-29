@@ -1,6 +1,6 @@
 extends SceneTree
 
-const Debug = preload("res://tests/phase5_debug.gd")
+const Debug = preload("res://tests/phase5/phase5_debug.gd")
 const TEST_SAVE := "res://.godot/phase5_smoke.save"
 var failed := false
 var companion_hits: Array[int] = []

@@ -10,7 +10,7 @@ The campaign spans ten regions with 20 stages each: Greenvale Outskirts, Whisper
 
 Adventure → Campaign opens the overview, world map, and 20-stage selection for each unlocked region. Defeating a region boss opens the next region. Defeating the Demon Lord opens the next difficulty at 1-1 while keeping all account progress. Previous stages and regions remain replayable. Stage and region first-clear rewards, completion, unlocks, selected replay stage, and map position are saved per difficulty. Phase 7 Easy 1-10 saves continue at Easy 1-11 without treating the new Stage 20 as cleared.
 
-`scripts/campaign_data.gd` centralizes regions, enemy pools, archetypes, element matchups, difficulty multipliers, rewards, treasure probability, and placeholder music paths. `tests/phase8_smoke.gd` checks structure, scaling, migration, map and stage states, boss retry, and save persistence. `tests/phase8_visual_capture.gd` creates portrait captures for the overview, map, stage selection, ten region battles, elite, treasure, boss, and Infernal variant. Debug-only helpers are in `tests/phase8_debug.gd`. Music assets and complex boss mechanics are not included.
+`scripts/campaign/campaign_data.gd` centralizes regions, enemy pools, archetypes, element matchups, difficulty multipliers, rewards, treasure probability, and placeholder music paths. `tests/phase8/phase8_smoke.gd` checks structure, scaling, migration, map and stage states, boss retry, and save persistence. `tests/phase8/phase8_visual_capture.gd` creates portrait captures for the overview, map, stage selection, ten region battles, elite, treasure, boss, and Infernal variant. Debug-only helpers are in `tests/phase8/phase8_debug.gd`. Music assets and complex boss mechanics are not included.
 
 ## Phase 3 progression
 
@@ -29,7 +29,7 @@ No purchases or online systems are included.
 - **Artifacts:** Every owned relic grants a small permanent bonus. Two equipped slots activate stronger combat effects, including critical healing, faster skill recovery, fire bursts, extra critical effects, periodic guarding, and a once-per-battle Phoenix revive. Tower Floor 20 unlocks a third slot, enabling the Dragon Relics three-piece fire bonus. Artifact copies, Gold, and Dust raise artifact levels.
 - **Persistence:** Phase 4 saves migrate to the new banners, materials, collections, levels, pieces, evolution stages, and equipped slots without losing earlier progress.
 
-The rewarded-ad provider is a development simulation, and daily claims use the device's local calendar. Debug grants live only in `tests/phase5_debug.gd`.
+The rewarded-ad provider is a development simulation, and daily claims use the device's local calendar. Debug grants live only in `tests/phase5/phase5_debug.gd`.
 
 ## Phase 6 Adventure
 
@@ -46,7 +46,7 @@ The Adventure tab opens Campaign, six Dungeons, Permanent Tower, Boss Rush, and 
 
 Each Dungeon has two daily attempts and five tiers unlocked by campaign progress. Daily resets use the device's local date. Tower floors scale procedurally beyond Floor 100; first clears grant Gold, Gems, and materials, with milestone chests every ten floors. Boss Rush has five consecutive bosses, keeps HP between fights, heals 10% between bosses, and allows two daily entries. Endless Survival has two rewarded runs per day and unlimited unrewarded practice. Rewards, records, and attempts are saved. Tower Floor 20 unlocks Artifact Slot 3 and the Dragon Relics three-piece effect.
 
-`scripts/pve_data.gd` holds mode scaling and rewards, `scripts/pve_service.gd` owns attempts and records, and `scripts/adventure_screen.gd` presents the modes. `tests/phase6_smoke.gd`, `tests/phase6_layout_smoke.gd`, and `tests/phase6_visual_capture.gd` cover the new systems. Debug-only helpers live in `tests/phase6_debug.gd`.
+`scripts/adventure/pve_data.gd` holds mode scaling and rewards, `scripts/adventure/pve_service.gd` owns attempts and records, and `scripts/adventure/adventure_screen.gd` presents the modes. `tests/phase6/phase6_smoke.gd`, `tests/phase6/phase6_layout_smoke.gd`, and `tests/phase6/phase6_visual_capture.gd` cover the new systems. Debug-only helpers live in `tests/phase6/phase6_debug.gd`.
 
 ## Phase 7 heroes
 
@@ -64,15 +64,15 @@ Hero stars cost 20, 40, 80, and 160 specific pieces. Five Generic Hero Pieces co
 
 The permanent Knight path is Squire → Knight → Royal Knight → Paladin → Divine Paladin. Its four steps require Level 20/40/70/100, 10/25/60/150 Evolution Crests, and 5,000/25,000/100,000/500,000 Gold. Each step updates stats, passive strength, title, element identity, portrait, battle appearance, and Power. Mage, Ranger, Assassin, and Necromancer each expose a five-stage future evolution path in data and UI.
 
-Mage, Ranger, and Necromancer use lightweight traveling projectiles; Assassin uses a fast melee dash; Knight retains sword-and-shield combat. Existing skills remain unrestricted, with optional hero tags available for future restrictions. `tests/phase7_smoke.gd`, `tests/phase7_layout_smoke.gd`, and `tests/phase7_visual_capture.gd` cover progression, combat, migration, layout, and visual states. Phase 7 debug grants live only in `tests/phase7_debug.gd`.
+Mage, Ranger, and Necromancer use lightweight traveling projectiles; Assassin uses a fast melee dash; Knight retains sword-and-shield combat. Existing skills remain unrestricted, with optional hero tags available for future restrictions. `tests/phase7/phase7_smoke.gd`, `tests/phase7/phase7_layout_smoke.gd`, and `tests/phase7/phase7_visual_capture.gd` cover progression, combat, migration, layout, and visual states. Phase 7 debug grants live only in `tests/phase7/phase7_debug.gd`.
 
 ## Structure and checks
 
-- `scripts/game_data.gd`: enemy, hero, evolution, and progression values.
-- `scripts/equipment_data.gd`: starter pool, rarity visuals, item stats, costs, and drop rolls.
-- `scripts/save_data.gd`: persistence, migration, rewards, equipment actions, and future evolution gate.
-- `scripts/battle_controller.gd`: combat and live reward events.
-- `scripts/battlefield.gd`, `scripts/hero_portrait.gd`: procedural battle art and Squire portrait.
-- `scripts/main.gd`: portrait HUD, Heroes, Equipment, and navigation.
-- `tests/progression_smoke.gd`, `tests/layout_smoke.gd`, `tests/phase3_smoke.gd`: progression, layout, and Phase 3 checks.
-- `tests/phase3_visual_capture.gd`: 360 × 640 captures for visual review.
+- `scripts/core/game_data.gd`: enemy, hero, evolution, and progression values.
+- `scripts/equipment/equipment_data.gd`: starter pool, rarity visuals, item stats, costs, and drop rolls.
+- `scripts/core/save_data.gd`: persistence, migration, rewards, equipment actions, and future evolution gate.
+- `scripts/combat/battle_controller.gd`: combat and live reward events.
+- `scripts/combat/battlefield.gd`, `scripts/heroes/hero_portrait.gd`: procedural battle art and Squire portrait.
+- `scripts/ui/main.gd`: portrait HUD, Heroes, Equipment, and navigation.
+- `tests/shared/progression_smoke.gd`, `tests/shared/layout_smoke.gd`, `tests/phase3/phase3_smoke.gd`: progression, layout, and Phase 3 checks.
+- `tests/phase3/phase3_visual_capture.gd`: 360 × 640 captures for visual review.
