@@ -50,8 +50,12 @@ func _friends_view() -> void:
 	for friend in list:
 		var card := _panel()
 		add_child(card)
+		var card_row := HBoxContainer.new()
+		card.add_child(card_row)
+		_add_portrait(card_row, str(friend.get("hero", "knight")), int(friend.get("evolution", 0)), "golden_frame" if str(friend.get("frame", "")) == "Golden Profile Frame" else "", Vector2(110, 132))
 		var box := VBoxContainer.new()
-		card.add_child(box)
+		box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card_row.add_child(box)
 		var frame := " • " + str(friend.frame) if str(friend.get("frame", "")) != "" else ""
 		box.add_child(_label("%s%s\n%s • Level %d • Power %d\nCampaign %s %d-%d • Guild %s • PvP %s" % [friend.name, frame, str(friend.hero).capitalize(), int(friend.level), int(friend.power), str(friend.get("difficulty", "Easy")), int(friend.get("region", 1)), int(friend.get("stage", 1)), str(friend.guild), str(friend.rank)], 23))
 		var actions := HBoxContainer.new()
@@ -115,7 +119,10 @@ func _guild_view() -> void:
 	add_child(_label("ROSTER %d" % roster.size(), 30))
 	for member in roster:
 		var frame := " • Golden Profile Frame" if profile.owned_cosmetics.has("golden_frame") and profile.equipped_cosmetics.get("Profile Frame", "") == "golden_frame" and str(member.id) == str(profile.account_meta.player_id) else ""
-		add_child(_label("%s%s • %d Power • %s • %s contribution • Active %s" % [member.name, frame, int(member.power), str(member.hero).capitalize(), member.get("role", "Member"), str(member.get("last_active", "Unknown"))], 22))
+		var member_row := HBoxContainer.new()
+		add_child(member_row)
+		_add_portrait(member_row, str(member.get("hero", "knight")), int(member.get("evolution", 0)), "golden_frame" if not frame.is_empty() else "", Vector2(92, 112))
+		member_row.add_child(_label("%s%s • %d Power • %s • %s contribution • Active %s" % [member.name, frame, int(member.power), str(member.hero).capitalize(), member.get("role", "Member"), str(member.get("last_active", "Unknown"))], 22))
 	var leave := _button("LEAVE GUILD")
 	leave.disabled = state.role == "Leader"
 	leave.pressed.connect(_leave)
@@ -155,7 +162,10 @@ func _pvp_view() -> void:
 		var frame := " • Golden Profile Frame" if str(opponent.get("frame", "")) == "golden_frame" else ""
 		var card := _panel()
 		add_child(card)
-		var box := VBoxContainer.new(); card.add_child(box)
+		var card_row := HBoxContainer.new(); card.add_child(card_row)
+		var snapshot: Dictionary = opponent.get("snapshot", {})
+		_add_portrait(card_row, str(snapshot.get("hero_id", opponent.get("hero", "knight"))), int(snapshot.get("evolution", 0)), "golden_frame" if str(opponent.get("frame", "")) == "golden_frame" else "", Vector2(110, 132))
+		var box := VBoxContainer.new(); box.size_flags_horizontal = Control.SIZE_EXPAND_FILL; card_row.add_child(box)
 		box.add_child(_label("%s%s • %s\nPower %d • Rating %d • %s\nReward preview: 500 Gold + 2 Gems + 5 PvP Tokens" % [opponent.name, frame, str(opponent.hero).capitalize(), int(opponent.power), int(opponent.rating), opponent.rank], 23))
 		var fight := _button("RANKED AUTO BATTLE • 60 SEC")
 		fight.disabled = int(profile.pvp_state.attempts) <= 0
@@ -254,6 +264,14 @@ func _panel() -> PanelContainer:
 	var style := StyleBoxFlat.new(); style.bg_color = Color("253739"); style.border_color = Color("7b7159"); style.set_border_width_all(2); style.set_corner_radius_all(8); style.set_content_margin_all(8)
 	panel.add_theme_stylebox_override("panel", style)
 	return panel
+
+func _add_portrait(parent: Control, hero_id: String, evolution: int, frame: String, minimum: Vector2) -> void:
+	var portrait := HeroPortrait.new()
+	portrait.hero_id = hero_id if HeroData.HEROES.has(hero_id) else "knight"
+	portrait.evolution = clampi(evolution, 0, 4)
+	portrait.profile_frame = frame
+	portrait.custom_minimum_size = minimum
+	parent.add_child(portrait)
 
 func _label(value: String, size: int) -> Label:
 	var label := Label.new(); label.text = value; label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; label.add_theme_font_size_override("font_size", size); label.add_theme_color_override("font_color", Color("e9c87d")); return label

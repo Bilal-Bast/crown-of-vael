@@ -80,6 +80,7 @@ var road_text: Label
 var stage_markers: Array[ColorRect] = []
 var hero_level_text: Label
 var hero_hp_text: Label
+var battle_hero_portrait: HeroPortrait
 var hero_stats_text: Label
 var exp_bar: ProgressBar
 var message_text: Label
@@ -351,6 +352,9 @@ func _build_battle_area() -> void:
 	hero_panel.add_child(hero_box)
 	var hero_heading := HBoxContainer.new()
 	hero_box.add_child(hero_heading)
+	battle_hero_portrait = HeroPortraitScript.new()
+	battle_hero_portrait.custom_minimum_size = Vector2(58, 70)
+	hero_heading.add_child(battle_hero_portrait)
 	hero_level_text = _label("", 31, PALE)
 	hero_level_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hero_heading.add_child(hero_level_text)
@@ -465,6 +469,11 @@ func _refresh_ui() -> void:
 	var hp := battle.hero_hp if battle.active else float(stats["hp"])
 	var hero_id := profile.selected_hero_id
 	var hero_record: Dictionary = profile.heroes[hero_id]
+	if battle_hero_portrait != null:
+		battle_hero_portrait.hero_id = hero_id
+		battle_hero_portrait.evolution = int(hero_record.get("evolution", 0))
+		battle_hero_portrait.profile_frame = str(profile.equipped_cosmetics.get("Profile Frame", ""))
+		battle_hero_portrait.queue_redraw()
 	var rarity := int(HeroData.HEROES[hero_id]["rarity"])
 	hero_level_text.text = "◆ %s  |  LV %d" % [HeroData.title(hero_id, hero_record).to_upper(), profile.level]
 	hero_level_text.add_theme_color_override("font_color", EquipmentData.COLORS[rarity])
@@ -668,13 +677,16 @@ func _build_heroes_screen() -> void:
 	identity_row.add_theme_constant_override("separation", 16)
 	identity.add_child(identity_row)
 	var portrait := HeroPortraitScript.new()
+	portrait.hero_id = profile.selected_hero_id
+	portrait.evolution = int(profile.heroes[profile.selected_hero_id].get("evolution", 0))
+	portrait.profile_frame = str(profile.equipped_cosmetics.get("Profile Frame", ""))
 	portrait.custom_minimum_size = Vector2(210, 250)
 	identity_row.add_child(portrait)
 	var box := VBoxContainer.new()
 	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	identity_row.add_child(box)
-	box.add_child(_label("SQUIRE  •  THE FIRST VOW", 36, GOLD))
-	box.add_child(_label("Male  •  Black hair  •  Vanguard", 31, PALE))
+	box.add_child(_label("%s  •  %s" % [HeroData.title(profile.selected_hero_id, profile.heroes[profile.selected_hero_id]).to_upper(), str(HeroData.HEROES[profile.selected_hero_id]["role"]).to_upper()], 36, GOLD))
+	box.add_child(_label("Selected hero  •  %s" % HeroData.element(profile.selected_hero_id, profile.heroes[profile.selected_hero_id]), 31, PALE))
 	heroes_level_text = _label("LEVEL %d    POWER %d" % [profile.level, profile.power()], 31, Color("a9d6ad"))
 	box.add_child(heroes_level_text)
 	box.add_child(_label("Evolution Crests: %d  •  Hero Pieces: %d" % [profile.evolution_crests, profile.hero_pieces], 29, MUTED))

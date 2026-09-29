@@ -16,16 +16,19 @@ var hero_lunge := 0.0
 var hero_bash := false
 var hero_attack_art_time := 0.0
 var hero_guard_art_time := 0.0
+## Compatibility aliases retained for the Phase 9/legacy smoke harness.
 var squire_idle_texture: Texture2D
 var squire_attack_texture: Texture2D
 var squire_guard_texture: Texture2D
 var shake_time := 0.0
+var hero_visual_state := "idle"
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	squire_idle_texture = SquireArt.load_texture(SquireArt.IDLE_PATH)
-	squire_attack_texture = SquireArt.load_texture(SquireArt.ATTACK_PATH)
-	squire_guard_texture = SquireArt.load_texture(SquireArt.GUARD_PATH)
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	squire_idle_texture = HeroArtService.texture_for(0, "idle")
+	squire_attack_texture = HeroArtService.texture_for(0, "attack")
+	squire_guard_texture = HeroArtService.texture_for(0, "guard")
 
 func set_battle(value: BattleController) -> void:
 	battle = value
@@ -41,6 +44,7 @@ func _process(delta: float) -> void:
 	hero_lunge = maxf(0.0, hero_lunge - delta)
 	hero_attack_art_time = maxf(0.0, hero_attack_art_time - delta)
 	hero_guard_art_time = maxf(0.0, hero_guard_art_time - delta)
+	hero_visual_state = "guard" if hero_guard_art_time > 0.0 else ("attack" if hero_attack_art_time > 0.0 else "idle")
 	shake_time = maxf(0.0, shake_time - delta)
 	for key in lunges.keys():
 		lunges[key] = maxf(0.0, float(lunges[key]) - delta)
@@ -59,7 +63,7 @@ func _process(delta: float) -> void:
 		hero_projectiles[i]["age"] = float(hero_projectiles[i]["age"]) + delta
 		if float(hero_projectiles[i]["age"]) >= 0.22:
 			hero_projectiles.remove_at(i)
-	if hero_lunge > 0.0 or hero_attack_art_time > 0.0 or hero_guard_art_time > 0.0 or shake_time > 0.0 or not floaters.is_empty() or not impacts.is_empty() or not deaths.is_empty() or not companion_lunges.is_empty() or not hero_projectiles.is_empty():
+	if hero_lunge > 0.0 or hero_attack_art_time > 0.0 or hero_guard_art_time > 0.0 or shake_time > 0.0 or not floaters.is_empty() or not impacts.is_empty() or not deaths.is_empty() or not companion_lunges.is_empty() or not hero_projectiles.is_empty() or battle != null and battle.active:
 		queue_redraw()
 
 func _on_companion_attack(slot: int, target: int, amount: int) -> void:
@@ -73,13 +77,16 @@ func _on_artifact_proc(label: String, color: Color) -> void:
 
 func _on_attack_started(attacker_index: int, target_index: int) -> void:
 	if attacker_index < 0:
-		if attacker_index == -1:
-			hero_attack_art_time = 0.26
+		var selected_form := int(battle.profile.heroes.get(battle.profile.selected_hero_id, {}).get("evolution", 0)) if battle != null and battle.profile != null else 0
+		if attacker_index == -1 or attacker_index == -2:
+			hero_attack_art_time = float(HeroArtService.metadata(selected_form).get("attack_duration", 0.26)) * (1.25 if attacker_index == -2 else 1.0)
 		var style := str(HeroData.HEROES[battle.profile.selected_hero_id]["style"])
 		if attacker_index == -1 and style in ["magic", "arrow", "dark_bolt"]:
 			hero_projectiles.append({"target": target_index, "age": 0.0, "style": style})
 		hero_lunge = 0.0 if style in ["magic", "arrow", "dark_bolt"] and attacker_index == -1 else (0.26 if attacker_index == -2 else 0.19)
 		hero_bash = attacker_index == -2
+		if attacker_index == -2:
+			shake_time = maxf(shake_time, 0.18)
 	else:
 		if str(battle.enemies[attacker_index].get("archetype", "")) in ["RANGED", "MAGIC", "HEALER"]:
 			impacts.append({"pos": _hero_position() + Vector2(0, -50), "age": 0.0, "life": 0.3, "strong": false})
@@ -89,7 +96,8 @@ func _on_attack_started(attacker_index: int, target_index: int) -> void:
 
 func _on_damage_popup(target_index: int, amount: int, critical: bool, bash: bool) -> void:
 	if target_index < 0:
-		hero_guard_art_time = 0.30
+		var evolution := int(battle.profile.heroes.get("knight", {}).get("evolution", 0)) if battle != null and battle.profile != null and battle.profile.selected_hero_id == "knight" else 0
+		hero_guard_art_time = float(HeroArtService.metadata(evolution).get("hit_duration", 0.30))
 	var pos := _hero_position() if target_index < 0 else _enemy_position(target_index)
 	var text_value := str(amount)
 	if critical:
@@ -268,17 +276,30 @@ func _enemy_position(index: int) -> Vector2:
 	return Vector2(size.x * (0.59 + (index % 3) * 0.14), size.y * (0.54 + int(index / 3) * 0.20))
 
 func _draw_hero(pos: Vector2, unit: float, flash: bool) -> void:
-	draw_set_transform(pos, 0.0, Vector2.ONE * unit)
 	var hero_id := battle.profile.selected_hero_id if battle != null and battle.profile != null else "knight"
 	var hero_record: Dictionary = battle.profile.heroes[hero_id] if battle != null and battle.profile != null else {"evolution": 0}
+	var form := clampi(int(hero_record.get("evolution", 0)), 0, 4) if hero_id == "knight" else 0
+	var metadata := HeroArtService.metadata(form)
+	if hero_visual_state == "idle":
+		pos.y += sin(float(Time.get_ticks_msec()) * 0.002) * 1.5 * unit
+	draw_set_transform(pos + metadata.get("offset", Vector2.ZERO) * unit, 0.0, Vector2.ONE * unit * float(metadata.get("scale", 1.0)))
 	if hero_id != "knight":
 		_draw_other_hero(hero_id, flash)
 		draw_set_transform(Vector2.ZERO)
 		return
-	var form := int(hero_record.get("evolution", 0))
-	if form == 0 and _draw_squire_art():
+	if float(metadata.get("aura", 0.0)) > 0.0:
+		var aura_color := Color("fff0aa", float(metadata["aura"]))
+		var aura_texture := HeroArtService.texture_for(form, "aura")
+		if aura_texture != null:
+			var aura_height := 320.0
+			var aura_width := aura_height * float(aura_texture.get_width()) / float(aura_texture.get_height())
+			draw_texture_rect(aura_texture, Rect2(-aura_width * 0.5, -260, aura_width, aura_height), false)
+		else:
+			draw_circle(Vector2(0, -102), 84 if form == 3 else 98, Color(aura_color, 0.10))
+			draw_arc(Vector2(0, -100), 64 if form == 3 else 78, PI, TAU, 32, aura_color, 4 if form == 3 else 6)
+	if _draw_knight_art(form):
 		if flash:
-			draw_circle(Vector2(0, -100), 45, Color(1, 1, 1, 0.32))
+			draw_circle(Vector2(0, -100), 49 if hero_bash else 45, Color(1, 1, 1, 0.4 if hero_bash else 0.32))
 		var art_ratio := battle.hero_hp / float(battle.hero["hp"]) if battle != null and not battle.hero.is_empty() else 1.0
 		_draw_hp_bar(Vector2(-57, -258), 114, art_ratio, Color("65d78c"))
 		draw_string(ThemeDB.fallback_font, Vector2(-57, -270), HeroData.title("knight", hero_record).to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("1d3030"))
@@ -321,14 +342,22 @@ func _draw_hero(pos: Vector2, unit: float, flash: bool) -> void:
 	draw_string(ThemeDB.fallback_font, Vector2(-57, -202), HeroData.title("knight", hero_record).to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 16 if form >= 2 else 20, Color("1d3030"))
 	draw_set_transform(Vector2.ZERO)
 
-func _draw_squire_art() -> bool:
-	var texture := squire_guard_texture if hero_guard_art_time > 0.0 else squire_attack_texture if hero_attack_art_time > 0.0 else squire_idle_texture
+func _draw_knight_art(form: int) -> bool:
+	var state := "guard" if hero_guard_art_time > 0.0 else "attack" if hero_attack_art_time > 0.0 else "idle"
+	var texture: Texture2D = null
+	if form == 0:
+		texture = squire_guard_texture if state == "guard" else squire_attack_texture if state == "attack" else squire_idle_texture
+	else:
+		texture = HeroArtService.texture_for(form, state)
 	if texture == null:
 		return false
-	var art_height := 285.0
+	var art_height := 285.0 * float(HeroArtService.metadata(form).get("portrait_scale", 1.0))
 	var art_width := art_height * float(texture.get_width()) / float(texture.get_height())
 	draw_texture_rect(texture, Rect2(-art_width * 0.5, 38.0 - art_height, art_width, art_height), false)
 	return true
+
+func _draw_squire_art() -> bool:
+	return _draw_knight_art(0)
 
 func _draw_other_hero(id: String, flash: bool) -> void:
 	var robe := Color("5363a3") if id == "mage" else (Color("576b46") if id == "ranger" else (Color("393947") if id == "assassin" else Color("423551")))

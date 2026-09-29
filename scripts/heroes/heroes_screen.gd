@@ -10,6 +10,7 @@ var selected_id := "knight"
 var view := "roster"
 var evolution_result := {}
 var pending_conversion := 0
+var preview_evolution := -1
 
 func configure(value: SaveData, live_battle: BattleController, changed: Callable, retreat: Callable) -> void:
 	profile = value
@@ -50,7 +51,8 @@ func _build_roster() -> void:
 		var data: Dictionary = HeroData.HEROES[id]
 		var record: Dictionary = profile.heroes[id]
 		var owned := bool(record["unlocked"])
-		var panel := _panel(EquipmentData.COLORS[int(data["rarity"])] if owned else Color("586462"))
+		var card_border: Color = HeroArtService.frame_color(int(record["evolution"])) if id == "knight" and owned else (EquipmentData.COLORS[int(data["rarity"])] if owned else Color("586462"))
+		var panel := _panel(card_border)
 		add_child(panel)
 		var box := VBoxContainer.new()
 		panel.add_child(box)
@@ -72,7 +74,8 @@ func _build_detail() -> void:
 	var back := _button("BACK TO HERO ROSTER")
 	back.pressed.connect(_back)
 	add_child(back)
-	var panel := _panel(EquipmentData.COLORS[int(data["rarity"])] if owned else Color("586462"))
+	var detail_border: Color = HeroArtService.frame_color(int(record["evolution"])) if selected_id == "knight" and owned else (EquipmentData.COLORS[int(data["rarity"])] if owned else Color("586462"))
+	var panel := _panel(detail_border)
 	add_child(panel)
 	var box := VBoxContainer.new()
 	panel.add_child(box)
@@ -111,8 +114,42 @@ func _build_detail() -> void:
 		unlock.pressed.connect(_unlock)
 		box.add_child(unlock)
 	_build_path(data, record)
+	if selected_id == "knight":
+		_build_form_preview(record)
 	if selected_id != "knight":
 		_build_conversion(record)
+
+func _build_form_preview(record: Dictionary) -> void:
+	add_child(_label("FORM PREVIEW  •  VISUAL ONLY", 30, Color("e9c87d")))
+	var stage := int(record["evolution"]) if preview_evolution < 0 else preview_evolution
+	var row := GridContainer.new()
+	row.columns = 3
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	add_child(row)
+	for index in HeroArtService.FORMS.size():
+		var button := _button(["SQUIRE", "KNIGHT", "ROYAL KNIGHT", "PALADIN", "DIVINE"][index])
+		button.custom_minimum_size = Vector2(0, 48)
+		button.add_theme_font_size_override("font_size", 15)
+		button.modulate = HeroArtService.frame_color(index)
+		button.pressed.connect(_preview_form.bind(index))
+		row.add_child(button)
+	var preview_row := VBoxContainer.new()
+	preview_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	add_child(preview_row)
+	var preview := HeroPortrait.new()
+	preview.hero_id = "knight"
+	preview.evolution = stage
+	preview.locked_preview = stage > int(record["evolution"])
+	preview.custom_minimum_size = Vector2(155, 180)
+	preview.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	preview_row.add_child(preview)
+	var preview_status := _label("%s  •  %s" % [HeroArtService.TITLES[stage].to_upper(), "LOCKED" if stage > int(record["evolution"]) else "AVAILABLE"], 24, HeroArtService.frame_color(stage))
+	preview_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	preview_row.add_child(preview_status)
+
+func _preview_form(stage: int) -> void:
+	preview_evolution = stage
+	refresh()
 
 func _build_path(data: Dictionary, record: Dictionary) -> void:
 	add_child(_label("EVOLUTION PATH", 32, Color("e9c87d")))
@@ -150,11 +187,24 @@ func _build_conversion(record: Dictionary) -> void:
 
 func _build_evolution_result() -> void:
 	add_child(_label("HERO EVOLVED", 43, Color("f9e9a5")))
-	var portrait := HeroPortrait.new()
-	portrait.hero_id = selected_id
-	portrait.evolution = int(profile.heroes[selected_id]["evolution"])
-	portrait.custom_minimum_size = Vector2(310, 355)
-	add_child(portrait)
+	var evolution_row := HBoxContainer.new()
+	evolution_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	add_child(evolution_row)
+	var old_portrait := HeroPortrait.new()
+	old_portrait.hero_id = selected_id
+	old_portrait.evolution = maxi(0, int(profile.heroes[selected_id]["evolution"]) - 1)
+	old_portrait.custom_minimum_size = Vector2(220, 270)
+	evolution_row.add_child(old_portrait)
+	var new_portrait := HeroPortrait.new()
+	new_portrait.hero_id = selected_id
+	new_portrait.evolution = int(profile.heroes[selected_id]["evolution"])
+	new_portrait.custom_minimum_size = Vector2(260, 320)
+	evolution_row.add_child(new_portrait)
+	new_portrait.modulate.a = 0.35
+	new_portrait.scale = Vector2(0.94, 0.94)
+	var reveal := create_tween()
+	reveal.tween_property(new_portrait, "modulate:a", 1.0, 0.45)
+	reveal.parallel().tween_property(new_portrait, "scale", Vector2.ONE, 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	add_child(_label("%s  →  %s" % [evolution_result["previous"], evolution_result["next"]], 37, Color("e9c87d")))
 	add_child(_label("Element: %s  •  New title earned" % evolution_result["element"], 29, Color("a9d6ad")))
 	var before: Dictionary = evolution_result.get("before_stats", {})

@@ -3,25 +3,33 @@ extends Control
 
 var hero_id := "knight"
 var evolution := 0
-var squire_portrait_texture: Texture2D
+var locked_preview := false
+var profile_frame := ""
 
 func _ready() -> void:
-	squire_portrait_texture = SquireArt.load_texture(SquireArt.PORTRAIT_PATH)
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 func _draw() -> void:
 	var scale_factor := minf(size.x / 210.0, size.y / 250.0)
 	draw_set_transform(Vector2((size.x - 210.0 * scale_factor) * 0.5, (size.y - 250.0 * scale_factor) * 0.5), 0.0, Vector2.ONE * scale_factor)
 	draw_rect(Rect2(0, 0, 210, 250), Color("173034"))
+	var border := Color("efcf8e") if profile_frame == "golden_frame" else HeroArtService.frame_color(evolution) if hero_id == "knight" else Color("75827d")
+	draw_rect(Rect2(3, 3, 204, 244), border, false, 5)
 	draw_circle(Vector2(160, 42), 28, Color("d9c384", 0.45))
-	if hero_id != "knight" or evolution > 0:
+	if hero_id == "knight":
+		var portrait_texture := HeroArtService.texture_for(evolution, "portrait")
+		if portrait_texture != null:
+			var aspect := float(portrait_texture.get_width()) / float(portrait_texture.get_height())
+			var width := minf(210.0, 250.0 * aspect)
+			var height := width / aspect
+			draw_texture_rect(portrait_texture, Rect2((210.0 - width) * 0.5, 250.0 - height, width, height), false)
+			return
+		if locked_preview:
+			_draw_variant()
+			draw_rect(Rect2(0, 0, 210, 250), Color("10191a", 0.63))
+			return
+	if hero_id != "knight":
 		_draw_variant()
-		return
-	if squire_portrait_texture != null:
-		var portrait_size := minf(210.0, 250.0)
-		var aspect := float(squire_portrait_texture.get_width()) / float(squire_portrait_texture.get_height())
-		var width := minf(portrait_size, portrait_size * aspect)
-		var height := width / aspect
-		draw_texture_rect(squire_portrait_texture, Rect2((210.0 - width) * 0.5, (250.0 - height) * 0.5, width, height), false)
 		return
 	draw_colored_polygon(PackedVector2Array([Vector2(0, 218), Vector2(45, 166), Vector2(96, 217), Vector2(160, 164), Vector2(210, 224), Vector2(210, 250), Vector2(0, 250)]), Color("425c50"))
 	draw_rect(Rect2(62, 184, 30, 57), Color("4d4438"))

@@ -21,7 +21,18 @@ func refresh() -> void:
 	add_child(_label("ACCOUNT & CLOUD", 40))
 	var meta: Dictionary = profile.account_meta
 	var frame_name := "Golden Profile Frame" if profile.owned_cosmetics.has("golden_frame") and profile.equipped_cosmetics.get("Profile Frame", "") == "golden_frame" else "No Frame"
-	add_child(_label("Player ID  %s\n%s • %s • %s\nCreated %s\nHero %s • Level %d • Power %d\nCampaign %s %d-%d • Guild %s • PvP %s" % [meta.player_id, meta.display_name, meta.account_type, frame_name, str(meta.created_at).substr(0, 10), HeroData.title(profile.selected_hero_id, profile.heroes[profile.selected_hero_id]), profile.level, profile.power(), CampaignData.DIFFICULTIES[profile.campaign_difficulty], profile.region, profile.stage, "None" if str(meta.guild_id) == "" else meta.guild_id, profile.pvp_state.get("highest_rank", "Bronze")], 27))
+	var profile_row := VBoxContainer.new()
+	add_child(profile_row)
+	var avatar := HeroPortrait.new()
+	avatar.hero_id = profile.selected_hero_id
+	avatar.evolution = int(profile.heroes[profile.selected_hero_id].get("evolution", 0))
+	avatar.profile_frame = "golden_frame" if frame_name == "Golden Profile Frame" else ""
+	avatar.custom_minimum_size = Vector2(100, 120)
+	avatar.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	profile_row.add_child(avatar)
+	var profile_details := _label("Player ID  %s\n%s • %s • %s\nCreated %s\nHero %s • Level %d • Power %d\nCampaign %s %d-%d • Guild %s • PvP %s" % [meta.player_id, meta.display_name, meta.account_type, frame_name, str(meta.created_at).substr(0, 10), HeroData.title(profile.selected_hero_id, profile.heroes[profile.selected_hero_id]), profile.level, profile.power(), CampaignData.DIFFICULTIES[profile.campaign_difficulty], profile.region, profile.stage, "None" if str(meta.guild_id) == "" else meta.guild_id, profile.pvp_state.get("highest_rank", "Bronze")], 27)
+	profile_details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	profile_row.add_child(profile_details)
 	var name_row := HBoxContainer.new()
 	add_child(name_row)
 	display_edit = LineEdit.new()
