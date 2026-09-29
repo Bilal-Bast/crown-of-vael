@@ -14,10 +14,18 @@ var companion_lunges: Dictionary = {}
 var hero_projectiles: Array[Dictionary] = []
 var hero_lunge := 0.0
 var hero_bash := false
+var hero_attack_art_time := 0.0
+var hero_guard_art_time := 0.0
+var squire_idle_texture: Texture2D
+var squire_attack_texture: Texture2D
+var squire_guard_texture: Texture2D
 var shake_time := 0.0
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	squire_idle_texture = SquireArt.load_texture(SquireArt.IDLE_PATH)
+	squire_attack_texture = SquireArt.load_texture(SquireArt.ATTACK_PATH)
+	squire_guard_texture = SquireArt.load_texture(SquireArt.GUARD_PATH)
 
 func set_battle(value: BattleController) -> void:
 	battle = value
@@ -31,6 +39,8 @@ func set_battle(value: BattleController) -> void:
 
 func _process(delta: float) -> void:
 	hero_lunge = maxf(0.0, hero_lunge - delta)
+	hero_attack_art_time = maxf(0.0, hero_attack_art_time - delta)
+	hero_guard_art_time = maxf(0.0, hero_guard_art_time - delta)
 	shake_time = maxf(0.0, shake_time - delta)
 	for key in lunges.keys():
 		lunges[key] = maxf(0.0, float(lunges[key]) - delta)
@@ -49,7 +59,7 @@ func _process(delta: float) -> void:
 		hero_projectiles[i]["age"] = float(hero_projectiles[i]["age"]) + delta
 		if float(hero_projectiles[i]["age"]) >= 0.22:
 			hero_projectiles.remove_at(i)
-	if hero_lunge > 0.0 or shake_time > 0.0 or not floaters.is_empty() or not impacts.is_empty() or not deaths.is_empty() or not companion_lunges.is_empty() or not hero_projectiles.is_empty():
+	if hero_lunge > 0.0 or hero_attack_art_time > 0.0 or hero_guard_art_time > 0.0 or shake_time > 0.0 or not floaters.is_empty() or not impacts.is_empty() or not deaths.is_empty() or not companion_lunges.is_empty() or not hero_projectiles.is_empty():
 		queue_redraw()
 
 func _on_companion_attack(slot: int, target: int, amount: int) -> void:
@@ -63,6 +73,8 @@ func _on_artifact_proc(label: String, color: Color) -> void:
 
 func _on_attack_started(attacker_index: int, target_index: int) -> void:
 	if attacker_index < 0:
+		if attacker_index == -1:
+			hero_attack_art_time = 0.26
 		var style := str(HeroData.HEROES[battle.profile.selected_hero_id]["style"])
 		if attacker_index == -1 and style in ["magic", "arrow", "dark_bolt"]:
 			hero_projectiles.append({"target": target_index, "age": 0.0, "style": style})
@@ -76,6 +88,8 @@ func _on_attack_started(attacker_index: int, target_index: int) -> void:
 	queue_redraw()
 
 func _on_damage_popup(target_index: int, amount: int, critical: bool, bash: bool) -> void:
+	if target_index < 0:
+		hero_guard_art_time = 0.30
 	var pos := _hero_position() if target_index < 0 else _enemy_position(target_index)
 	var text_value := str(amount)
 	if critical:
@@ -262,6 +276,14 @@ func _draw_hero(pos: Vector2, unit: float, flash: bool) -> void:
 		draw_set_transform(Vector2.ZERO)
 		return
 	var form := int(hero_record.get("evolution", 0))
+	if form == 0 and _draw_squire_art():
+		if flash:
+			draw_circle(Vector2(0, -100), 45, Color(1, 1, 1, 0.32))
+		var art_ratio := battle.hero_hp / float(battle.hero["hp"]) if battle != null and not battle.hero.is_empty() else 1.0
+		_draw_hp_bar(Vector2(-57, -258), 114, art_ratio, Color("65d78c"))
+		draw_string(ThemeDB.fallback_font, Vector2(-57, -270), HeroData.title("knight", hero_record).to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("1d3030"))
+		draw_set_transform(Vector2.ZERO)
+		return
 	if form >= 3:
 		draw_arc(Vector2(0, -85), 80 if form == 4 else 68, 0, TAU, 36, Color("fff2a3", 0.65), 6)
 	if form >= 2:
@@ -298,6 +320,15 @@ func _draw_hero(pos: Vector2, unit: float, flash: bool) -> void:
 	_draw_hp_bar(Vector2(-57, -190), 114, ratio, Color("65d78c"))
 	draw_string(ThemeDB.fallback_font, Vector2(-57, -202), HeroData.title("knight", hero_record).to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 16 if form >= 2 else 20, Color("1d3030"))
 	draw_set_transform(Vector2.ZERO)
+
+func _draw_squire_art() -> bool:
+	var texture := squire_guard_texture if hero_guard_art_time > 0.0 else squire_attack_texture if hero_attack_art_time > 0.0 else squire_idle_texture
+	if texture == null:
+		return false
+	var art_height := 285.0
+	var art_width := art_height * float(texture.get_width()) / float(texture.get_height())
+	draw_texture_rect(texture, Rect2(-art_width * 0.5, 38.0 - art_height, art_width, art_height), false)
+	return true
 
 func _draw_other_hero(id: String, flash: bool) -> void:
 	var robe := Color("5363a3") if id == "mage" else (Color("576b46") if id == "ranger" else (Color("393947") if id == "assassin" else Color("423551")))

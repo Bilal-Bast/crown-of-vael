@@ -97,6 +97,7 @@ func _run() -> void:
 	var main := (load("res://scenes/main.tscn") as PackedScene).instantiate()
 	root.add_child(main)
 	(main.get("profile") as SaveData).last_login_reward_date = ""
+	main.call("_show_login_popup")
 	check(main.get("quests_screen") != null and main.get("login_screen") != null, "screens instantiated")
 	check(main.get("login_popup") != null, "login popup instantiated")
 	await process_frame
