@@ -121,13 +121,16 @@ func _guild_view() -> void:
 	for member in roster:
 		var frame := " • Golden Profile Frame" if profile.owned_cosmetics.has("golden_frame") and profile.equipped_cosmetics.get("Profile Frame", "") == "golden_frame" and str(member.id) == str(profile.account_meta.player_id) else ""
 		var member_row := HBoxContainer.new()
+		member_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		add_child(member_row)
 		var member_hero := str(member.get("hero", "knight"))
 		var member_evolution := int(member.get("evolution", 0))
 		if str(member.id) == str(profile.account_meta.player_id):
 			member_evolution = int(profile.heroes.get(member_hero, {}).get("evolution", member_evolution))
 		_add_portrait(member_row, member_hero, member_evolution, "golden_frame" if not frame.is_empty() else "", Vector2(92, 112))
-		member_row.add_child(_label("%s%s • %d Power • %s • %s contribution • Active %s" % [member.name, frame, int(member.power), str(member.hero).capitalize(), member.get("role", "Member"), str(member.get("last_active", "Unknown"))], 22))
+		var member_details := _label("%s%s • %d Power • %s • %s contribution • Active %s" % [member.name, frame, int(member.power), str(member.hero).capitalize(), member.get("role", "Member"), str(member.get("last_active", "Unknown"))], 22)
+		member_details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		member_row.add_child(member_details)
 	var leave := _button("LEAVE GUILD")
 	leave.disabled = state.role == "Leader"
 	leave.pressed.connect(_leave)

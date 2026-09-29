@@ -13,29 +13,47 @@ func _run() -> void:
 	profile.last_login_reward_date = CalendarService.day()
 	(main.get("battle") as BattleController).active = false
 	profile.selected_hero_id = "knight"
-	profile.heroes["knight"]["evolution"] = 2
+	profile.heroes["knight"]["evolution"] = 3
 	main.call("_refresh_ui")
 	var field := main.get("battlefield") as Battlefield
 	main.call("_select_tab", "Battle")
-	await _capture("royal_knight_battle_idle", main)
+	await _capture("paladin_battle_idle", main)
 	field._on_attack_started(-1, 0)
 	await process_frame
-	await _capture("royal_knight_battle_attack", main)
+	await _capture("paladin_battle_attack", main)
 	field._on_damage_popup(-1, 35, false, false)
 	await process_frame
-	await _capture("royal_knight_battle_guard", main)
+	await _capture("paladin_battle_guard", main)
 	var heroes := main.get("heroes_screen") as HeroesScreen
 	var heroes_area := main.get("heroes_area") as ScrollContainer
 	main.call("_select_tab", "Account")
-	await _capture("royal_knight_profile", main)
+	await _capture("paladin_account_profile", main)
 	main.call("_select_tab", "Social")
 	var social := main.get("social_screen") as SocialScreen
 	social.tab = "Friends"
 	if not profile.friends_state.friends.is_empty():
 		profile.friends_state.friends[0]["hero"] = "knight"
-		profile.friends_state.friends[0]["evolution"] = 2
+		profile.friends_state.friends[0]["evolution"] = 3
 	social.refresh()
-	await _capture("royal_knight_social", main)
+	await _capture("paladin_friends", main)
+	social.tab = "Guild"
+	if profile.guild_state.guild.is_empty():
+		social.guild.create("Paladin Testers", "PAL", "Visual art verification")
+	social.refresh()
+	var roster_y := 0
+	for child in social.get_children():
+		if child is Label and (child as Label).text.begins_with("ROSTER"):
+			roster_y = int(child.position.y)
+	(main.get("social_area") as ScrollContainer).scroll_vertical = maxi(0, roster_y - 30)
+	await _capture("paladin_guild_roster", main)
+	social.tab = "PvP"
+	var opponent_result: Dictionary = social.pvp.opponents()
+	social.opponents = opponent_result.get("opponents", [])
+	if not social.opponents.is_empty():
+		social.opponents[0]["snapshot"]["hero_id"] = "knight"
+		social.opponents[0]["snapshot"]["evolution"] = 3
+	social.refresh()
+	await _capture("paladin_pvp_opponent", main)
 	main.call("_select_tab", "Heroes")
 	heroes.selected_id = "knight"
 	heroes.view = "detail"
@@ -45,12 +63,12 @@ func _run() -> void:
 		(main.get("heroes_area") as ScrollContainer).scroll_vertical = 0
 		await _capture("knight_form_%d" % stage, main, heroes_area, true)
 	heroes_area.scroll_vertical = 0
-	await _capture("royal_knight_heroes_portrait", main)
+	await _capture("paladin_heroes_portrait", main)
 	heroes.preview_evolution = -1
-	heroes.evolution_result = {"previous": "Knight", "next": "Royal Knight", "element": "Steel", "before_stats": {"hp": 115, "atk": 12, "armor": 6}, "after_stats": {"hp": 132, "atk": 14, "armor": 7}}
+	heroes.evolution_result = {"previous": "Royal Knight", "next": "Paladin", "element": "Steel", "before_stats": {"hp": 132, "atk": 14, "armor": 7}, "after_stats": {"hp": 150, "atk": 16, "armor": 9}}
 	heroes.view = "evolution_result"
 	heroes.refresh()
-	await _capture("knight_to_royal_knight_evolution_result", main)
+	await _capture("royal_knight_to_paladin_evolution_result", main)
 	print("PHASE 12A VISUAL CAPTURE: %s" % ("FAIL (%d)" % failures if failures else "PASS"))
 	quit(1 if failures else 0)
 

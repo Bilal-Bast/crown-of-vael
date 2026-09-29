@@ -26,15 +26,20 @@ func _run() -> void:
 	for slot in ["idle", "attack", "guard", "portrait"]:
 		check(HeroArtService.texture_for(2, slot) != null, "Royal Knight %s asset loads" % slot)
 		check(HeroArtService.resolve_path(2, slot) == "res://assets/heroes/knight/royal_knight/%s.png" % slot, "Royal Knight %s resolves real asset path" % slot)
-	check(HeroArtService.texture_for(3, "idle") == null, "missing Paladin art returns procedural fallback signal")
+	for slot in ["idle", "attack", "guard", "portrait"]:
+		var paladin_texture := HeroArtService.texture_for(3, slot)
+		check(paladin_texture != null, "Paladin %s asset loads" % slot)
+		if paladin_texture != null:
+			check(paladin_texture.get_image().detect_alpha(), "Paladin %s transparency retained" % slot)
+		check(HeroArtService.resolve_path(3, slot) == "res://assets/heroes/knight/paladin/%s.png" % slot, "Paladin %s resolves real asset path" % slot)
 	check(HeroArtService.texture_for(4, "portrait") == null, "missing Divine Paladin portrait returns fallback signal")
-	check(HeroArtService.resolve_path(3, "attack").is_empty(), "missing battle state path is empty")
+	check(HeroArtService.resolve_path(4, "idle").is_empty(), "missing Divine battle state path is empty")
 	var squire_path := HeroArtService.asset_path(0, "idle")
 	for i in 100:
 		HeroArtService.texture_for(0, "idle")
 	check(HeroArtService.cached_load_count(squire_path) == 1, "repeated battle lookup loads texture once")
 	var report := HeroArtService.validation_report()
-	check(report.size() >= 8, "validation reports remaining missing evolution slots without failing")
+	check(report.size() >= 4, "validation reports remaining missing evolution slots without failing")
 	var profile := SaveData.new()
 	profile.heroes["knight"]["evolution"] = 1
 	var battle := BattleController.new()
@@ -66,6 +71,20 @@ func _run() -> void:
 	field._on_damage_popup(-1, 1, false, false)
 	field._process(0.01)
 	check(HeroArtService.texture_for(2, field.hero_visual_state) != null, "Royal Knight guard state uses supplied guard art")
+	profile.heroes["knight"]["evolution"] = 3
+	field.hero_visual_state = "idle"
+	field.hero_guard_art_time = 0.0
+	check(HeroArtService.texture_for(3, field.hero_visual_state) != null, "Paladin idle uses supplied idle art")
+	field._on_attack_started(-1, 0)
+	field._process(0.01)
+	check(field.hero_visual_state == "attack" and HeroArtService.texture_for(3, field.hero_visual_state) != null, "Paladin attack transition uses supplied art")
+	field._process(0.30)
+	check(field.hero_visual_state == "idle", "Paladin attack returns to idle")
+	field.hero_attack_art_time = 0.0
+	field._on_damage_popup(-1, 1, false, false)
+	field._process(0.01)
+	check(field.hero_visual_state == "guard" and HeroArtService.texture_for(3, field.hero_visual_state) != null, "Paladin guard transition uses supplied art")
+	check(float(HeroArtService.metadata(3).aura) > 0.0 and float(HeroArtService.metadata(3).aura) < float(HeroArtService.metadata(4).aura), "Paladin holy aura stays softer than Divine aura")
 	field._on_attack_started(-2, 0)
 	check(field.hero_bash and field.shake_time > 0.0 and field.hero_lunge == 0.26, "Shield Bash visual emphasis")
 	check(profile.gold == gold_before, "visual events do not grant rewards or alter economy")
