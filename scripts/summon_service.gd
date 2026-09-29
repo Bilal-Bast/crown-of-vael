@@ -18,7 +18,8 @@ func can_summon(banner: String, count: int, source: String = "gems", day: String
 	var state: Dictionary = profile.banners[banner]
 	var today := day if day != "" else local_day()
 	match source:
-		"gems": return SummonData.COSTS.has(count) and profile.gems >= int(SummonData.COSTS[count])
+		"gems": return SummonData.COSTS.has(count) and (profile.summon_tickets.get(banner, 0) >= count or profile.gems >= int(SummonData.COSTS[count]))
+		"ticket": return count > 0 and int(profile.summon_tickets.get(banner, 0)) >= count
 		"daily": return count == 1 and state.get("free_day", "") != today
 		"ad": return count == 1 and (state.get("ad_day", "") != today or int(state.get("ad_count", 0)) < SummonData.AD_DAILY_LIMIT)
 	return false
@@ -32,7 +33,12 @@ func summon(banner: String, count: int, source: String = "gems", day: String = "
 	if source == "ad" and not ad_provider.show_rewarded_ad():
 		return results
 	if source == "gems":
-		profile.gems -= int(SummonData.COSTS[count])
+		if int(profile.summon_tickets.get(banner, 0)) >= count:
+			profile.summon_tickets[banner] = int(profile.summon_tickets[banner]) - count
+		else:
+			profile.gems -= int(SummonData.COSTS[count])
+	elif source == "ticket":
+		profile.summon_tickets[banner] = int(profile.summon_tickets[banner]) - count
 	elif source == "daily":
 		state["free_day"] = today
 	else:
@@ -69,6 +75,11 @@ func summon(banner: String, count: int, source: String = "gems", day: String = "
 			profile.artifact_dust += 2
 			reward = {"kind": id, "rarity": rarity}
 		results.append(reward)
+		var tracker := ProgressionService.new(profile)
+		tracker.report("summon_performed")
+		if rarity >= 4:
+			tracker.report("summon_rarity_%d" % rarity)
+			tracker.report("summon_%s_rarity_%d" % [banner, rarity])
 		state["exp"] = int(state["exp"]) + SummonData.EXP_PER_SUMMON
 		while int(state["level"]) < SummonData.MAX_LEVEL and int(state["exp"]) >= SummonData.exp_to_next(int(state["level"])):
 			state["exp"] = int(state["exp"]) - SummonData.exp_to_next(int(state["level"]))

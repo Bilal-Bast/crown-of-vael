@@ -10,6 +10,8 @@ const ArtifactsScreenScript = preload("res://scripts/artifacts_screen.gd")
 const HeroPortraitScript = preload("res://scripts/hero_portrait.gd")
 const AdventureScreenScript = preload("res://scripts/adventure_screen.gd")
 const HeroesScreenScript = preload("res://scripts/heroes_screen.gd")
+const QuestsScreenScript = preload("res://scripts/quests_screen.gd")
+const LoginScreenScript = preload("res://scripts/login_screen.gd")
 
 const INK := Color("172425")
 const PANEL := Color("253739")
@@ -32,6 +34,11 @@ var summon_area: ScrollContainer
 var companions_area: ScrollContainer
 var artifacts_area: ScrollContainer
 var adventure_area: ScrollContainer
+var quests_area: ScrollContainer
+var login_area: ScrollContainer
+var quests_screen: QuestsScreen
+var login_screen: LoginScreen
+var login_popup: PopupPanel
 var adventure_screen: AdventureScreen
 var pve_service: PveService
 var current_run := {}
@@ -72,6 +79,7 @@ var transition_id := 0
 
 func _ready() -> void:
 	profile = SaveData.load_profile()
+	ProgressionService.new(profile).refresh()
 	pve_service = PveService.new(profile)
 	battle = BattleScript.new()
 	add_child(battle)
@@ -82,7 +90,11 @@ func _ready() -> void:
 	battle.mode_finished.connect(_on_mode_finished)
 	battle.equipment_dropped.connect(_on_equipment_dropped)
 	battle.hero_leveled.connect(_on_hero_leveled)
+	battle.skill_cast.connect(_on_skill_cast)
+	battle.companion_attack.connect(_on_companion_attack)
 	_build_ui()
+	if profile.last_login_reward_date != CalendarService.day():
+		call_deferred("_show_login_popup")
 	if profile.campaign_complete:
 		_show_message("Infernal campaign complete.")
 		_refresh_ui()
@@ -168,6 +180,16 @@ func _build_ui() -> void:
 	adventure_screen.add_theme_constant_override("separation", 14)
 	adventure_area.add_child(adventure_screen)
 	adventure_screen.configure(profile, _start_pve, _return_campaign, _select_campaign_stage)
+	quests_area = _screen_scroll(root)
+	quests_screen = QuestsScreenScript.new()
+	quests_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	quests_area.add_child(quests_screen)
+	quests_screen.configure(profile, _on_progression_claimed)
+	login_area = _screen_scroll(root)
+	login_screen = LoginScreenScript.new()
+	login_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	login_area.add_child(login_screen)
+	login_screen.configure(profile, _on_progression_claimed)
 	_build_navigation(root)
 	_refresh_progression_screens()
 
@@ -326,18 +348,27 @@ func _build_battle_area() -> void:
 func _build_navigation(root: VBoxContainer) -> void:
 	var panel := _panel()
 	root.add_child(panel)
+	var rows := VBoxContainer.new()
+	panel.add_child(rows)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 6)
-	panel.add_child(row)
-	for tab_name in ["Battle", "Adventure", "Heroes", "Equipment", "Skills", "Summon"]:
+	rows.add_child(row)
+	for tab_name in ["Battle", "Adventure", "Heroes", "Equipment", "Skills", "Summon", "Quests", "Login"]:
+		if tab_name == "Skills":
+			row = HBoxContainer.new()
+			row.add_theme_constant_override("separation", 6)
+			rows.add_child(row)
 		var button := Button.new()
 		button.text = tab_name
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.custom_minimum_size.y = 120
+		button.custom_minimum_size.y = 72
 		button.add_theme_font_size_override("font_size", 25)
 		button.pressed.connect(_select_tab.bind(tab_name))
 		row.add_child(button)
 		nav_buttons[tab_name] = button
+	login_popup = PopupPanel.new()
+	login_popup.name = "DailyLoginPopup"
+	add_child(login_popup)
 	_update_navigation()
 
 func _panel() -> PanelContainer:
@@ -425,7 +456,7 @@ func _show_message(value: String) -> void:
 
 func _select_tab(tab_name: String) -> void:
 	selected_tab = tab_name
-	stage_panel.visible = tab_name != "Adventure"
+	stage_panel.visible = tab_name not in ["Adventure", "Quests", "Login"]
 	battle_area.visible = tab_name == "Battle"
 	heroes_area.visible = tab_name == "Heroes"
 	equipment_area.visible = tab_name == "Equipment"
@@ -434,6 +465,8 @@ func _select_tab(tab_name: String) -> void:
 	companions_area.visible = tab_name == "Companions"
 	artifacts_area.visible = tab_name == "Artifacts"
 	adventure_area.visible = tab_name == "Adventure"
+	quests_area.visible = tab_name == "Quests"
+	login_area.visible = tab_name == "Login"
 	placeholder_area.visible = false
 	placeholder_title.text = tab_name.to_upper()
 	if tab_name in ["Heroes", "Equipment"]:
@@ -448,6 +481,38 @@ func _select_tab(tab_name: String) -> void:
 		artifacts_screen.refresh()
 	elif tab_name == "Adventure":
 		adventure_screen.refresh()
+	elif tab_name == "Quests":
+		quests_screen.refresh()
+	elif tab_name == "Login":
+		login_screen.refresh()
+	_update_navigation()
+
+func _show_login_popup() -> void:
+	if profile.last_login_reward_date == CalendarService.day(): return
+	for child in login_popup.get_children(): child.queue_free()
+	var box := VBoxContainer.new()
+	box.custom_minimum_size = Vector2(680, 240)
+	login_popup.add_child(box)
+	box.add_child(_label("DAILY LOGIN  •  DAY %d" % [profile.daily_login_index + 1], 37, GOLD))
+	var reward: Dictionary = ProgressionData.login_reward(profile.daily_login_index)
+	for key in reward:
+		box.add_child(_label("%d %s" % [int(reward[key]), str(key).replace("_", " ").capitalize()], 30, PALE))
+	var claim := Button.new()
+	claim.text = "CLAIM REWARD"
+	claim.custom_minimum_size.y = 82
+	claim.custom_minimum_size.y = 130
+	claim.pressed.connect(_claim_login_popup)
+	box.add_child(claim)
+	login_popup.popup_centered()
+
+func _claim_login_popup() -> void:
+	if ProgressionService.new(profile).claim_login():
+		login_popup.hide()
+		login_screen.refresh()
+		_on_progression_claimed()
+
+func _on_progression_claimed() -> void:
+	_refresh_ui()
 	_update_navigation()
 
 func _start_pve(config: Dictionary) -> void:
@@ -729,6 +794,12 @@ func _on_hero_leveled(new_level: int, gem_bonus: int) -> void:
 	if selected_tab == "Heroes":
 		_refresh_progression_screens()
 
+func _on_skill_cast(_id: String, _slot: int) -> void:
+	ProgressionService.new(profile).report("skill_cast")
+
+func _on_companion_attack(_slot: int, _target: int, amount: int) -> void:
+	ProgressionService.new(profile).report("companion_damage", amount)
+
 func _update_navigation() -> void:
 	for tab_name in nav_buttons:
 		var button: Button = nav_buttons[tab_name]
@@ -741,6 +812,22 @@ func _update_navigation() -> void:
 		button.add_theme_stylebox_override("normal", style)
 		button.add_theme_color_override("font_color", GOLD if selected else MUTED)
 		button.add_theme_color_override("font_hover_color", PALE)
+		var badge := ProgressionService.new(profile).badge(tab_name)
+		button.text = tab_name
+		var dot := button.get_node_or_null("BadgeDot") as ColorRect
+		if dot == null:
+			dot = ColorRect.new()
+			dot.name = "BadgeDot"
+			dot.color = Color("d94f52")
+			dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			dot.anchor_left = 1.0
+			dot.anchor_right = 1.0
+			dot.offset_left = -20
+			dot.offset_right = -7
+			dot.offset_top = 7
+			dot.offset_bottom = 20
+			button.add_child(dot)
+		dot.visible = badge
 
 func _buy_upgrade(stat: String) -> void:
 	if profile.buy_upgrade(stat):
@@ -756,6 +843,7 @@ func _on_stage_cleared() -> void:
 	var cleared_region := profile.region
 	var cleared_stage := profile.stage
 	var gem_reward := profile.record_stage_clear(cleared_stage)
+	ProgressionService.new(profile).report("campaign_stage_cleared")
 	summon_screen.refresh()
 	if selected_tab == "Equipment":
 		_refresh_progression_screens()

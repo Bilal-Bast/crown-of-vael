@@ -82,6 +82,15 @@ func complete(run: Dictionary, result: Dictionary) -> Dictionary:
 			profile.boss_rush_state["full_clear"] = true
 	if mode == "endless":
 		profile.endless_state["best_wave"] = maxi(int(profile.endless_state["best_wave"]), progress)
+	var tracker := ProgressionService.new(profile)
+	if mode == "dungeon" and won:
+		tracker.report("dungeon_completed")
+		if int(run.get("tier", 0)) >= 5: tracker.report("dungeon_tier_5")
+	if mode == "tower" and won: tracker.report("tower_floor_cleared")
+	if mode == "boss_rush": tracker.report("boss_rush_run")
+	if mode == "endless":
+		tracker.report("endless_wave_reached", progress)
+		if bool(run.get("rewarded", false)): tracker.report("endless_rewarded_run")
 	var reward := PveData.reward(run, progress, first)
 	if mode == "dungeon" and not won or mode == "endless" and not bool(run.get("rewarded", false)):
 		for key in reward:

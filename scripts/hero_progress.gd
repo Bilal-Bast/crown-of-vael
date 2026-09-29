@@ -22,6 +22,7 @@ func unlock(id: String) -> bool:
 		return false
 	record["pieces"] = int(record["pieces"]) - cost
 	record["unlocked"] = true
+	ProgressionService.new(profile).report("hero_unlocked")
 	_claim_milestones()
 	profile.save()
 	return true
@@ -38,6 +39,7 @@ func star_up(id: String) -> bool:
 		return false
 	record["pieces"] = int(record["pieces"]) - cost
 	record["stars"] = stars + 1
+	ProgressionService.new(profile).report("hero_starred")
 	_claim_milestones()
 	profile.save()
 	return true
@@ -60,6 +62,7 @@ func evolve(id: String) -> Dictionary:
 	profile.gold -= int(cost["gold"])
 	profile.evolution_crests -= int(cost["crests"])
 	record["evolution"] = stage + 1
+	ProgressionService.new(profile).report("hero_evolved")
 	if id == "knight":
 		profile.evolution = stage + 1 # Phase 3–6 compatibility field.
 	_claim_milestones()
@@ -100,6 +103,8 @@ func _claim_milestones() -> void:
 				earned = true
 		if earned:
 			profile.hero_milestones.append(key)
+			var achievement_id: String = {"heroes_2": "heroes_unlocked_2", "heroes_5": "heroes_unlocked_5", "hero_star_3": "hero_max_stars_3", "evolve_knight_1": "knight_evolution_1", "evolve_knight_2": "knight_evolution_2", "evolve_knight_3": "knight_evolution_3", "evolve_knight_4": "knight_evolution_4"}.get(key, "")
+			if achievement_id != "": profile.achievement_claimed[achievement_id] = true
 			var reward: Dictionary = HeroData.MILESTONES[key]
 			profile.gems += int(reward["gems"])
 			profile.evolution_crests += int(reward["crests"])

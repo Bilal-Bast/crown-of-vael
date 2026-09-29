@@ -35,6 +35,17 @@ func refresh() -> void:
 		headbox.add_child(hub)
 		for screen_name in ["Companions", "Artifacts"]:
 			var open := _button("OPEN %s" % screen_name.to_upper())
+			if ProgressionService.new(profile).badge(screen_name):
+				var dot := ColorRect.new()
+				dot.color = Color("d94f52")
+				dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				dot.anchor_left = 1.0
+				dot.anchor_right = 1.0
+				dot.offset_left = -22
+				dot.offset_right = -8
+				dot.offset_top = 8
+				dot.offset_bottom = 22
+				open.add_child(dot)
 			open.pressed.connect(on_open.bind(screen_name))
 			hub.add_child(open)
 	if notice != "":
@@ -79,7 +90,8 @@ func _build_banner(banner: String) -> void:
 	paid.add_theme_constant_override("separation", 8)
 	box.add_child(paid)
 	for count in [1, 10, 50]:
-		var button := _button("%dx\n%d GEMS" % [count, SummonData.COSTS[count]])
+		var tickets := int(profile.summon_tickets.get(banner, 0))
+		var button := _button("%dx\n%d TICKETS" % [count, count] if tickets >= count else "%dx\n%d GEMS" % [count, SummonData.COSTS[count]])
 		button.disabled = not service.can_summon(banner, count)
 		button.pressed.connect(_summon.bind(banner, count, "gems"))
 		paid.add_child(button)

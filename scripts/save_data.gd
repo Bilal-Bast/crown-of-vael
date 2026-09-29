@@ -49,6 +49,28 @@ var artifact_dust := 0
 var artifacts := {}
 var equipped_artifact_slots: Array[String] = ["", "", "", "", "", ""]
 var save_path := SAVE_PATH
+var daily_reset_date := ""
+var weekly_reset_week := ""
+var daily_quest_ids: Array[String] = []
+var weekly_quest_ids: Array[String] = []
+var lifetime_stats := {}
+var daily_counters := {}
+var weekly_counters := {}
+var daily_claimed := {}
+var weekly_claimed := {}
+var achievement_claimed := {}
+var daily_activity := 0
+var weekly_activity := 0
+var daily_activity_claimed := {}
+var weekly_activity_claimed := {}
+var daily_activity_awarded := {}
+var weekly_activity_awarded := {}
+var daily_login_index := 0
+var monthly_login_index := 0
+var last_login_reward_date := ""
+var last_monthly_reward_date := ""
+var summon_tickets := {"equipment": 0, "skills": 0, "companions": 0, "artifacts": 0}
+var quest_intro_seen := false
 
 func _init() -> void:
 	for id in HeroData.HEROES:
@@ -70,6 +92,26 @@ static func load_from(path: String) -> SaveData:
 	if not value is Dictionary:
 		return profile
 	var data: Dictionary = value
+	profile.daily_reset_date = str(data.get("daily_reset_date", ""))
+	profile.weekly_reset_week = str(data.get("weekly_reset_week", ""))
+	for id in data.get("daily_quest_ids", []): profile.daily_quest_ids.append(str(id))
+	for id in data.get("weekly_quest_ids", []): profile.weekly_quest_ids.append(str(id))
+	for key in ["lifetime_stats", "daily_counters", "weekly_counters", "daily_claimed", "weekly_claimed", "achievement_claimed", "daily_activity_claimed", "weekly_activity_claimed", "daily_activity_awarded", "weekly_activity_awarded"]:
+		if data.get(key, {}) is Dictionary:
+			profile.set(key, data[key].duplicate(true) if data.has(key) else {})
+	if not data.has("daily_activity_awarded"): profile.daily_activity_awarded = profile.daily_claimed.duplicate(true)
+	if not data.has("weekly_activity_awarded"): profile.weekly_activity_awarded = profile.weekly_claimed.duplicate(true)
+	profile.daily_activity = maxi(0, int(data.get("daily_activity", 0)))
+	profile.weekly_activity = maxi(0, int(data.get("weekly_activity", 0)))
+	profile.daily_login_index = posmod(int(data.get("daily_login_index", 0)), 7)
+	profile.monthly_login_index = posmod(int(data.get("monthly_login_index", 0)), 28)
+	profile.last_login_reward_date = str(data.get("last_login_reward_date", ""))
+	profile.last_monthly_reward_date = str(data.get("last_monthly_reward_date", ""))
+	profile.quest_intro_seen = bool(data.get("quest_intro_seen", false))
+	var saved_tickets: Variant = data.get("summon_tickets", {})
+	if saved_tickets is Dictionary:
+		for banner in profile.summon_tickets:
+			profile.summon_tickets[banner] = maxi(0, int(saved_tickets.get(banner, 0)))
 	profile.stage = clampi(int(data.get("stage", 1)), 1, GameData.MAX_STAGE)
 	profile.campaign_difficulty = clampi(int(data.get("campaign_difficulty", 0)), 0, 5)
 	profile.highest_difficulty_unlocked = clampi(int(data.get("highest_difficulty_unlocked", profile.campaign_difficulty)), profile.campaign_difficulty, 5)
@@ -110,6 +152,9 @@ static func load_from(path: String) -> SaveData:
 	for key in data.get("hero_milestones", []):
 		if HeroData.MILESTONES.has(str(key)) and not profile.hero_milestones.has(str(key)):
 			profile.hero_milestones.append(str(key))
+	var legacy_achievement_ids := {"heroes_2": "heroes_unlocked_2", "heroes_5": "heroes_unlocked_5", "hero_star_3": "hero_max_stars_3", "evolve_knight_1": "knight_evolution_1", "evolve_knight_2": "knight_evolution_2", "evolve_knight_3": "knight_evolution_3", "evolve_knight_4": "knight_evolution_4"}
+	for key in profile.hero_milestones:
+		if legacy_achievement_ids.has(key): profile.achievement_claimed[legacy_achievement_ids[key]] = true
 	profile.evolution_crests = maxi(0, int(data.get("evolution_crests", 0)))
 	profile.hero_pieces = maxi(0, int(data.get("hero_pieces", 0)))
 	profile.unlocked_dungeon_tier = clampi(int(data.get("unlocked_dungeon_tier", 1)), 1, 5)
@@ -246,7 +291,17 @@ func save() -> void:
 		push_error("Could not save profile: %s" % error_string(FileAccess.get_open_error()))
 		return
 	file.store_string(JSON.stringify({
-		"phase4_version": 1, "phase5_version": 1, "phase6_version": 1, "phase7_version": 1, "phase8_version": 1,
+		"phase4_version": 1, "phase5_version": 1, "phase6_version": 1, "phase7_version": 1, "phase8_version": 1, "phase9_version": 1,
+		"daily_reset_date": daily_reset_date, "weekly_reset_week": weekly_reset_week,
+		"daily_quest_ids": daily_quest_ids, "weekly_quest_ids": weekly_quest_ids,
+		"lifetime_stats": lifetime_stats, "daily_counters": daily_counters, "weekly_counters": weekly_counters,
+		"daily_claimed": daily_claimed, "weekly_claimed": weekly_claimed, "achievement_claimed": achievement_claimed,
+		"daily_activity": daily_activity, "weekly_activity": weekly_activity,
+		"daily_activity_claimed": daily_activity_claimed, "weekly_activity_claimed": weekly_activity_claimed,
+		"daily_activity_awarded": daily_activity_awarded, "weekly_activity_awarded": weekly_activity_awarded,
+		"daily_login_index": daily_login_index, "monthly_login_index": monthly_login_index,
+		"last_login_reward_date": last_login_reward_date, "last_monthly_reward_date": last_monthly_reward_date,
+		"summon_tickets": summon_tickets, "quest_intro_seen": quest_intro_seen,
 		"stage": stage,
 		"campaign_difficulty": campaign_difficulty, "highest_difficulty_unlocked": highest_difficulty_unlocked,
 		"region": region, "highest_stages": highest_stages, "campaign_first_clears": campaign_first_clears,
@@ -280,11 +335,14 @@ func add_skill_copy(id: String, rarity: int) -> void:
 		skills[id] = {"level": 1, "duplicates": 0, "rarity": clampi(rarity, 0, 7)}
 		return
 	var record: Dictionary = skills[id]
+	var previous_level := int(record["level"])
 	record["rarity"] = maxi(int(record["rarity"]), rarity)
 	record["duplicates"] = int(record["duplicates"]) + 1
 	while int(record["level"]) < 99 and int(record["duplicates"]) >= SkillData.copies_to_level(int(record["level"])):
 		record["duplicates"] = int(record["duplicates"]) - SkillData.copies_to_level(int(record["level"]))
 		record["level"] = int(record["level"]) + 1
+	if int(record["level"]) > previous_level:
+		ProgressionService.new(self).report("skill_upgraded", int(record["level"]) - previous_level)
 
 func equip_skill(id: String, slot: int) -> bool:
 	if not skills.has(id) or slot < 0 or slot >= 4:
@@ -342,6 +400,7 @@ func level_companion(id: String) -> bool:
 	gold -= int(cost["gold"])
 	companion_essence -= int(cost["essence"])
 	record["level"] = int(record["level"]) + 1
+	ProgressionService.new(self).report("companion_upgraded")
 	save()
 	return true
 
@@ -372,6 +431,7 @@ func evolve_companion(id: String) -> bool:
 	companion_essence -= int(cost["essence"])
 	companion_crests -= int(cost["crests"])
 	record["evolution"] = stage + 1
+	ProgressionService.new(self).report("companion_evolved")
 	save()
 	return true
 
@@ -418,6 +478,7 @@ func level_artifact(id: String) -> bool:
 	artifact_dust -= int(cost["dust"])
 	record["duplicates"] = int(record["duplicates"]) - int(cost["copies"])
 	record["level"] = int(record["level"]) + 1
+	ProgressionService.new(self).report("artifact_upgraded")
 	save()
 	return true
 
@@ -492,6 +553,7 @@ func upgrade_item(id: String) -> bool:
 		gold -= gold_cost
 		enhancement_stones -= stone_cost
 		item["level"] = int(item["level"]) + 1
+		ProgressionService.new(self).report("equipment_enhanced")
 		save()
 		return true
 	return false
@@ -521,6 +583,7 @@ func merge_items(kind: String, rarity: int, item_level: int = 1) -> Dictionary:
 				inventory.remove_at(index)
 	var merged := EquipmentData.create_item(kind, rarity + 1)
 	inventory.append(merged)
+	ProgressionService.new(self).report("equipment_merged")
 	save()
 	return merged
 
@@ -600,6 +663,7 @@ func evolve() -> bool:
 	return not HeroProgress.new(self).evolve("knight").is_empty()
 
 func add_rewards(reward_gold: int, reward_exp: int) -> bool:
+	var previous_level := level
 	gold += reward_gold
 	exp += reward_exp
 	var leveled_up := false
@@ -608,6 +672,9 @@ func add_rewards(reward_gold: int, reward_exp: int) -> bool:
 		level += 1
 		leveled_up = true
 	check_level_milestones()
+	var tracker := ProgressionService.new(self)
+	tracker.report("gold_earned", reward_gold)
+	tracker.report("hero_level_gained", level - previous_level)
 	save()
 	return leveled_up
 

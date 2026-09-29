@@ -199,11 +199,18 @@ func _resolve_hero_hit(target: int, amount: int, critical: bool) -> void:
 func _hit_enemy(index: int, amount: int, critical: bool, bash: bool) -> void:
 	var enemy := enemies[index]
 	amount = maxi(1, roundi(amount - float(enemy.get("armor", 0.0))))
+	var tracker := ProgressionService.new(profile)
+	tracker.report("damage_dealt", mini(amount, ceili(float(enemy["current_hp"]))))
+	if critical: tracker.report("critical_hit")
 	if str(mode_config.get("mode", "campaign")) != "campaign":
 		run_damage += mini(amount, ceili(float(enemy["current_hp"])))
 	enemy["current_hp"] = maxf(0.0, float(enemy["current_hp"]) - amount)
 	damage_popup.emit(index, amount, critical, bash)
 	if float(enemy["current_hp"]) <= 0.0:
+		tracker.report("enemy_defeated")
+		if bool(enemy.get("boss", false)) or str(enemy.get("archetype", "")) == "BOSS": tracker.report("boss_defeated")
+		if str(enemy.get("archetype", "")) == "ELITE": tracker.report("elite_defeated")
+		if str(enemy.get("archetype", "")) == "TREASURE": tracker.report("treasure_found")
 		enemy_defeated.emit(index, int(enemy["gold"]), int(enemy["exp"]))
 		if str(mode_config.get("mode", "campaign")) != "campaign":
 			run_kills += 1
