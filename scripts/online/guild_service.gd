@@ -41,7 +41,7 @@ func join(guild_id: String) -> bool:
 		if str(record.id) != guild_id: continue
 		profile.guild_state.guild = record.duplicate(true)
 		profile.guild_state.guild["leader_id"] = "MOCK-LEADER"
-		profile.guild_state.guild["members"] = [{"id": "MOCK-LEADER", "name": "Guildmaster Rowan", "power": record.power, "hero": "knight", "role": "Leader", "contribution": 120, "last_active": "Today"}, {"id": str(profile.account_meta.player_id), "name": str(profile.account_meta.display_name), "power": profile.power(), "hero": profile.selected_hero_id, "role": "Member", "contribution": int(profile.guild_state.contribution), "last_active": "Now"}]
+		profile.guild_state.guild["members"] = [{"id": "MOCK-LEADER", "name": "Guildmaster Rowan", "power": record.power, "hero": "knight", "evolution": 1, "role": "Leader", "contribution": 120, "last_active": "Today"}, {"id": str(profile.account_meta.player_id), "name": str(profile.account_meta.display_name), "power": profile.power(), "hero": profile.selected_hero_id, "evolution": int(profile.heroes.get(profile.selected_hero_id, {}).get("evolution", 0)), "role": "Member", "contribution": int(profile.guild_state.contribution), "last_active": "Now"}]
 		profile.guild_state.role = "Member"
 		profile.account_meta.guild_id = guild_id
 		profile.save()

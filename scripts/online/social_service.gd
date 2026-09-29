@@ -3,7 +3,7 @@ extends RefCounted
 
 const FRIEND_LIMIT := 50
 const MOCK_FRIENDS := [
-	{"id": "MOCK-FRIEND-1", "name": "Aldric Moonfall", "hero": "knight", "level": 18, "power": 6200, "difficulty": "Easy", "region": 3, "stage": 12, "rank": "Silver", "guild": "The Ember Oath", "frame": "golden_frame"},
+	{"id": "MOCK-FRIEND-1", "name": "Aldric Moonfall", "hero": "knight", "evolution": 1, "level": 18, "power": 6200, "difficulty": "Easy", "region": 3, "stage": 12, "rank": "Silver", "guild": "The Ember Oath", "frame": "golden_frame"},
 	{"id": "MOCK-FRIEND-2", "name": "Lyra Stormweaver", "hero": "mage", "level": 25, "power": 9300, "difficulty": "Normal", "region": 5, "stage": 6, "rank": "Gold", "guild": "Silver Stags", "frame": ""},
 	{"id": "MOCK-FRIEND-3", "name": "Thorne Blackbriar", "hero": "ranger", "level": 31, "power": 14500, "difficulty": "Hard", "region": 2, "stage": 18, "rank": "Platinum", "guild": "", "frame": ""}
 ]
@@ -16,7 +16,7 @@ func _init(value: SaveData) -> void:
 	for key in ["friends", "incoming", "outgoing"]:
 		if not profile.friends_state.has(key): profile.friends_state[key] = []
 	if profile.friends_state.friends.is_empty(): profile.friends_state.friends = MOCK_FRIENDS.duplicate(true)
-	if profile.friends_state.incoming.is_empty(): profile.friends_state.incoming = [{"id": "MOCK-INCOMING-1", "name": "Ilyan Redbrook", "hero": "knight", "level": 12, "power": 2800, "difficulty": "Easy", "region": 1, "stage": 5, "rank": "Bronze", "guild": "", "frame": ""}]
+	if profile.friends_state.incoming.is_empty(): profile.friends_state.incoming = [{"id": "MOCK-INCOMING-1", "name": "Ilyan Redbrook", "hero": "knight", "evolution": 1, "level": 12, "power": 2800, "difficulty": "Easy", "region": 1, "stage": 5, "rank": "Bronze", "guild": "", "frame": ""}]
 
 func add_friend(player_id: String) -> bool:
 	if fail_next:

@@ -12,14 +12,30 @@ func _run() -> void:
 	profile.save_path = "res://.godot/phase12a_visual.save"
 	profile.last_login_reward_date = CalendarService.day()
 	(main.get("battle") as BattleController).active = false
+	profile.selected_hero_id = "knight"
+	profile.heroes["knight"]["evolution"] = 1
+	main.call("_refresh_ui")
 	var field := main.get("battlefield") as Battlefield
 	main.call("_select_tab", "Battle")
-	await _capture("squire_battle_idle", main)
+	await _capture("knight_battle_idle", main)
 	field._on_attack_started(-1, 0)
 	await process_frame
-	await _capture("squire_battle_attack", main)
+	await _capture("knight_battle_attack", main)
+	field._on_damage_popup(-1, 35, false, false)
+	await process_frame
+	await _capture("knight_battle_guard", main)
 	var heroes := main.get("heroes_screen") as HeroesScreen
 	var heroes_area := main.get("heroes_area") as ScrollContainer
+	main.call("_select_tab", "Account")
+	await _capture("knight_profile", main)
+	main.call("_select_tab", "Social")
+	var social := main.get("social_screen") as SocialScreen
+	social.tab = "Friends"
+	if not profile.friends_state.friends.is_empty():
+		profile.friends_state.friends[0]["hero"] = "knight"
+		profile.friends_state.friends[0]["evolution"] = 1
+	social.refresh()
+	await _capture("knight_social", main)
 	main.call("_select_tab", "Heroes")
 	heroes.selected_id = "knight"
 	heroes.view = "detail"
@@ -28,6 +44,8 @@ func _run() -> void:
 		heroes.refresh()
 		(main.get("heroes_area") as ScrollContainer).scroll_vertical = 0
 		await _capture("knight_form_%d" % stage, main, heroes_area, true)
+	heroes_area.scroll_vertical = 0
+	await _capture("knight_heroes_portrait", main)
 	heroes.preview_evolution = -1
 	heroes.evolution_result = {"previous": "Squire", "next": "Knight", "element": "Steel", "before_stats": {"hp": 100, "atk": 10, "armor": 5}, "after_stats": {"hp": 115, "atk": 12, "armor": 6}}
 	heroes.view = "evolution_result"

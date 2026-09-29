@@ -52,7 +52,7 @@ func _friends_view() -> void:
 		add_child(card)
 		var card_row := HBoxContainer.new()
 		card.add_child(card_row)
-		_add_portrait(card_row, str(friend.get("hero", "knight")), int(friend.get("evolution", 0)), "golden_frame" if str(friend.get("frame", "")) == "Golden Profile Frame" else "", Vector2(110, 132))
+		_add_portrait(card_row, str(friend.get("hero", "knight")), int(friend.get("evolution", 0)), "golden_frame" if str(friend.get("frame", "")) in ["Golden Profile Frame", "golden_frame"] else "", Vector2(110, 132))
 		var box := VBoxContainer.new()
 		box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		card_row.add_child(box)
@@ -71,9 +71,10 @@ func _friends_view() -> void:
 	for request in incoming:
 		var row := HBoxContainer.new()
 		add_child(row)
-		row.add_child(_label("%s • %s" % [request.name, request.id], 23))
-		var request_label := row.get_child(0) as Label
+		_add_portrait(row, str(request.get("hero", "knight")), int(request.get("evolution", 0)), str(request.get("frame", "")), Vector2(72, 88))
+		var request_label := _label("%s • %s" % [request.name, request.id], 23)
 		request_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(request_label)
 		var accept := _button("ACCEPT")
 		accept.pressed.connect(_accept.bind(str(request.id)))
 		row.add_child(accept)
@@ -121,7 +122,11 @@ func _guild_view() -> void:
 		var frame := " • Golden Profile Frame" if profile.owned_cosmetics.has("golden_frame") and profile.equipped_cosmetics.get("Profile Frame", "") == "golden_frame" and str(member.id) == str(profile.account_meta.player_id) else ""
 		var member_row := HBoxContainer.new()
 		add_child(member_row)
-		_add_portrait(member_row, str(member.get("hero", "knight")), int(member.get("evolution", 0)), "golden_frame" if not frame.is_empty() else "", Vector2(92, 112))
+		var member_hero := str(member.get("hero", "knight"))
+		var member_evolution := int(member.get("evolution", 0))
+		if str(member.id) == str(profile.account_meta.player_id):
+			member_evolution = int(profile.heroes.get(member_hero, {}).get("evolution", member_evolution))
+		_add_portrait(member_row, member_hero, member_evolution, "golden_frame" if not frame.is_empty() else "", Vector2(92, 112))
 		member_row.add_child(_label("%s%s • %d Power • %s • %s contribution • Active %s" % [member.name, frame, int(member.power), str(member.hero).capitalize(), member.get("role", "Member"), str(member.get("last_active", "Unknown"))], 22))
 	var leave := _button("LEAVE GUILD")
 	leave.disabled = state.role == "Leader"
@@ -267,7 +272,8 @@ func _panel() -> PanelContainer:
 
 func _add_portrait(parent: Control, hero_id: String, evolution: int, frame: String, minimum: Vector2) -> void:
 	var portrait := HeroPortrait.new()
-	portrait.hero_id = hero_id if HeroData.HEROES.has(hero_id) else "knight"
+	var normalized_hero := hero_id.to_lower().replace(" ", "_")
+	portrait.hero_id = normalized_hero if HeroData.HEROES.has(normalized_hero) else "knight"
 	portrait.evolution = clampi(evolution, 0, 4)
 	portrait.profile_frame = frame
 	portrait.custom_minimum_size = minimum

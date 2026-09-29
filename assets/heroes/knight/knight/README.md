@@ -1,3 +1,3 @@
-# Knight art
+# Knight art (integrated)
 
-Optional transparent PNG slots: `idle.png`, `attack.png`, `guard.png`, `portrait.png`; future slots `skill.png`, `death.png`, `evolution_fx.png`, `aura.png`. Missing art falls back to the existing procedural Knight rendering.
+The Knight evolution uses `idle.png`, `attack.png`, `guard.png`, and `portrait.png` through `HeroArtService`. Optional future slots are `skill.png`, `death.png`, `evolution_fx.png`, and `aura.png`. Any missing state continues to fall back to the procedural Knight rendering.

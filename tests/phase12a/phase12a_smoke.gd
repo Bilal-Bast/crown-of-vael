@@ -20,7 +20,10 @@ func _run() -> void:
 	for slot in ["idle", "attack", "guard", "portrait"]:
 		check(HeroArtService.texture_for(0, slot) != null, "Squire %s asset loads" % slot)
 	check(HeroArtService.resolve_path(0, "idle") == "res://assets/heroes/knight/squire/squire_idle.png", "Squire legacy filename preserved")
-	check(HeroArtService.texture_for(1, "idle") == null, "missing Knight art returns procedural fallback signal")
+	for slot in ["idle", "attack", "guard", "portrait"]:
+		check(HeroArtService.texture_for(1, slot) != null, "Knight %s asset loads" % slot)
+		check(HeroArtService.resolve_path(1, slot) == "res://assets/heroes/knight/knight/%s.png" % slot, "Knight %s resolves real asset path" % slot)
+	check(HeroArtService.texture_for(2, "idle") == null, "missing Royal Knight art returns procedural fallback signal")
 	check(HeroArtService.texture_for(4, "portrait") == null, "missing portrait returns fallback signal")
 	check(HeroArtService.resolve_path(2, "attack").is_empty(), "missing battle state path is empty")
 	var squire_path := HeroArtService.asset_path(0, "idle")
@@ -28,8 +31,9 @@ func _run() -> void:
 		HeroArtService.texture_for(0, "idle")
 	check(HeroArtService.cached_load_count(squire_path) == 1, "repeated battle lookup loads texture once")
 	var report := HeroArtService.validation_report()
-	check(report.size() >= 16, "validation reports missing evolution slots without failing")
+	check(report.size() >= 12, "validation reports remaining missing evolution slots without failing")
 	var profile := SaveData.new()
+	profile.heroes["knight"]["evolution"] = 1
 	var battle := BattleController.new()
 	battle.profile = profile
 	var field := Battlefield.new()
@@ -43,11 +47,13 @@ func _run() -> void:
 	field._process(0.01)
 	check(field.hero_visual_state == "attack", "idle to attack visual state")
 	check(field.hero_attack_art_time > 0.0, "attack visual timer active")
+	check(HeroArtService.texture_for(1, field.hero_visual_state) != null, "Knight attack state uses supplied attack art")
 	field._process(0.30)
 	check(field.hero_visual_state == "idle", "attack visual returns to idle")
 	field._on_damage_popup(-1, 1, false, false)
 	field._process(0.01)
 	check(field.hero_visual_state == "guard", "idle to guard visual state")
+	check(HeroArtService.texture_for(1, field.hero_visual_state) != null, "Knight guard state uses supplied guard art")
 	field._process(0.31)
 	check(field.hero_visual_state == "idle", "guard visual returns to idle")
 	field._on_attack_started(-2, 0)
