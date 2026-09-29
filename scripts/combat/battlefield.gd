@@ -10,6 +10,8 @@ var impacts: Array[Dictionary] = []
 var deaths: Array[Dictionary] = []
 var flashes: Dictionary = {}
 var lunges: Dictionary = {}
+var enemy_attack_times: Dictionary = {}
+var enemy_hit_times: Dictionary = {}
 var companion_lunges: Dictionary = {}
 var hero_projectiles: Array[Dictionary] = []
 var hero_lunge := 0.0
@@ -48,6 +50,10 @@ func _process(delta: float) -> void:
 	shake_time = maxf(0.0, shake_time - delta)
 	for key in lunges.keys():
 		lunges[key] = maxf(0.0, float(lunges[key]) - delta)
+	for key in enemy_attack_times.keys():
+		enemy_attack_times[key] = maxf(0.0, float(enemy_attack_times[key]) - delta)
+	for key in enemy_hit_times.keys():
+		enemy_hit_times[key] = maxf(0.0, float(enemy_hit_times[key]) - delta)
 	for key in companion_lunges.keys():
 		companion_lunges[key] = maxf(0.0, float(companion_lunges[key]) - delta)
 		if float(companion_lunges[key]) <= 0.0:
@@ -63,8 +69,8 @@ func _process(delta: float) -> void:
 		hero_projectiles[i]["age"] = float(hero_projectiles[i]["age"]) + delta
 		if float(hero_projectiles[i]["age"]) >= 0.22:
 			hero_projectiles.remove_at(i)
-	if hero_lunge > 0.0 or hero_attack_art_time > 0.0 or hero_guard_art_time > 0.0 or shake_time > 0.0 or not floaters.is_empty() or not impacts.is_empty() or not deaths.is_empty() or not companion_lunges.is_empty() or not hero_projectiles.is_empty() or battle != null and battle.active:
-		queue_redraw()
+		if hero_lunge > 0.0 or hero_attack_art_time > 0.0 or hero_guard_art_time > 0.0 or shake_time > 0.0 or not floaters.is_empty() or not impacts.is_empty() or not deaths.is_empty() or not companion_lunges.is_empty() or not hero_projectiles.is_empty() or battle != null and battle.active:
+			queue_redraw()
 
 func _on_companion_attack(slot: int, target: int, amount: int) -> void:
 	companion_lunges[slot] = 0.24
@@ -88,6 +94,9 @@ func _on_attack_started(attacker_index: int, target_index: int) -> void:
 		if attacker_index == -2:
 			shake_time = maxf(shake_time, 0.18)
 	else:
+		var enemy: Dictionary = battle.enemies[attacker_index]
+		var enemy_id := str(enemy.get("visual", enemy.get("kind", "")))
+		enemy_attack_times[attacker_index] = float(EnemyArtService.metadata(enemy_id).get("attack_duration", 0.26))
 		if str(battle.enemies[attacker_index].get("archetype", "")) in ["RANGED", "MAGIC", "HEALER"]:
 			impacts.append({"pos": _hero_position() + Vector2(0, -50), "age": 0.0, "life": 0.3, "strong": false})
 		else:
@@ -98,6 +107,10 @@ func _on_damage_popup(target_index: int, amount: int, critical: bool, bash: bool
 	if target_index < 0:
 		var evolution := int(battle.profile.heroes.get("knight", {}).get("evolution", 0)) if battle != null and battle.profile != null and battle.profile.selected_hero_id == "knight" else 0
 		hero_guard_art_time = float(HeroArtService.metadata(evolution).get("hit_duration", 0.30))
+	elif battle != null and target_index < battle.enemies.size():
+		var enemy: Dictionary = battle.enemies[target_index]
+		var enemy_id := str(enemy.get("visual", enemy.get("kind", "")))
+		enemy_hit_times[target_index] = float(EnemyArtService.metadata(enemy_id).get("hit_duration", 0.22))
 	var pos := _hero_position() if target_index < 0 else _enemy_position(target_index)
 	var text_value := str(amount)
 	if critical:
@@ -153,7 +166,7 @@ func _draw() -> void:
 			var lunge := float(lunges.get(i, 0.0))
 			if lunge > 0.0:
 				pos.x -= sin((1.0 - lunge / 0.18) * PI) * 24.0 * unit
-			_draw_enemy(pos, enemy, unit, float(flashes.get(i, 0.0)) > 0.0)
+			_draw_enemy(pos, enemy, unit, float(flashes.get(i, 0.0)) > 0.0, i)
 	_draw_hero_projectiles(unit)
 	_draw_effects(unit)
 	_draw_artifact_indicators(unit)
@@ -231,6 +244,16 @@ func _draw_landscape(w: float, h: float) -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), Color("19332e", 0.08), false, 5)
 
 func _draw_region_landscape(w: float, h: float) -> void:
+	if battle.region == 1:
+		var background := EnemyArtService.background_texture(1, battle.stage == 20)
+		if background != null:
+			var scale_to_cover := maxf(w / float(background.get_width()), h / float(background.get_height()))
+			var bg_size := Vector2(background.get_size()) * scale_to_cover
+			draw_texture_rect(background, Rect2((size - bg_size) * 0.5, bg_size), false)
+			# Lower contrast just enough for sprites, bars, and floating combat text.
+			draw_rect(Rect2(Vector2.ZERO, size), Color("10211f", 0.12))
+			draw_rect(Rect2(0, h * 0.76, w, h * 0.24), Color("3c513f", 0.17))
+			return
 	var info: Dictionary = CampaignData.REGIONS[battle.region - 1]
 	var sky := Color(str(info["sky"]))
 	var ground := Color(str(info["ground"]))
@@ -401,15 +424,35 @@ func _draw_hero_projectiles(unit: float) -> void:
 			draw_line(origin.lerp(destination, maxf(0.0, progress - 0.12)), pos, color.darkened(0.2), 7 * unit)
 			draw_circle(pos, 12 * unit, color)
 
-func _draw_enemy(pos: Vector2, enemy: Dictionary, unit: float, flash: bool) -> void:
+func enemy_visual_state(index: int) -> String:
+	if float(enemy_hit_times.get(index, 0.0)) > 0.0:
+		return "hit"
+	if float(enemy_attack_times.get(index, 0.0)) > 0.0:
+		return "attack"
+	return "idle"
+
+func _draw_enemy(pos: Vector2, enemy: Dictionary, unit: float, flash: bool, enemy_index: int = -1) -> void:
 	var kind := str(enemy.get("visual", enemy["kind"]))
 	var boss := str(enemy.get("archetype", "")) == "BOSS" or kind == "Goblin Warlord"
-	var actor_scale := unit * (1.65 if boss else (1.2 if str(enemy.get("archetype", "")) == "ELITE" else 1.0))
+	var enemy_state := enemy_visual_state(enemy_index)
+	if enemy_state == "hit":
+		pos.x += 9.0 * unit
+	var art_meta := EnemyArtService.metadata(kind)
+	var elite_scale := 1.2 if str(enemy.get("archetype", "")) == "ELITE" else 1.0
+	var boss_scale := 1.65 if boss else 1.0
+	var actor_scale := unit * elite_scale * boss_scale
 	draw_set_transform(pos, 0.0, Vector2.ONE * actor_scale)
 	if int(enemy.get("difficulty", 0)) >= 3:
 		draw_arc(Vector2(0, -70), 65, 0, TAU, 24, Color("e3548b", 0.28 + 0.12 * (int(enemy["difficulty"]) - 3)), 7)
 	draw_ellipse_placeholder(Vector2(0, 15), Vector2(39, 10), Color("314d37", 0.33))
-	if boss and enemy.has("region") and kind != "Goblin Warlord":
+	var art_region := int(enemy.get("region", battle.region if battle != null and str(battle.mode_config.get("mode", "campaign")) == "campaign" else 0))
+	var enemy_texture := EnemyArtService.texture_for(kind, enemy_state, art_region)
+	var art_size := Vector2.ZERO
+	if enemy_texture != null:
+		var art_height := 240.0 * float(art_meta.get("scale", 0.82))
+		art_size = Vector2(art_height * float(enemy_texture.get_width()) / float(enemy_texture.get_height()), art_height)
+		draw_texture_rect(enemy_texture, Rect2(Vector2(-art_size.x * 0.5, 24.0 - art_size.y) + Vector2(art_meta.get("offset", Vector2.ZERO)), art_size), false)
+	elif boss and enemy.has("region") and kind != "Goblin Warlord":
 		_draw_region_boss(enemy)
 	else:
 		match str(enemy.get("family", kind)):
@@ -436,12 +479,12 @@ func _draw_enemy(pos: Vector2, enemy: Dictionary, unit: float, flash: bool) -> v
 			draw_arc(Vector2(0, -75), 56, PI * 0.1, PI * 0.9, 15, Color("ff704f", 0.7), 5)
 		if str(enemy.get("archetype", "")) == "TREASURE":
 			draw_arc(Vector2(0, -91), 50, 0, TAU, 20, Color("ffdf80"), 6)
-	if flash:
-		draw_circle(Vector2(0, -62), 47, Color(1, 1, 1, 0.55))
+	if flash or enemy_state == "hit":
+		draw_circle(Vector2(0, -62), 47, Color(1, 1, 1, 0.4))
 	var bar_width := 125.0 if boss else 85.0
-	_draw_hp_bar(Vector2(-bar_width * 0.5, -151 if boss else -116), bar_width, float(enemy["current_hp"]) / float(enemy["hp"]), Color("eb6f67"))
+	_draw_hp_bar(Vector2(-bar_width * 0.5, -250 if boss else -116), bar_width, float(enemy["current_hp"]) / float(enemy["hp"]), Color("eb6f67"))
 	if boss:
-		draw_string(ThemeDB.fallback_font, Vector2(-90, -163), kind.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color("f8dfbc"))
+		draw_string(ThemeDB.fallback_font, Vector2(-90, -265), kind.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color("f8dfbc"))
 	draw_set_transform(Vector2.ZERO)
 
 func _draw_campaign_creature(enemy: Dictionary) -> void:
