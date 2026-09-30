@@ -1,10 +1,27 @@
 .godot/
 .import/
 export.cfg
-export_presets.cfg
 *.tmp
 *.log
 .DS_Store
 Thumbs.db
 
 .godot_runtime/
+
+# Android and local build output
+build/
+android/build/
+.gradle/
+*.apk
+*.aab
+
+# Signing material and private export configuration
+*.keystore
+*.jks
+*.p12
+*.pfx
+signing.properties
+android_signing.cfg
+
+# Local captures and generated tools
+captures/
