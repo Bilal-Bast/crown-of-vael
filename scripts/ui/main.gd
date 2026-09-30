@@ -31,6 +31,8 @@ const MUTED := Color("aebdb4")
 var profile: SaveData
 var battle: BattleController
 var battlefield: Battlefield
+var battlefield_host: Control
+var pixel_battle_background: TextureRect
 var skill_bar: SkillBar
 var battle_area: VBoxContainer
 var placeholder_area: PanelContainer
@@ -398,11 +400,25 @@ func _build_stage_card(root: VBoxContainer) -> void:
 		stage_markers.append(marker)
 
 func _build_battle_area() -> void:
+	battlefield_host = Control.new()
+	battlefield_host.custom_minimum_size.y = 390
+	battlefield_host.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	battle_area.add_child(battlefield_host)
+	pixel_battle_background = TextureRect.new()
+	pixel_battle_background.name = "GreenvalePixelBattleBackground"
+	pixel_battle_background.visible = false
+	pixel_battle_background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pixel_battle_background.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	pixel_battle_background.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	pixel_battle_background.modulate = Color(0.80, 0.84, 0.81, 1.0)
+	pixel_battle_background.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pixel_battle_background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	battlefield_host.add_child(pixel_battle_background)
 	battlefield = BattlefieldScript.new()
-	battlefield.custom_minimum_size.y = 390
-	battlefield.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	battlefield.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	battlefield.pixel_background_layer = pixel_battle_background
 	battlefield.set_battle(battle)
-	battle_area.add_child(battlefield)
+	battlefield_host.add_child(battlefield)
 
 	var skill_panel := _panel()
 	battle_area.add_child(skill_panel)
