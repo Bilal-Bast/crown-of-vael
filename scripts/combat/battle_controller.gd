@@ -8,11 +8,13 @@ signal enemy_defeated(target_index: int, reward_gold: int, reward_exp: int)
 signal equipment_dropped(item: Dictionary)
 signal hero_leveled(level: int, gem_bonus: int)
 signal skill_cast(id: String, slot: int)
+signal skill_healed(amount: int)
 signal companion_attack(slot: int, target: int, amount: int)
 signal artifact_proc(label: String, color: Color)
 signal message(text: String)
 signal stage_cleared
 signal battle_lost(boss_failure: bool)
+signal presentation_event(event: String, data: Dictionary)
 signal mode_finished(result: Dictionary)
 
 var profile: SaveData
@@ -42,6 +44,11 @@ var pending_hero_hits: Array[Dictionary] = []
 func start(new_profile: SaveData) -> void:
 	mode_config = {"mode": "campaign"}
 	_start_shared(new_profile)
+	if stage == 20:
+		presentation_event.emit("boss_intro", {"name": str(CampaignData.REGIONS[region - 1]["boss"])})
+	var audio := get_node_or_null("/root/AudioService") if is_inside_tree() else null
+	if audio != null:
+		audio.set_music("boss" if stage == 20 else "battle_region_%02d" % region)
 	message.emit("%s! Defeat it in 30 seconds." % CampaignData.REGIONS[region - 1]["boss"] if stage == 20 else "%s | Wave 1/3" % CampaignData.label(difficulty, region, stage))
 	changed.emit()
 
@@ -235,9 +242,11 @@ func _hit_enemy(index: int, amount: int, critical: bool, bash: bool) -> void:
 		if _all_enemies_defeated():
 			if stage == 20 or wave >= GameData.WAVES_PER_STAGE:
 				active = false
+				presentation_event.emit("boss_defeat" if stage == 20 else "stage_clear", {"boss": stage == 20})
 				stage_cleared.emit()
 			else:
 				wave += 1
+				presentation_event.emit("wave", {"wave": wave})
 				_spawn_wave()
 				message.emit("Wave %d/%d" % [wave, GameData.WAVES_PER_STAGE])
 	changed.emit()
@@ -250,6 +259,7 @@ func _advance_mode() -> void:
 	if mode == "boss_rush":
 		hero_hp = minf(float(hero["hp"]), hero_hp + float(hero["hp"]) * PveData.BOSS_HEAL)
 	wave += 1
+	presentation_event.emit("wave", {"wave": wave})
 	_spawn_wave()
 	message.emit("%s | %s" % [PveData.mode_label(mode_config), mode_detail()])
 

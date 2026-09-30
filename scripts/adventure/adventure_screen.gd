@@ -1,6 +1,8 @@
 class_name AdventureScreen
 extends VBoxContainer
 
+signal tutorial_feature_opened(feature_name: String)
+
 var profile: SaveData
 var service: PveService
 var on_start: Callable
@@ -233,6 +235,8 @@ func _open(next: String) -> void:
 	if next == "map" and view != "stages": map_difficulty = profile.campaign_difficulty
 	view = next
 	refresh()
+	var feature: String = str({"dungeons": "Dungeons", "tiers": "Dungeons", "tower": "Tower", "boss_rush": "Boss Rush", "endless": "Endless Survival"}.get(next, ""))
+	if feature != "": tutorial_feature_opened.emit(feature)
 
 func _back() -> void:
 	var button := _button("BACK TO ADVENTURE")

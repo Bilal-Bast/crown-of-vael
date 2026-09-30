@@ -3,6 +3,7 @@ extends Control
 
 const SKY := Color("b9d5c5")
 const GROUND := Color("738e65")
+var vfx := CombatVfxService.new()
 
 var battle: BattleController
 var floaters: Array[Dictionary] = []
@@ -25,21 +26,33 @@ var squire_guard_texture: Texture2D
 var shake_time := 0.0
 var hero_visual_state := "idle"
 
+func _init() -> void:
+	floaters = vfx.labels
+	impacts = vfx.effects
+
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	squire_idle_texture = HeroArtService.texture_for(0, "idle")
 	squire_attack_texture = HeroArtService.texture_for(0, "attack")
 	squire_guard_texture = HeroArtService.texture_for(0, "guard")
+	floaters = vfx.labels
+	impacts = vfx.effects
+	deaths = []
 
 func set_battle(value: BattleController) -> void:
 	battle = value
+	floaters = vfx.labels
+	impacts = vfx.effects
 	battle.changed.connect(queue_redraw)
 	battle.damage_popup.connect(_on_damage_popup)
 	battle.attack_started.connect(_on_attack_started)
 	battle.enemy_defeated.connect(_on_enemy_defeated)
 	battle.companion_attack.connect(_on_companion_attack)
 	battle.artifact_proc.connect(_on_artifact_proc)
+	battle.skill_cast.connect(_on_skill_cast)
+	battle.skill_healed.connect(_on_skill_healed)
+	battle.presentation_event.connect(_on_presentation_event)
 	queue_redraw()
 
 func _process(delta: float) -> void:
@@ -48,6 +61,8 @@ func _process(delta: float) -> void:
 	hero_guard_art_time = maxf(0.0, hero_guard_art_time - delta)
 	hero_visual_state = "guard" if hero_guard_art_time > 0.0 else ("attack" if hero_attack_art_time > 0.0 else "idle")
 	shake_time = maxf(0.0, shake_time - delta)
+	vfx.reduced = battle != null and battle.profile != null and battle.profile.reduced_effects
+	vfx.tick(delta)
 	for key in lunges.keys():
 		lunges[key] = maxf(0.0, float(lunges[key]) - delta)
 	for key in enemy_attack_times.keys():
@@ -60,35 +75,90 @@ func _process(delta: float) -> void:
 			companion_lunges.erase(key)
 	for key in flashes.keys():
 		flashes[key] = maxf(0.0, float(flashes[key]) - delta)
-	for group in [floaters, impacts, deaths]:
+	for group in [deaths]:
 		for i in range(group.size() - 1, -1, -1):
 			group[i]["age"] = float(group[i]["age"]) + delta
 			if float(group[i]["age"]) >= float(group[i]["life"]):
 				group.remove_at(i)
-	for i in range(hero_projectiles.size() - 1, -1, -1):
-		hero_projectiles[i]["age"] = float(hero_projectiles[i]["age"]) + delta
-		if float(hero_projectiles[i]["age"]) >= 0.22:
-			hero_projectiles.remove_at(i)
-		if hero_lunge > 0.0 or hero_attack_art_time > 0.0 or hero_guard_art_time > 0.0 or shake_time > 0.0 or not floaters.is_empty() or not impacts.is_empty() or not deaths.is_empty() or not companion_lunges.is_empty() or not hero_projectiles.is_empty() or battle != null and battle.active:
-			queue_redraw()
+	if hero_lunge > 0.0 or hero_attack_art_time > 0.0 or hero_guard_art_time > 0.0 or shake_time > 0.0 or not floaters.is_empty() or not impacts.is_empty() or not deaths.is_empty() or not companion_lunges.is_empty() or not vfx.projectiles.is_empty() or battle != null and battle.active:
+		queue_redraw()
 
 func _on_companion_attack(slot: int, target: int, amount: int) -> void:
 	companion_lunges[slot] = 0.24
-	floaters.append({"pos": _enemy_position(target) + Vector2(0, -130), "text": "ALLY %d" % amount, "color": Color("a9e5c4"), "age": 0.0, "life": 0.8, "size": 23, "centered": true})
+	var companion_id := battle.profile.equipped_companion_slots[slot] if battle != null and battle.profile != null else ""
+	var visual := str(CompanionData.COMPANIONS.get(companion_id, {}).get("visual", "beast"))
+	var cue_color := Color("b5e5c2") if visual == "beast" else (Color("a9e9e3") if visual == "fairy" else (Color("dba3ef") if visual == "dragon" else Color("d5c39c")))
+	var origin := Vector2(size.x * (0.09 + slot * 0.105), size.y * 0.70 - 25)
+	if visual == "humanoid":
+		vfx.pulse(_enemy_position(target) + Vector2(0, -70), cue_color, 0.55, 0.18, "slash")
+	else:
+		vfx.projectile(origin, _enemy_position(target) + Vector2(0, -72), cue_color, 0.18, 5)
+	vfx.label(_enemy_position(target) + Vector2(0, -130), "ALLY %d" % amount, Color("a9e5c4"), 23, 0.8)
 	queue_redraw()
 
+func _play_audio(event: String) -> void:
+	if not is_inside_tree():
+		return
+	var audio := get_node_or_null("/root/AudioService")
+	if audio != null:
+		audio.play_event(event)
+
 func _on_artifact_proc(label: String, color: Color) -> void:
-	floaters.append({"pos": _hero_position() + Vector2(0, -190), "text": label, "color": color, "age": 0.0, "life": 1.1, "size": 28, "centered": true})
+	vfx.label(_hero_position() + Vector2(0, -190), label, color, 28, 1.1)
+	queue_redraw()
+
+func _on_skill_cast(skill_id: String, _slot: int) -> void:
+	var target := _hero_position()
+	for index in battle.enemies.size():
+		if float(battle.enemies[index]["current_hp"]) > 0.0:
+			target = _enemy_position(index)
+			break
+	var hero_id := battle.profile.selected_hero_id if battle.profile != null else "knight"
+	var element := HeroData.element(hero_id, battle.profile.heroes[hero_id]) if battle.profile != null else "Holy"
+	var tint: Color = {"Fire": Color("ff9a57"), "Ice": Color("9fe5f1"), "Holy": Color("ffe39b"), "Dark": Color("b892ef")}.get(element, Color("dbe7e1"))
+	vfx.skill_effect(skill_id, _hero_position() + Vector2(0, -82), target + Vector2(0, -76), tint)
+	_play_audio("shield_bash" if skill_id == "shield_bash" else "skill_activation")
+	queue_redraw()
+
+func _on_skill_healed(amount: int) -> void:
+	if amount <= 0:
+		return
+	vfx.label(_hero_position() + Vector2(48, -160), "HEAL +%d" % amount, Color("9febaa"), 44, 0.95)
+	queue_redraw()
+
+func _on_presentation_event(event: String, data: Dictionary) -> void:
+	if event == "boss_intro":
+		vfx.boss_banner_name = str(data.get("name", "BOSS"))
+		vfx.boss_banner_time = 1.8
+		vfx.shake(0.30, 3.2)
+		_play_audio("boss_entrance")
+	elif event in ["boss_defeat", "stage_clear"]:
+		vfx.clear_time = 0.72 if event == "boss_defeat" else 0.45
+		vfx.pulse(Vector2(size.x * 0.5, size.y * 0.42), Color("ffe6a0"), 2.0 if event == "boss_defeat" else 1.2, 0.75)
+		vfx.label(Vector2(size.x * 0.5, size.y * 0.42 - 55), "VICTORY!" if event == "boss_defeat" else "STAGE CLEAR", Color("fff0bc"), 44 if event == "boss_defeat" else 34, 0.72)
+		if event == "boss_defeat":
+			vfx.shake(0.22, 2.6)
+			_play_audio("boss_defeat")
+	elif event == "wave":
+		vfx.boss_banner_name = "WAVE %d" % int(data.get("wave", 1))
+		vfx.boss_banner_time = 0.72
 	queue_redraw()
 
 func _on_attack_started(attacker_index: int, target_index: int) -> void:
 	if attacker_index < 0:
+		if attacker_index == -1:
+			_play_audio("projectile_launch" if battle.profile.selected_hero_id in ["mage", "ranger", "necromancer"] else "sword_swing")
 		var selected_form := int(battle.profile.heroes.get(battle.profile.selected_hero_id, {}).get("evolution", 0)) if battle != null and battle.profile != null else 0
 		if attacker_index == -1 or attacker_index == -2:
 			hero_attack_art_time = float(HeroArtService.metadata(selected_form).get("attack_duration", 0.26)) * (1.25 if attacker_index == -2 else 1.0)
 		var style := str(HeroData.HEROES[battle.profile.selected_hero_id]["style"])
 		if attacker_index == -1 and style in ["magic", "arrow", "dark_bolt"]:
-			hero_projectiles.append({"target": target_index, "age": 0.0, "style": style})
+			var projectile_color := Color("8fe4f4") if style == "magic" else (Color("b08bda") if style == "dark_bolt" else Color("ead3a1"))
+			vfx.projectile(_hero_position() + Vector2(35, -90), _enemy_position(target_index) + Vector2(0, -85), projectile_color, 0.22, 8, "arrow" if style == "arrow" else "orb")
+		elif attacker_index == -1:
+			vfx.pulse(_enemy_position(target_index) + Vector2(0, -65), Color("e8d5a0"), 0.8, 0.24, "slash")
+			if battle.profile.selected_hero_id == "assassin":
+				vfx.projectile(_hero_position() + Vector2(24, -76), _enemy_position(target_index) + Vector2(0, -64), Color("c8a0e5"), 0.12, 7)
 		hero_lunge = 0.0 if style in ["magic", "arrow", "dark_bolt"] and attacker_index == -1 else (0.26 if attacker_index == -2 else 0.19)
 		hero_bash = attacker_index == -2
 		if attacker_index == -2:
@@ -97,8 +167,12 @@ func _on_attack_started(attacker_index: int, target_index: int) -> void:
 		var enemy: Dictionary = battle.enemies[attacker_index]
 		var enemy_id := str(enemy.get("visual", enemy.get("kind", "")))
 		enemy_attack_times[attacker_index] = float(EnemyArtService.metadata(enemy_id).get("attack_duration", 0.26))
+		if str(enemy.get("archetype", "")) == "BOSS":
+			vfx.shake(0.12, 2.0)
 		if str(battle.enemies[attacker_index].get("archetype", "")) in ["RANGED", "MAGIC", "HEALER"]:
-			impacts.append({"pos": _hero_position() + Vector2(0, -50), "age": 0.0, "life": 0.3, "strong": false})
+			var origin := _enemy_position(attacker_index) + Vector2(-18, -82)
+			vfx.projectile(origin, _hero_position() + Vector2(0, -75), Color("d49aff") if str(battle.enemies[attacker_index].get("archetype", "")) == "MAGIC" else Color("dbe2c0"), 0.26, 6)
+			vfx.pulse(_hero_position() + Vector2(0, -50), Color("f4f0d5"), 0.7, 0.3)
 		else:
 			lunges[attacker_index] = 0.18
 	queue_redraw()
@@ -112,37 +186,47 @@ func _on_damage_popup(target_index: int, amount: int, critical: bool, bash: bool
 		var enemy_id := str(enemy.get("visual", enemy.get("kind", "")))
 		enemy_hit_times[target_index] = float(EnemyArtService.metadata(enemy_id).get("hit_duration", 0.22))
 	var pos := _hero_position() if target_index < 0 else _enemy_position(target_index)
-	var text_value := str(amount)
+	var text_value := NumberFormat.compact(amount)
 	if critical:
-		text_value = "CRIT %d!" % amount
+		text_value = "CRIT %s!" % NumberFormat.compact(amount)
 	elif bash:
-		text_value = "BASH %d!" % amount
-	floaters.append({"pos": pos + Vector2(0, -100), "text": text_value, "color": Color("ffdf72") if critical else (Color("9de8f2") if bash else (Color("ffb4a0") if target_index < 0 else Color.WHITE)), "age": 0.0, "life": 0.9, "size": 35 if critical or bash else 28})
-	impacts.append({"pos": pos + Vector2(0, -56), "age": 0.0, "life": 0.30, "strong": critical or bash})
+		text_value = "BASH %s!" % NumberFormat.compact(amount)
+	var label_color := Color("ffdf72") if critical else (Color("9de8f2") if bash else (Color("ffb4a0") if target_index < 0 else Color.WHITE))
+	vfx.label(pos + Vector2(0, -100), text_value, label_color, 36 if critical else (34 if bash else 28), 0.72 if critical else 0.9, critical)
+	vfx.pulse(pos + Vector2(0, -56), Color("ffe59d") if critical or bash else Color("f4f0d5"), 1.7 if critical else (1.5 if bash else 0.8), 0.30)
 	flashes[target_index] = 0.16
 	if bash:
 		shake_time = 0.28
+		vfx.shake(0.20, 3.0)
+	elif critical:
+		vfx.shake(0.11, 1.2)
+	else:
+		vfx.shake(0.05, 0.45)
+	_play_audio("shield_bash" if bash else ("critical_hit" if critical else "normal_hit"))
 	queue_redraw()
 
 func _on_enemy_defeated(target_index: int, gold: int, exp: int) -> void:
 	var pos := _enemy_position(target_index)
-	deaths.append({"pos": pos + Vector2(0, -50), "age": 0.0, "life": 0.6})
-	floaters.append({"pos": pos + Vector2(0, -140), "text": "+%d GOLD  +%d EXP" % [gold, exp], "color": Color("ffe79c"), "age": 0.0, "life": 1.25, "size": 22})
+	deaths.append({"pos": pos + Vector2(0, -50), "index": target_index, "age": 0.0, "life": 0.62})
+	vfx.label(pos + Vector2(0, -140), "+%s GOLD  +%s EXP" % [NumberFormat.compact(gold), NumberFormat.compact(exp)], Color("ffe79c"), 22, 1.25)
+	vfx.pulse(pos + Vector2(0, -50), Color("d9f1a5"), 1.4 if int(battle.enemies[target_index].get("archetype", "") == "BOSS") else 1.0, 0.52)
+	_play_audio("enemy_death")
+	_play_audio("gold_reward")
 	queue_redraw()
 
 func show_equipment_drop(item_name: String, rarity_color: Color) -> void:
-	floaters.append({"pos": Vector2(size.x * 0.5, size.y * 0.45), "text": "LOOT: %s" % item_name, "color": rarity_color, "age": 0.0, "life": 2.2, "size": 30, "centered": true})
+	vfx.label(Vector2(size.x * 0.5, size.y * 0.45), "LOOT: %s" % item_name, rarity_color, 30, 2.2)
 	queue_redraw()
 
 func show_level_up(level: int, gem_bonus: int) -> void:
 	var note := "SQUIRE LEVEL %d!" % level
 	if gem_bonus > 0:
 		note += "  +%d GEMS" % gem_bonus
-	floaters.append({"pos": Vector2(size.x * 0.5, size.y * 0.28), "text": note, "color": Color("f7e9af"), "age": 0.0, "life": 2.0, "size": 39, "centered": true})
+	vfx.label(Vector2(size.x * 0.5, size.y * 0.28), note, Color("f7e9af"), 39, 2.0)
 	queue_redraw()
 
 func show_hero_switch(title: String) -> void:
-	floaters.append({"pos": Vector2(size.x * 0.5, size.y * 0.28), "text": "%s SELECTED" % title.to_upper(), "color": Color("f7e9af"), "age": 0.0, "life": 1.0, "size": 34, "centered": true})
+	vfx.label(Vector2(size.x * 0.5, size.y * 0.28), "%s SELECTED" % title.to_upper(), Color("f7e9af"), 34, 1.0)
 	flashes[-1] = 0.35
 	queue_redraw()
 
@@ -151,23 +235,30 @@ func _draw() -> void:
 	var h := size.y
 	var unit := minf(w / 1000.0, h / 650.0)
 	_draw_landscape(w, h)
-	var shake := Vector2(randf_range(-7, 7), randf_range(-4, 4)) * unit * (shake_time / 0.28) if shake_time > 0.0 else Vector2.ZERO
+	var shake := Vector2(randf_range(-1, 1), randf_range(-1, 1)) * unit * vfx.shake_strength * (vfx.shake_time / 0.20) if vfx.shake_time > 0.0 else Vector2.ZERO
 	var hero_pos := _hero_position() + shake
 	if hero_lunge > 0.0:
 		hero_pos.x += sin((1.0 - hero_lunge / (0.26 if hero_bash else 0.19)) * PI) * (75.0 if hero_bash else 49.0) * unit
 	_draw_companions(unit)
-	_draw_hero(hero_pos, unit, float(flashes.get(-1, 0.0)) > 0.0)
+	_draw_hero(hero_pos, unit, float(flashes.get(-1, 0.0)) > 0.0 and not vfx.reduced)
 	if battle != null:
 		for i in battle.enemies.size():
 			var enemy: Dictionary = battle.enemies[i]
 			if float(enemy["current_hp"]) <= 0.0:
+				for death in deaths:
+					if int(death.get("index", -1)) == i:
+						_draw_defeated_enemy(_enemy_position(i) + shake, enemy, unit, float(death["age"]) / float(death["life"]))
+						break
 				continue
 			var pos := _enemy_position(i) + shake
 			var lunge := float(lunges.get(i, 0.0))
 			if lunge > 0.0:
 				pos.x -= sin((1.0 - lunge / 0.18) * PI) * 24.0 * unit
+			var hit_time := float(enemy_hit_times.get(i, 0.0))
+			if hit_time > 0.0:
+				var hit_duration := float(EnemyArtService.metadata(str(enemy.get("visual", enemy["kind"]))).get("hit_duration", 0.22))
+				pos.x += sin((1.0 - hit_time / hit_duration) * PI) * 16.0 * unit
 			_draw_enemy(pos, enemy, unit, float(flashes.get(i, 0.0)) > 0.0, i)
-	_draw_hero_projectiles(unit)
 	_draw_effects(unit)
 	_draw_artifact_indicators(unit)
 
@@ -435,8 +526,6 @@ func _draw_enemy(pos: Vector2, enemy: Dictionary, unit: float, flash: bool, enem
 	var kind := str(enemy.get("visual", enemy["kind"]))
 	var boss := str(enemy.get("archetype", "")) == "BOSS" or kind == "Goblin Warlord"
 	var enemy_state := enemy_visual_state(enemy_index)
-	if enemy_state == "hit":
-		pos.x += 9.0 * unit
 	var art_meta := EnemyArtService.metadata(kind)
 	var elite_scale := 1.2 if str(enemy.get("archetype", "")) == "ELITE" else 1.0
 	var boss_scale := 1.65 if boss else 1.0
@@ -487,11 +576,25 @@ func _draw_enemy(pos: Vector2, enemy: Dictionary, unit: float, flash: bool, enem
 		if str(enemy.get("archetype", "")) == "TREASURE":
 			draw_arc(Vector2(0, -91), 50, 0, TAU, 20, Color("ffdf80"), 6)
 	if flash or enemy_state == "hit":
-		draw_circle(Vector2(0, -62), 47, Color(1, 1, 1, 0.4))
+		draw_circle(Vector2(0, -62), 47, Color(1, 1, 1, 0.20 if vfx.reduced else 0.4))
 	var bar_width := 125.0 if boss else 85.0
 	_draw_hp_bar(Vector2(-bar_width * 0.5, -250 if boss else -116), bar_width, float(enemy["current_hp"]) / float(enemy["hp"]), Color("eb6f67"))
 	if boss:
 		draw_string(ThemeDB.fallback_font, Vector2(-90, -265), kind.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color("f8dfbc"))
+	draw_set_transform(Vector2.ZERO)
+
+func _draw_defeated_enemy(pos: Vector2, enemy: Dictionary, unit: float, ratio: float) -> void:
+	var kind := str(enemy.get("visual", enemy.get("kind", "")))
+	var texture := EnemyArtService.presentation_texture_for(kind, "idle", int(enemy.get("region", battle.region)))
+	if texture == null:
+		return
+	var meta := EnemyArtService.metadata(kind)
+	var actor_scale := unit * float(meta.get("scale", 0.82)) * (1.65 if str(enemy.get("archetype", "")) == "BOSS" else 1.0) * (1.0 - ratio * 0.45)
+	var height := 240.0 * float(meta.get("scale", 0.82)) * (1.0 - ratio * 0.45)
+	var width := height * float(texture.get_width()) / float(texture.get_height())
+	var flip_scale := -actor_scale if bool(meta.get("flip_h", false)) else actor_scale
+	draw_set_transform(pos, 0.0, Vector2(flip_scale, actor_scale))
+	draw_texture_rect(texture, Rect2(Vector2(-width * 0.5, 24.0 - height), Vector2(width, height)), false, Color(1, 1, 1, 1.0 - ratio))
 	draw_set_transform(Vector2.ZERO)
 
 func _draw_campaign_creature(enemy: Dictionary) -> void:
@@ -643,17 +746,7 @@ func _draw_warlord() -> void:
 	draw_colored_polygon(PackedVector2Array([Vector2(70, -124), Vector2(95, -143), Vector2(109, -116), Vector2(91, -96)]), Color("adb1a4"))
 
 func _draw_effects(unit: float) -> void:
-	for impact in impacts:
-		var age := float(impact["age"])
-		var life := float(impact["life"])
-		var ratio := age / life
-		var pos: Vector2 = impact["pos"]
-		var color := Color("ffe5a1") if bool(impact["strong"]) else Color("f4f0d5")
-		color.a = 1.0 - ratio
-		draw_arc(pos, (12.0 + ratio * (60.0 if bool(impact["strong"]) else 35.0)) * unit, 0, TAU, 20, color, 5 * unit)
-		for i in 6:
-			var direction := Vector2.RIGHT.rotated(TAU * i / 6.0)
-			draw_line(pos + direction * (15 + ratio * 18) * unit, pos + direction * (28 + ratio * 35) * unit, color, 4 * unit)
+	vfx.draw(self, unit, battle)
 	for death in deaths:
 		var ratio := float(death["age"]) / float(death["life"])
 		var color := Color("b7e6a8", 0.7 * (1.0 - ratio))

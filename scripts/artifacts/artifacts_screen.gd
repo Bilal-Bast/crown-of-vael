@@ -58,6 +58,8 @@ func refresh() -> void:
 	if selected_id != "" and profile.artifacts.has(selected_id):
 		_build_detail()
 	add_child(_label("RELIC COLLECTION", 32, Color("e9c87d")))
+	if profile.artifacts.is_empty():
+		add_child(_label("No artifacts discovered yet. Explore modes or summon to find relics.", 29, Color("aebdb4")))
 	for id in ArtifactData.ARTIFACTS:
 		var data: Dictionary = ArtifactData.ARTIFACTS[id]
 		var owned := profile.artifacts.has(id)
