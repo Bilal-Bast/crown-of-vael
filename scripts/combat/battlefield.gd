@@ -244,8 +244,8 @@ func _draw_landscape(w: float, h: float) -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), Color("19332e", 0.08), false, 5)
 
 func _draw_region_landscape(w: float, h: float) -> void:
-	if battle.region == 1:
-		var background := EnemyArtService.background_texture(1, battle.stage == 20)
+	if battle.region >= 1 and battle.region <= 10:
+		var background := EnemyArtService.background_texture(battle.region, battle.stage == 20)
 		if background != null:
 			var scale_to_cover := maxf(w / float(background.get_width()), h / float(background.get_height()))
 			var bg_size := Vector2(background.get_size()) * scale_to_cover
@@ -446,12 +446,19 @@ func _draw_enemy(pos: Vector2, enemy: Dictionary, unit: float, flash: bool, enem
 		draw_arc(Vector2(0, -70), 65, 0, TAU, 24, Color("e3548b", 0.28 + 0.12 * (int(enemy["difficulty"]) - 3)), 7)
 	draw_ellipse_placeholder(Vector2(0, 15), Vector2(39, 10), Color("314d37", 0.33))
 	var art_region := int(enemy.get("region", battle.region if battle != null and str(battle.mode_config.get("mode", "campaign")) == "campaign" else 0))
-	var enemy_texture := EnemyArtService.texture_for(kind, enemy_state, art_region)
+	var enemy_texture := EnemyArtService.presentation_texture_for(kind, enemy_state, art_region)
 	var art_size := Vector2.ZERO
 	if enemy_texture != null:
 		var art_height := 240.0 * float(art_meta.get("scale", 0.82))
 		art_size = Vector2(art_height * float(enemy_texture.get_width()) / float(enemy_texture.get_height()), art_height)
+		var width_cap := 500.0 if boss else (320.0 if elite_scale > 1.0 else 280.0)
+		if art_size.x > width_cap:
+			art_size *= width_cap / art_size.x
+		if bool(art_meta.get("flip_h", false)):
+			draw_set_transform(pos, 0.0, Vector2(-actor_scale, actor_scale))
 		draw_texture_rect(enemy_texture, Rect2(Vector2(-art_size.x * 0.5, 24.0 - art_size.y) + Vector2(art_meta.get("offset", Vector2.ZERO)), art_size), false)
+		if bool(art_meta.get("flip_h", false)):
+			draw_set_transform(pos, 0.0, Vector2.ONE * actor_scale)
 	elif boss and enemy.has("region") and kind != "Goblin Warlord":
 		_draw_region_boss(enemy)
 	else:

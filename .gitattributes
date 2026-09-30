@@ -1,2 +1,20 @@
-# Normalize EOL for all files that Git considers text files.
+﻿# Normalize EOL for all files that Git considers text files.
 * text=auto eol=lf
+assets/enemies/ashen_highlands/**/*.png filter=lfs diff=lfs merge=lfs -text
+assets/enemies/crimson_desert/**/*.png filter=lfs diff=lfs merge=lfs -text
+assets/enemies/demon_realm/**/*.png filter=lfs diff=lfs merge=lfs -text
+assets/enemies/dragon_peaks/**/*.png filter=lfs diff=lfs merge=lfs -text
+assets/enemies/frostfang_mountains/**/*.png filter=lfs diff=lfs merge=lfs -text
+assets/enemies/ruined_kingdom/**/*.png filter=lfs diff=lfs merge=lfs -text
+assets/enemies/shadowlands/**/*.png filter=lfs diff=lfs merge=lfs -text
+assets/enemies/sunken_marshes/**/*.png filter=lfs diff=lfs merge=lfs -text
+assets/enemies/whispering_forest/**/*.png filter=lfs diff=lfs merge=lfs -text
+assets/backgrounds/regions/ashen_highlands/battle_bg.png filter=lfs diff=lfs merge=lfs -text
+assets/backgrounds/regions/crimson_desert/battle_bg.png filter=lfs diff=lfs merge=lfs -text
+assets/backgrounds/regions/demon_realm/battle_bg.png filter=lfs diff=lfs merge=lfs -text
+assets/backgrounds/regions/dragon_peaks/battle_bg.png filter=lfs diff=lfs merge=lfs -text
+assets/backgrounds/regions/frostfang_mountains/battle_bg.png filter=lfs diff=lfs merge=lfs -text
+assets/backgrounds/regions/ruined_kingdom/battle_bg.png filter=lfs diff=lfs merge=lfs -text
+assets/backgrounds/regions/shadowlands/battle_bg.png filter=lfs diff=lfs merge=lfs -text
+assets/backgrounds/regions/sunken_marshes/battle_bg.png filter=lfs diff=lfs merge=lfs -text
+assets/backgrounds/regions/whispering_forest/battle_bg.png filter=lfs diff=lfs merge=lfs -text
