@@ -20,7 +20,7 @@ func _run() -> void:
 		check(CampaignData.wave_kinds(region, 20, 1) == [info["boss"]], "region %d boss" % region)
 		for stage in [5, 10, 15]:
 			var kinds := CampaignData.wave_kinds(region, stage, 3)
-			check(kinds.size() == 5 and info["elites"].has(kinds[4]), "region %d stage %d elite" % [region, stage])
+			check(kinds.size() == 7 and info["elites"].has(kinds[6]), "region %d stage %d elite" % [region, stage])
 	for difficulty in range(1, 6):
 		check(float(CampaignData.enemy_stats("Goblin", difficulty, 1, 1, 1)["hp"]) > float(CampaignData.enemy_stats("Goblin", difficulty - 1, 1, 1, 1)["hp"]), "HP difficulty scaling %d" % difficulty)
 		check(float(CampaignData.enemy_stats("Goblin", difficulty, 1, 1, 1)["atk"]) > float(CampaignData.enemy_stats("Goblin", difficulty - 1, 1, 1, 1)["atk"]), "damage difficulty scaling %d" % difficulty)
@@ -70,7 +70,7 @@ func _run() -> void:
 	var battle := BattleController.new()
 	root.add_child(battle)
 	battle.start(migrated)
-	check(battle.enemies.size() == 5 and battle.boss_time == 30.0, "normal combat waves")
+	check(battle.enemies.size() == 7 and battle.boss_time == 30.0, "normal combat waves")
 	battle.force_treasure = true
 	battle._spawn_wave()
 	check(str(battle.enemies[0]["archetype"]) == "TREASURE", "forced treasure spawn")

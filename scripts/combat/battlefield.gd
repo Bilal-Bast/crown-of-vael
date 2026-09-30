@@ -19,6 +19,8 @@ var hero_lunge := 0.0
 var hero_bash := false
 var hero_attack_art_time := 0.0
 var hero_guard_art_time := 0.0
+var hero_run_time := 0.0
+var hero_run_duration := 1.5
 var pixel_skill_effect_time := 0.0
 var pixel_skill_effect_pos := Vector2.ZERO
 var pixel_background_layer: TextureRect
@@ -77,6 +79,7 @@ func _process(delta: float) -> void:
 	hero_lunge = maxf(0.0, hero_lunge - delta)
 	hero_attack_art_time = maxf(0.0, hero_attack_art_time - delta)
 	hero_guard_art_time = maxf(0.0, hero_guard_art_time - delta)
+	hero_run_time = maxf(0.0, hero_run_time - delta)
 	pixel_skill_effect_time = maxf(0.0, pixel_skill_effect_time - delta)
 	hero_visual_state = "guard" if hero_guard_art_time > 0.0 else ("attack" if hero_attack_art_time > 0.0 else "idle")
 	shake_time = maxf(0.0, shake_time - delta)
@@ -99,7 +102,7 @@ func _process(delta: float) -> void:
 			group[i]["age"] = float(group[i]["age"]) + delta
 			if float(group[i]["age"]) >= float(group[i]["life"]):
 				group.remove_at(i)
-	if hero_lunge > 0.0 or hero_attack_art_time > 0.0 or hero_guard_art_time > 0.0 or pixel_skill_effect_time > 0.0 or shake_time > 0.0 or not floaters.is_empty() or not impacts.is_empty() or not deaths.is_empty() or not companion_lunges.is_empty() or not vfx.projectiles.is_empty() or battle != null and battle.active:
+	if hero_lunge > 0.0 or hero_attack_art_time > 0.0 or hero_guard_art_time > 0.0 or hero_run_time > 0.0 or pixel_skill_effect_time > 0.0 or shake_time > 0.0 or not floaters.is_empty() or not impacts.is_empty() or not deaths.is_empty() or not companion_lunges.is_empty() or not vfx.projectiles.is_empty() or battle != null and battle.active:
 		queue_redraw()
 
 func _on_companion_attack(slot: int, target: int, amount: int) -> void:
@@ -163,8 +166,12 @@ func _on_presentation_event(event: String, data: Dictionary) -> void:
 			vfx.shake(0.22, 2.6)
 			_play_audio("boss_defeat")
 	elif event == "wave":
+		hero_run_time = 0.0
 		vfx.boss_banner_name = "WAVE %d" % int(data.get("wave", 1))
 		vfx.boss_banner_time = 0.72
+	elif event == "wave_run":
+		hero_run_duration = float(data.get("duration", 1.5))
+		hero_run_time = hero_run_duration
 	queue_redraw()
 
 func _on_attack_started(attacker_index: int, target_index: int) -> void:
@@ -295,8 +302,9 @@ func _draw() -> void:
 			if hit_time > 0.0:
 				var hit_duration := float(EnemyArtService.metadata(str(enemy.get("visual", enemy["kind"]))).get("hit_duration", 0.22))
 				pos.x += sin((1.0 - hit_time / hit_duration) * PI) * 16.0 * unit
-			_draw_enemy(pos, enemy, unit, float(flashes.get(i, 0.0)) > 0.0, i)
-			_update_pixel_enemy_sprite(i, pos, enemy, enemy_visual_state(i), unit)
+			var enemy_unit := unit * (0.76 if battle.enemies.size() > 3 and battle.stage != 20 else 1.0)
+			_draw_enemy(pos, enemy, enemy_unit, float(flashes.get(i, 0.0)) > 0.0, i)
+			_update_pixel_enemy_sprite(i, pos, enemy, enemy_visual_state(i), enemy_unit)
 		for i in range(battle.enemies.size(), pixel_enemy_sprites.size()):
 			_sync_pixel_enemy_visibility(i, false)
 	else:
@@ -439,7 +447,10 @@ func _draw_region_landscape(w: float, h: float) -> void:
 		draw_rect(Rect2(Vector2.ZERO, size), Color("371c3c", 0.12 + (battle.difficulty - 3) * 0.06))
 
 func _hero_position() -> Vector2:
-	return Vector2(size.x * 0.24, size.y * 0.72)
+	var run_progress := 1.0 - hero_run_time / hero_run_duration if hero_run_time > 0.0 else 0.0
+	var hero_x := lerpf(0.24, 0.78, run_progress) if hero_run_time > 0.0 else 0.24
+	var run_bob := sin(float(Time.get_ticks_msec()) * 0.025) * 4.0 * run_progress if hero_run_time > 0.0 else 0.0
+	return Vector2(size.x * hero_x, size.y * 0.72 + run_bob)
 
 func _enemy_position(index: int) -> Vector2:
 	if PixelBattleArt.is_active(battle) and battle.enemies.size() <= 3:
@@ -447,7 +458,12 @@ func _enemy_position(index: int) -> Vector2:
 		return Vector2(size.x * float(x_positions[index]), size.y * 0.73)
 	if battle != null and (str(battle.mode_config.get("mode", "campaign")) == "boss_rush" or str(battle.mode_config.get("mode", "campaign")) == "campaign" and battle.stage == 20):
 		return Vector2(size.x * 0.75, size.y * 0.71)
-	return Vector2(size.x * (0.59 + (index % 3) * 0.14), size.y * (0.54 + int(index / 3) * 0.20))
+	var positions := [Vector2(0.42, 0.64), Vector2(0.58, 0.64), Vector2(0.74, 0.64), Vector2(0.90, 0.64), Vector2(0.50, 0.81), Vector2(0.68, 0.81), Vector2(0.86, 0.81)]
+	var target := Vector2(size.x * positions[index % positions.size()].x, size.y * positions[index % positions.size()].y)
+	if battle != null and index < battle.enemies.size() and bool(battle.enemies[index].get("spawned", false)):
+		var entry_progress := 1.0 - clampf(float(battle.enemies[index].get("entry_time", 0.0)) / 0.45, 0.0, 1.0)
+		target.x = lerpf(size.x * 1.14, target.x, entry_progress)
+	return target
 
 func _draw_hero(pos: Vector2, unit: float, flash: bool) -> void:
 	var hero_id := battle.profile.selected_hero_id if battle != null and battle.profile != null else "knight"
@@ -534,6 +550,7 @@ func _update_pixel_hero_sprite(pos: Vector2, unit: float, allow_visible: bool = 
 	pixel_hero_sprite.position = pos + Vector2(0.0, -158.0 * unit)
 	var form_scale := float(HeroArtService.metadata(0).get("scale", 1.0))
 	pixel_hero_sprite.scale = Vector2(370.0 / 256.0, 392.0 / 256.0) * unit * form_scale
+	pixel_hero_sprite.rotation = sin(float(Time.get_ticks_msec()) * 0.035) * 0.06 if hero_run_time > 0.0 else 0.0
 	pixel_hero_sprite.modulate = Color.WHITE
 	pixel_hero_sprite.visible = true
 

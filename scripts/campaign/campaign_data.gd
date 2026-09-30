@@ -92,10 +92,10 @@ static func wave_kinds(region: int, stage: int, wave: int, force_elite: bool = f
 		result.append(str(info["boss"]))
 		return result
 	var pool: Array = info["enemies"]
-	for i in 5:
+	for i in GameData.ENEMIES_PER_WAVE:
 		result.append(str(pool[(stage + wave + i) % pool.size()]))
 	if wave == 3 and (is_elite(stage) or force_elite):
-		result[4] = str(info["elites"][(stage / 5) % 2])
+		result[result.size() - 1] = str(info["elites"][(stage / 5) % 2])
 	if force_treasure or randf() < TREASURE_CHANCE / 3.0:
 		result[0] = TREASURES[randi_range(0, TREASURES.size() - 1)]
 	return result

@@ -40,6 +40,10 @@ var run_time := 0.0
 var run_kills := 0
 var run_damage := 0
 var pending_hero_hits: Array[Dictionary] = []
+var enemy_entry_timer := 0.0
+var spawned_enemy_count := 0
+var wave_transition_time := 0.0
+var wave_transition_duration := 1.5
 
 func start(new_profile: SaveData) -> void:
 	mode_config = {"mode": "campaign"}
@@ -72,6 +76,9 @@ func _start_shared(new_profile: SaveData) -> void:
 	run_time = 0.0
 	run_kills = 0
 	run_damage = 0
+	enemy_entry_timer = 0.0
+	spawned_enemy_count = 0
+	wave_transition_time = 0.0
 	pending_hero_hits.clear()
 	active = true
 	skill_runtime.start(profile)
@@ -98,6 +105,8 @@ func refresh_hero_stats() -> void:
 
 func _spawn_wave() -> void:
 	enemies.clear()
+	enemy_entry_timer = 0.0
+	spawned_enemy_count = 0
 	if str(mode_config.get("mode", "campaign")) != "campaign":
 		for template in PveData.wave_enemies(mode_config, wave):
 			var enemy := template.duplicate(true)
@@ -111,13 +120,21 @@ func _spawn_wave() -> void:
 	var kinds := CampaignData.wave_kinds(region, 20 if force_boss else stage, wave, force_elite, force_treasure)
 	force_treasure = false
 
+	var paced_entries := stage != 20 and not force_boss
 	for kind in kinds:
 		var enemy := CampaignData.enemy_stats(kind, difficulty, region, stage, wave)
-		enemy["current_hp"] = enemy["hp"]
+		var enters_now := not paced_entries or spawned_enemy_count == 0
+		enemy["current_hp"] = enemy["hp"] if enters_now else 0.0
+		enemy["spawned"] = enters_now
 		enemy["attack_time"] = 0.7 + randf_range(0.0, 0.5)
 		enemy["stun_time"] = 0.0
+		enemy["entry_time"] = 0.45 if enters_now else 0.0
 		enemies.append(enemy)
+		if enters_now:
+			spawned_enemy_count += 1
 
+	if paced_entries and spawned_enemy_count > 0:
+		enemy_entry_timer = GameData.ENEMY_ENTRY_INTERVAL
 	changed.emit()
 
 func _process(delta: float) -> void:
@@ -129,6 +146,13 @@ func _process(delta: float) -> void:
 		if boss_time <= 0.0:
 			_lose(true)
 			return
+	if wave_transition_time > 0.0:
+		wave_transition_time = maxf(0.0, wave_transition_time - delta)
+		if wave_transition_time <= 0.0:
+			_advance_campaign_wave()
+		changed.emit()
+		return
+	_process_enemy_entries(delta)
 	artifact_runtime.process(delta, self)
 	skill_runtime.process(delta, self)
 	companion_runtime.process(delta, self)
@@ -144,6 +168,7 @@ func _process(delta: float) -> void:
 			return
 	for i in enemies.size():
 		var enemy := enemies[i]
+		enemy["entry_time"] = maxf(0.0, float(enemy.get("entry_time", 0.0)) - delta)
 		if float(enemy["current_hp"]) <= 0.0:
 			continue
 		enemy["stun_time"] = maxf(0.0, float(enemy["stun_time"]) - delta)
@@ -171,6 +196,25 @@ func _process(delta: float) -> void:
 				_lose(stage == 20 and str(mode_config.get("mode", "campaign")) == "campaign")
 				return
 	changed.emit()
+
+func _process_enemy_entries(delta: float) -> void:
+	if str(mode_config.get("mode", "campaign")) != "campaign" or stage == 20 or spawned_enemy_count >= enemies.size():
+		return
+	enemy_entry_timer -= delta
+	if enemy_entry_timer > 0.0:
+		return
+	for index in enemies.size():
+		if bool(enemies[index].get("spawned", false)):
+			continue
+		enemies[index]["current_hp"] = enemies[index]["hp"]
+		enemies[index]["spawned"] = true
+		enemies[index]["entry_time"] = 0.45
+		enemies[index]["attack_time"] = 0.7 + randf_range(0.0, 0.5)
+		spawned_enemy_count += 1
+		enemy_entry_timer = GameData.ENEMY_ENTRY_INTERVAL
+		presentation_event.emit("enemy_enter", {"index": index})
+		changed.emit()
+		return
 
 func _hero_attack() -> void:
 	for i in enemies.size():
@@ -245,11 +289,17 @@ func _hit_enemy(index: int, amount: int, critical: bool, bash: bool) -> void:
 				presentation_event.emit("boss_defeat" if stage == 20 else "stage_clear", {"boss": stage == 20})
 				stage_cleared.emit()
 			else:
-				wave += 1
-				presentation_event.emit("wave", {"wave": wave})
-				_spawn_wave()
-				message.emit("Wave %d/%d" % [wave, GameData.WAVES_PER_STAGE])
-	changed.emit()
+				wave_transition_time = wave_transition_duration
+				presentation_event.emit("wave_run", {"duration": wave_transition_duration})
+		changed.emit()
+
+func _advance_campaign_wave() -> void:
+	if not active:
+		return
+	wave += 1
+	presentation_event.emit("wave", {"wave": wave})
+	_spawn_wave()
+	message.emit("Wave %d/%d" % [wave, GameData.WAVES_PER_STAGE])
 
 func _advance_mode() -> void:
 	var mode := str(mode_config["mode"])
@@ -277,6 +327,8 @@ func _finish_mode(won: bool) -> void:
 	changed.emit()
 
 func _all_enemies_defeated() -> bool:
+	if str(mode_config.get("mode", "campaign")) == "campaign" and spawned_enemy_count < enemies.size():
+		return false
 	for enemy in enemies:
 		if float(enemy["current_hp"]) > 0.0:
 			return false
