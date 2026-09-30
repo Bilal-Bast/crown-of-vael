@@ -109,7 +109,15 @@ func _build_banner(banner: String) -> void:
 	free_row.add_child(ad)
 
 func _build_reveal() -> void:
-	var panel := _panel(Color("e9c87d"))
+	var highest_rarity := 0
+	for reward in results:
+		highest_rarity = maxi(highest_rarity, int(reward["rarity"]))
+	var panel := _panel(EquipmentData.COLORS[highest_rarity])
+	panel.modulate.a = 0.72
+	panel.scale = Vector2(0.92, 0.92) if highest_rarity >= 4 else Vector2(0.96, 0.96)
+	var reveal_tween := create_tween()
+	reveal_tween.tween_property(panel, "modulate:a", 1.0, 0.22)
+	reveal_tween.parallel().tween_property(panel, "scale", Vector2.ONE, 0.32 if highest_rarity >= 4 else 0.24).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	add_child(panel)
 	move_child(panel, 1)
 	var box := VBoxContainer.new()
@@ -150,6 +158,9 @@ func _build_reveal() -> void:
 	box.add_child(close)
 
 func _summon(banner: String, count: int, source: String) -> void:
+	var audio := get_node_or_null("/root/AudioService") if is_inside_tree() else null
+	if audio != null:
+		audio.play_event("summon", "UI")
 	var pulled := service.summon(banner, count, source)
 	if pulled.is_empty():
 		notice = "Summon unavailable. Check Gems or daily allowance."

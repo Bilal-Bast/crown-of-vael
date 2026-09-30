@@ -86,7 +86,9 @@ func cast(id: String, battle: BattleController) -> bool:
 		attack_amount = strength
 		battle.refresh_hero_stats()
 	elif effect == "heal":
+		var hp_before := battle.hero_hp
 		battle.hero_hp = minf(float(battle.hero["hp"]), battle.hero_hp + float(battle.hero["hp"]) * strength * (1.0 + float(battle.hero.get("healing_bonus", 0.0))))
 		battle.changed.emit()
+		battle.skill_healed.emit(roundi(battle.hero_hp - hp_before))
 	battle.message.emit("%s!" % data["name"])
 	return true
