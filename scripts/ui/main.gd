@@ -16,6 +16,10 @@ const BattlePassScreenScript = preload("res://scripts/monetization/battle_pass_s
 const ShopScreenScript = preload("res://scripts/monetization/shop_screen.gd")
 const AccountScreenScript = preload("res://scripts/online/account_screen.gd")
 const SocialScreenScript = preload("res://scripts/online/social_screen.gd")
+const SettingsScreenScript = preload("res://scripts/ui/settings_screen.gd")
+const IdleRewardServiceScript = preload("res://scripts/progression/idle_reward_service.gd")
+const TutorialServiceScript = preload("res://scripts/progression/tutorial_service.gd")
+const NumberFormatScript = preload("res://scripts/core/number_format.gd")
 
 const INK := Color("172425")
 const PANEL := Color("253739")
@@ -44,10 +48,12 @@ var battle_pass_area: ScrollContainer
 var shop_area: ScrollContainer
 var account_area: ScrollContainer
 var social_area: ScrollContainer
+var settings_area: ScrollContainer
 var battle_pass_screen: BattlePassScreen
 var shop_screen: ShopScreen
 var account_screen: AccountScreen
 var social_screen: SocialScreen
+var settings_screen: SettingsScreen
 var cloud_sync_timer: Timer
 var quests_screen: QuestsScreen
 var login_screen: LoginScreen
@@ -90,9 +96,31 @@ var upgrade_buttons: Dictionary = {}
 var nav_buttons: Dictionary = {}
 var selected_tab := "Battle"
 var transition_id := 0
+var idle_rewards: IdleRewardService
+var tutorials: TutorialService
+var tutorial_popup: PopupPanel
+var tutorial_title: Label
+var tutorial_body: Label
+var tutorial_next: Button
+var tutorial_skip: Button
+var offline_popup: Control
+var offline_body: Label
+var offline_ad_button: Button
+var power_help_dialog: AcceptDialog
+var active_feature_tip := ""
+var onboarding_upgrade_dismissed := false
+var exit_confirmation: ConfirmationDialog
 
 func _ready() -> void:
-	profile = SaveData.load_profile()
+	var test_save_path := OS.get_environment("VAEL_SAVE_PATH")
+	profile = SaveData.load_from(test_save_path) if not test_save_path.is_empty() else SaveData.load_profile()
+	tutorials = TutorialServiceScript.new(profile)
+	idle_rewards = IdleRewardServiceScript.new(profile)
+	idle_rewards.prepare(int(Time.get_unix_time_from_system()))
+	var audio := get_node_or_null("/root/AudioService")
+	if audio != null:
+		audio.apply_settings(profile.audio_settings)
+		audio.set_music("home")
 	ProgressionService.new(profile).refresh()
 	if profile.offline_last_claim == 0:
 		profile.offline_last_claim = int(Time.get_unix_time_from_system())
@@ -115,8 +143,6 @@ func _ready() -> void:
 	cloud_sync_timer.wait_time = 4.0
 	cloud_sync_timer.timeout.connect(_auto_cloud_sync)
 	add_child(cloud_sync_timer)
-	if profile.last_login_reward_date != CalendarService.day():
-		call_deferred("_show_login_popup")
 	if profile.campaign_complete:
 		_show_message("Infernal campaign complete.")
 		_refresh_ui()
@@ -127,8 +153,48 @@ func _ready() -> void:
 		battle.start(profile)
 
 func _notification(what: int) -> void:
-	if what in [NOTIFICATION_WM_CLOSE_REQUEST, NOTIFICATION_APPLICATION_PAUSED] and profile != null and str(profile.account_meta.get("account_type", "Guest")) == "Linked":
-		AccountService.new(profile).sync_now()
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		_handle_back_request()
+		return
+	if profile == null: return
+	if what in [NOTIFICATION_WM_CLOSE_REQUEST, NOTIFICATION_APPLICATION_PAUSED]:
+		profile.offline_last_claim = maxi(profile.offline_last_claim, int(Time.get_unix_time_from_system()))
+		profile.save()
+		if str(profile.account_meta.get("account_type", "Guest")) == "Linked": AccountService.new(profile).sync_now()
+	elif what == NOTIFICATION_APPLICATION_RESUMED:
+		idle_rewards.prepare(int(Time.get_unix_time_from_system()))
+		_show_offline_popup()
+
+func _handle_back_request() -> void:
+	if login_popup != null and login_popup.visible:
+		login_popup.hide()
+		return
+	if power_help_dialog != null and power_help_dialog.visible:
+		power_help_dialog.hide()
+		return
+	if tutorial_popup != null and tutorial_popup.visible:
+		tutorial_popup.hide()
+		return
+	if offline_popup != null and offline_popup.visible:
+		offline_popup.hide()
+		return
+	if selected_tab == "Adventure" and adventure_screen != null and str(adventure_screen.get("view")) != "hub":
+		adventure_screen._open("hub")
+		return
+	if selected_tab == "Heroes" and heroes_screen != null and str(heroes_screen.get("view")) != "roster":
+		heroes_screen._back()
+		return
+	if selected_tab != "Battle":
+		_select_tab("Battle")
+		return
+	if exit_confirmation == null:
+		exit_confirmation = ConfirmationDialog.new()
+		exit_confirmation.title = "Leave Crown of Vael?"
+		exit_confirmation.dialog_text = "Your progress is saved automatically."
+		exit_confirmation.ok_button_text = "EXIT"
+		exit_confirmation.confirmed.connect(get_tree().quit)
+		add_child(exit_confirmation)
+	exit_confirmation.popup_centered()
 
 func _build_ui() -> void:
 	var backdrop := ColorRect.new()
@@ -206,6 +272,7 @@ func _build_ui() -> void:
 	adventure_screen.add_theme_constant_override("separation", 14)
 	adventure_area.add_child(adventure_screen)
 	adventure_screen.configure(profile, _start_pve, _return_campaign, _select_campaign_stage)
+	adventure_screen.tutorial_feature_opened.connect(_show_feature_for_tab)
 	quests_area = _screen_scroll(root)
 	quests_screen = QuestsScreenScript.new()
 	quests_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -236,8 +303,16 @@ func _build_ui() -> void:
 	social_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	social_area.add_child(social_screen)
 	social_screen.configure(profile, _on_account_social_changed)
+	social_screen.tutorial_feature_opened.connect(_show_feature_for_tab)
+	settings_area = _screen_scroll(root)
+	settings_screen = SettingsScreenScript.new()
+	settings_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	settings_area.add_child(settings_screen)
+	settings_screen.configure(profile, _on_settings_changed)
 	_build_navigation(root)
+	_build_guidance_popups()
 	_refresh_progression_screens()
+	call_deferred("_show_onboarding_or_offline")
 
 func _screen_scroll(root: VBoxContainer) -> ScrollContainer:
 	var scroll := ScrollContainer.new()
@@ -269,6 +344,11 @@ func _build_top_bar(root: VBoxContainer) -> void:
 	gold_text = _metric(metrics, "GOLD", GOLD)
 	gems_text = _metric(metrics, "GEMS", Color("a5dded"))
 	power_text = _metric(metrics, "POWER", Color("d9e9ca"))
+	var power_help := Button.new()
+	power_help.text = "?"
+	power_help.custom_minimum_size = Vector2(54, 54)
+	power_help.pressed.connect(_show_power_help)
+	metrics.add_child(power_help)
 
 func _metric(parent: HBoxContainer, heading: String, value_color: Color) -> Label:
 	var cell := VBoxContainer.new()
@@ -399,26 +479,253 @@ func _build_navigation(root: VBoxContainer) -> void:
 	root.add_child(panel)
 	var rows := VBoxContainer.new()
 	panel.add_child(rows)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 6)
-	rows.add_child(row)
-	for tab_name in ["Battle", "Adventure", "Heroes", "Equipment", "Skills", "Summon", "Quests", "Login", "Pass", "Shop", "Account", "Social"]:
-		if tab_name in ["Skills", "Pass"]:
-			row = HBoxContainer.new()
-			row.add_theme_constant_override("separation", 6)
-			rows.add_child(row)
-		var button := Button.new()
-		button.text = tab_name
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.custom_minimum_size.y = 72
-		button.add_theme_font_size_override("font_size", 25)
-		button.pressed.connect(_select_tab.bind(tab_name))
-		row.add_child(button)
-		nav_buttons[tab_name] = button
+	for tab_row in [["Battle", "Adventure", "Heroes", "Equipment"], ["Skills", "Summon", "Quests", "Login"], ["Pass", "Shop", "Account", "Social"], ["Settings"]]:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 6)
+		rows.add_child(row)
+		for tab_name in tab_row:
+			var button := Button.new()
+			button.text = tab_name
+			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			button.custom_minimum_size.y = 72
+			button.add_theme_font_size_override("font_size", 25)
+			button.pressed.connect(_select_tab.bind(tab_name))
+			button.pressed.connect(_play_audio.bind("button_click", "UI"))
+			row.add_child(button)
+			nav_buttons[tab_name] = button
 	login_popup = PopupPanel.new()
 	login_popup.name = "DailyLoginPopup"
 	add_child(login_popup)
 	_update_navigation()
+
+func _build_guidance_popups() -> void:
+	tutorial_popup = PopupPanel.new()
+	tutorial_popup.name = "TutorialPopup"
+	add_child(tutorial_popup)
+	var card := _panel()
+	card.custom_minimum_size = Vector2(690, 0)
+	tutorial_popup.add_child(card)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 14)
+	card.add_child(box)
+	tutorial_title = _label("", 40, GOLD)
+	tutorial_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(tutorial_title)
+	tutorial_body = _label("", 30, PALE)
+	tutorial_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(tutorial_body)
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 10)
+	box.add_child(actions)
+	tutorial_next = Button.new()
+	tutorial_next.custom_minimum_size.y = 132
+	tutorial_next.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tutorial_next.add_theme_font_size_override("font_size", 28)
+	tutorial_next.pressed.connect(_on_tutorial_next)
+	actions.add_child(tutorial_next)
+	tutorial_skip = Button.new()
+	tutorial_skip.text = "SKIP TUTORIAL"
+	tutorial_skip.custom_minimum_size.y = 132
+	tutorial_skip.add_theme_font_size_override("font_size", 24)
+	tutorial_skip.pressed.connect(_on_tutorial_skip)
+	actions.add_child(tutorial_skip)
+	offline_popup = Control.new()
+	offline_popup.name = "OfflineRewardsPopup"
+	offline_popup.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	offline_popup.mouse_filter = Control.MOUSE_FILTER_STOP
+	offline_popup.visible = false
+	add_child(offline_popup)
+	var scrim := ColorRect.new()
+	scrim.color = Color(0.02, 0.05, 0.06, 0.76)
+	scrim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	scrim.mouse_filter = Control.MOUSE_FILTER_STOP
+	offline_popup.add_child(scrim)
+	var offline_card := _panel()
+	offline_card.custom_minimum_size = Vector2(690, 330)
+	offline_card.set_anchors_preset(Control.PRESET_CENTER)
+	offline_card.offset_left = -345
+	offline_card.offset_right = 345
+	offline_card.offset_top = -165
+	offline_card.offset_bottom = 165
+	offline_card.mouse_filter = Control.MOUSE_FILTER_STOP
+	offline_popup.add_child(offline_card)
+	var offline_box := VBoxContainer.new()
+	offline_box.add_theme_constant_override("separation", 14)
+	offline_card.add_child(offline_box)
+	var offline_title := _label("WELCOME BACK\nOFFLINE REWARDS", 38, GOLD)
+	offline_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	offline_box.add_child(offline_title)
+	offline_body = _label("", 32, PALE)
+	offline_body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	offline_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	offline_box.add_child(offline_body)
+	var claims := HBoxContainer.new()
+	claims.add_theme_constant_override("separation", 10)
+	offline_box.add_child(claims)
+	var claim := Button.new()
+	claim.text = "CLAIM"
+	claim.custom_minimum_size.y = 132
+	claim.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	claim.add_theme_font_size_override("font_size", 29)
+	claim.pressed.connect(_claim_idle_reward.bind(false))
+	claims.add_child(claim)
+	offline_ad_button = Button.new()
+	offline_ad_button.text = "2× REWARD"
+	offline_ad_button.text = "2× REWARD • DEV SIM"
+	offline_ad_button.custom_minimum_size.y = 132
+	offline_ad_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	offline_ad_button.add_theme_font_size_override("font_size", 29)
+	offline_ad_button.pressed.connect(_claim_idle_reward.bind(true))
+	claims.add_child(offline_ad_button)
+	power_help_dialog = AcceptDialog.new()
+	power_help_dialog.title = "POWER"
+	power_help_dialog.dialog_text = "Power is a summary estimate shaped by hero stats, upgrades, equipment, skills and passives, companions, artifacts, and hero stars or evolution. It helps compare builds but cannot predict every battle outcome."
+	add_child(power_help_dialog)
+
+func _show_onboarding_or_offline() -> void:
+	if tutorials.onboarding_active():
+		if not bool(profile.tutorial_state.steps.get("battle", false)):
+			_show_onboarding_step("battle")
+		elif not bool(profile.tutorial_state.steps.get("upgrade", false)):
+			_show_onboarding_step("upgrade")
+		elif not bool(profile.tutorial_state.steps.get("waves", false)):
+			_show_onboarding_step("waves")
+	else:
+		_show_startup_reward_popup()
+
+func _show_startup_reward_popup() -> void:
+	if not profile.offline_pending_rewards.is_empty():
+		_show_offline_popup()
+	elif profile.last_login_reward_date != CalendarService.day():
+		_show_login_popup()
+
+func _show_onboarding_step(id: String) -> void:
+	if tutorial_popup == null or not tutorials.onboarding_active(): return
+	active_feature_tip = ""
+	tutorial_skip.visible = true
+	var step_index := 0
+	for index in TutorialServiceScript.STEPS.size():
+		if str(TutorialServiceScript.STEPS[index].id) == id: step_index = index
+	var step: Dictionary = TutorialServiceScript.STEPS[step_index]
+	tutorial_title.text = "FIRST STEPS  •  %s" % str(step.title)
+	tutorial_body.text = str(step.body)
+	if id == "battle":
+		tutorial_next.text = "SHOW ME"
+	elif id == "upgrade":
+		tutorial_next.text = "REMIND ME LATER"
+	else:
+		tutorial_next.text = "GOT IT"
+	tutorial_next.disabled = false
+	_highlight_first_upgrade(id == "upgrade")
+	tutorial_popup.popup_centered(Vector2i(720, 360))
+
+func _highlight_first_upgrade(enabled: bool) -> void:
+	var button := upgrade_buttons.get("atk") as Button
+	if button == null: return
+	if not enabled:
+		for style_name in ["normal", "hover", "pressed", "disabled"]: button.remove_theme_stylebox_override(style_name)
+		return
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color("31453a")
+	normal.border_color = GOLD
+	normal.set_border_width_all(5)
+	normal.set_corner_radius_all(8)
+	normal.set_content_margin_all(8)
+	button.add_theme_stylebox_override("normal", normal)
+	var hover := normal.duplicate() as StyleBoxFlat
+	hover.bg_color = Color("405744")
+	button.add_theme_stylebox_override("hover", hover)
+
+func _on_tutorial_next() -> void:
+	if active_feature_tip != "":
+		_on_feature_ack()
+		tutorial_popup.hide()
+		return
+	var id := "battle" if tutorial_title.text.ends_with("BATTLE") else "upgrade" if tutorial_title.text.ends_with("UPGRADE") else "waves"
+	if id == "battle":
+		tutorials.mark_step("battle")
+		profile.tutorial_state["current_step"] = "upgrade"
+		tutorial_popup.hide()
+		if profile.gold >= GameData.upgrade_cost(int(profile.upgrades.get("atk", 0))): _show_onboarding_step("upgrade")
+		else: onboarding_upgrade_dismissed = false
+	elif id == "upgrade":
+		onboarding_upgrade_dismissed = true
+		_highlight_first_upgrade(false)
+		tutorial_popup.hide()
+	else:
+		tutorials.mark_step("waves")
+		tutorial_popup.hide()
+		_show_startup_reward_popup()
+
+func _on_tutorial_skip() -> void:
+	tutorials.skip()
+	_highlight_first_upgrade(false)
+	tutorial_popup.hide()
+	_show_startup_reward_popup()
+
+func _maybe_show_upgrade_prompt() -> void:
+	if tutorials == null or not tutorials.onboarding_active() or not bool(profile.tutorial_state.steps.get("battle", false)) or onboarding_upgrade_dismissed or bool(profile.tutorial_state.steps.get("upgrade", false)) or tutorial_popup != null and tutorial_popup.visible: return
+	if profile.gold >= GameData.upgrade_cost(int(profile.upgrades.get("atk", 0))):
+		if selected_tab != "Battle": _select_tab("Battle")
+		_show_onboarding_step("upgrade")
+
+func _show_feature_for_tab(tab_name: String) -> void:
+	if tutorials == null: return
+	var id := "Battle Pass" if tab_name == "Pass" else tab_name
+	if id == "Summon" and profile.gems < SummonData.COSTS[1] and int(profile.summon_tickets.get("equipment", 0)) <= 0 and not SummonService.new(profile).can_summon("equipment", 1, "daily"): return
+	if id == "Equipment" and profile.inventory.is_empty(): return
+	if tutorials.feature_seen(id): return
+	var copy: Array = tutorials.feature_copy(id)
+	if copy.is_empty(): return
+	active_feature_tip = id
+	tutorial_title.text = str(copy[0])
+	tutorial_body.text = str(copy[1])
+	tutorial_next.text = "GOT IT"
+	tutorial_next.disabled = false
+	tutorial_skip.visible = false
+	tutorial_popup.popup_centered(Vector2i(720, 360))
+
+func _show_power_help() -> void:
+	power_help_dialog.popup_centered(Vector2i(760, 260))
+
+func _show_offline_popup() -> void:
+	if offline_popup == null or idle_rewards == null or idle_rewards.profile.offline_pending_rewards.is_empty(): return
+	var reward: Dictionary = profile.offline_pending_rewards
+	var seconds := int(reward.get("seconds", 0))
+	var hours := floori(float(seconds) / 3600.0)
+	var minutes := floori(float(seconds % 3600) / 60.0)
+	offline_body.text = "Away %dh %dm\nGold  +%s\nHero EXP  +%s" % [hours, minutes, NumberFormatScript.compact(int(reward.get("gold", 0))), NumberFormatScript.compact(int(reward.get("exp", 0)))]
+	offline_ad_button.disabled = false
+	offline_popup.visible = true
+
+func _claim_idle_reward(double_reward: bool) -> void:
+	var ads: RewardedAdProvider = MonetizationService.new(profile).ads
+	var previous_level := profile.level
+	var result: Dictionary = idle_rewards.claim(double_reward, int(Time.get_unix_time_from_system()), ads)
+	if result.is_empty():
+		offline_body.text = "The rewarded ad is unavailable. Claim the base reward instead."
+		offline_ad_button.disabled = true
+		return
+	offline_popup.hide()
+	_play_audio("claim_reward", "UI")
+	if battle.active: battle.refresh_hero_stats()
+	_refresh_ui()
+	if profile.level > 1 and selected_tab == "Heroes": _refresh_progression_screens()
+	_show_message("Offline rewards claimed: +%s Gold, +%s Hero EXP." % [NumberFormatScript.compact(int(result.gold)), NumberFormatScript.compact(int(result.exp))])
+	gold_text.pivot_offset = gold_text.size * 0.5
+	var reward_tween := create_tween()
+	reward_tween.tween_property(gold_text, "scale", Vector2(1.16, 1.16), 0.12)
+	reward_tween.tween_property(gold_text, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	if profile.level > previous_level and battlefield != null: battlefield.show_level_up(profile.level, 0)
+	if battlefield != null and result.gold > 0:
+		battlefield.vfx.label(Vector2(battlefield.size.x * 0.5, battlefield.size.y * 0.45), "+%s GOLD" % NumberFormatScript.compact(int(result.gold)), GOLD, 32, 0.8)
+		battlefield.queue_redraw()
+	if profile.last_login_reward_date != CalendarService.day(): _show_login_popup()
+
+func _on_feature_ack() -> void:
+	if active_feature_tip != "": tutorials.acknowledge_feature(active_feature_tip)
+	active_feature_tip = ""
+	tutorial_skip.visible = true
 
 func _panel() -> PanelContainer:
 	var panel := PanelContainer.new()
@@ -445,9 +752,9 @@ func _refresh_ui() -> void:
 	if stage_text == null:
 		return
 	var stats := profile.hero_stats()
-	gold_text.text = str(profile.gold)
-	gems_text.text = str(profile.gems)
-	power_text.text = str(profile.power())
+	gold_text.text = NumberFormatScript.compact(profile.gold)
+	gems_text.text = NumberFormatScript.compact(profile.gems)
+	power_text.text = NumberFormatScript.compact(profile.power())
 	var campaign := str(battle.mode_config.get("mode", "campaign")) == "campaign"
 	stage_text.text = CampaignData.label(profile.campaign_difficulty, profile.region, profile.stage).to_upper() if campaign else PveData.mode_label(battle.mode_config)
 	region_text.text = CampaignData.REGIONS[profile.region - 1]["name"] if campaign else battle.mode_detail()
@@ -466,6 +773,8 @@ func _refresh_ui() -> void:
 		wave_text.text = "Wave %d/3  |  %d enemies remaining" % [battle.wave, _living_enemies()]
 	boss_text.visible = campaign and profile.stage == 20 and battle.active
 	boss_text.text = "00:%02d" % ceili(battle.boss_time)
+	boss_text.add_theme_color_override("font_color", Color("ff786c") if battle.boss_time <= 10.0 else Color("ffb38d"))
+	boss_text.add_theme_font_size_override("font_size", 39 if battle.boss_time <= 10.0 else 34)
 	var hp := battle.hero_hp if battle.active else float(stats["hp"])
 	var hero_id := profile.selected_hero_id
 	var hero_record: Dictionary = profile.heroes[hero_id]
@@ -477,7 +786,7 @@ func _refresh_ui() -> void:
 	var rarity := int(HeroData.HEROES[hero_id]["rarity"])
 	hero_level_text.text = "◆ %s  |  LV %d" % [HeroData.title(hero_id, hero_record).to_upper(), profile.level]
 	hero_level_text.add_theme_color_override("font_color", EquipmentData.COLORS[rarity])
-	hero_hp_text.text = "HP %d/%d" % [ceili(hp), ceili(float(stats["hp"]))]
+	hero_hp_text.text = "HP %s/%s" % [NumberFormatScript.compact(ceili(hp)), NumberFormatScript.compact(ceili(float(stats["hp"])))]
 	hero_stats_text.text = "%s  •  %s  |  ATK %d    ARMOR %d    SPEED %.2f/s\nCRIT %d%%    CRIT DMG %d%%" % [EquipmentData.RARITIES[rarity].to_upper(), HeroData.element(hero_id, hero_record).to_upper(), roundi(float(stats["atk"])), roundi(float(stats["armor"])), float(stats["speed"]), roundi(float(stats["crit_chance"]) * 100), roundi(float(stats["crit_damage"]) * 100)]
 	exp_bar.max_value = GameData.exp_to_next(profile.level)
 	exp_bar.value = profile.exp
@@ -494,6 +803,7 @@ func _refresh_ui() -> void:
 		var button: Button = upgrade_buttons[stat]
 		button.text = "%s +%d\n%d GOLD" % [str(stat).to_upper(), rank, cost]
 		button.disabled = profile.gold < cost
+	_maybe_show_upgrade_prompt()
 	skill_bar.queue_redraw()
 	battlefield.queue_redraw()
 
@@ -510,7 +820,7 @@ func _show_message(value: String) -> void:
 
 func _select_tab(tab_name: String) -> void:
 	selected_tab = tab_name
-	stage_panel.visible = tab_name not in ["Adventure", "Quests", "Login", "Pass", "Shop", "Account", "Social"]
+	stage_panel.visible = tab_name not in ["Adventure", "Quests", "Login", "Pass", "Shop", "Account", "Social", "Settings"]
 	battle_area.visible = tab_name == "Battle"
 	heroes_area.visible = tab_name == "Heroes"
 	equipment_area.visible = tab_name == "Equipment"
@@ -525,6 +835,7 @@ func _select_tab(tab_name: String) -> void:
 	shop_area.visible = tab_name == "Shop"
 	account_area.visible = tab_name == "Account"
 	social_area.visible = tab_name == "Social"
+	settings_area.visible = tab_name == "Settings"
 	placeholder_area.visible = false
 	placeholder_title.text = tab_name.to_upper()
 	if tab_name in ["Heroes", "Equipment"]:
@@ -552,6 +863,7 @@ func _select_tab(tab_name: String) -> void:
 	elif tab_name == "Social":
 		social_screen.refresh()
 	_update_navigation()
+	_show_feature_for_tab(tab_name)
 
 func _show_login_popup() -> void:
 	if profile.last_login_reward_date == CalendarService.day(): return
@@ -578,9 +890,11 @@ func _claim_login_popup() -> void:
 		_on_progression_claimed()
 
 func _on_progression_claimed() -> void:
+	_play_audio("claim_reward", "UI")
 	_refresh_ui()
 	_update_navigation()
 	_schedule_cloud_sync()
+	_maybe_show_upgrade_prompt()
 
 func _on_account_social_changed() -> void:
 	_refresh_ui()
@@ -744,6 +1058,10 @@ func _build_equipment_screen() -> void:
 	headbox.add_child(_label("ARMORY  •  %s" % HeroData.title(profile.selected_hero_id, profile.heroes[profile.selected_hero_id]).to_upper(), 36, GOLD))
 	headbox.add_child(_label("%d Gold    •    %d Enhancement Stones" % [profile.gold, profile.enhancement_stones], 30, PALE))
 	headbox.add_child(_label("Swipe to browse slots and inventory.", 28, MUTED))
+	if profile.inventory.is_empty():
+		var empty := _label("No equipment yet. Battle or summon to obtain gear.", 29, MUTED)
+		empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		headbox.add_child(empty)
 	var selected := profile.get_item(selected_item_id)
 	if not selected.is_empty():
 		_section_title(equipment_content, "ITEM DETAILS")
@@ -844,6 +1162,7 @@ func _merge_selected() -> void:
 		_gear_changed("Five items merged into %s!" % EquipmentData.title(merged))
 
 func _gear_changed(note: String) -> void:
+	_play_audio("equip", "UI")
 	if battle.active:
 		battle.refresh_hero_stats()
 	_show_message(note)
@@ -865,6 +1184,10 @@ func _on_summon_changed() -> void:
 	_schedule_cloud_sync()
 	if battle.active:
 		battle.refresh_hero_stats()
+	if not profile.companions.is_empty() and not tutorials.feature_seen("Companions"):
+		_show_feature_for_tab("Companions")
+	elif not profile.artifacts.is_empty() and not tutorials.feature_seen("Artifacts"):
+		_show_feature_for_tab("Artifacts")
 
 func _on_build_changed() -> void:
 	_refresh_ui()
@@ -880,17 +1203,31 @@ func _on_equipment_dropped(item: Dictionary) -> void:
 	battlefield.show_equipment_drop(EquipmentData.title(item), EquipmentData.COLORS[int(item["rarity"])] )
 	if selected_tab == "Equipment":
 		_refresh_progression_screens()
+	if tutorials != null and not tutorials.feature_seen("Equipment"): _show_feature_for_tab("Equipment")
 
 func _on_hero_leveled(new_level: int, gem_bonus: int) -> void:
+	_play_audio("level_up", "SFX")
 	battlefield.show_level_up(new_level, gem_bonus)
 	if selected_tab == "Heroes":
 		_refresh_progression_screens()
 
 func _on_skill_cast(_id: String, _slot: int) -> void:
 	ProgressionService.new(profile).report("skill_cast")
+	_play_audio("skill_activation")
 
 func _on_companion_attack(_slot: int, _target: int, amount: int) -> void:
 	ProgressionService.new(profile).report("companion_damage", amount)
+
+func _on_settings_changed() -> void:
+	if battlefield != null:
+		battlefield.vfx.reduced = profile.reduced_effects
+
+func _play_audio(event: String, category := "SFX") -> void:
+	if not is_inside_tree():
+		return
+	var audio := get_node_or_null("/root/AudioService")
+	if audio != null:
+		audio.play_event(event, category)
 
 func _update_navigation() -> void:
 	for tab_name in nav_buttons:
@@ -923,14 +1260,19 @@ func _update_navigation() -> void:
 
 func _buy_upgrade(stat: String) -> void:
 	if profile.buy_upgrade(stat):
+		_play_audio("upgrade", "UI")
 		if battle.active:
 			battle.refresh_hero_stats()
 		_show_message("%s upgraded! Your power increased." % stat.to_upper())
 		_refresh_ui()
 		_schedule_cloud_sync()
+		if stat == "atk" and tutorials != null and tutorials.onboarding_active() and not bool(profile.tutorial_state.steps.get("upgrade", false)):
+			tutorials.mark_step("upgrade")
+			_show_onboarding_step("waves")
 
 func _on_stage_cleared() -> void:
 	_schedule_cloud_sync()
+	_maybe_show_upgrade_prompt()
 	transition_id += 1
 	var this_transition := transition_id
 	var cleared_difficulty := profile.campaign_difficulty
@@ -958,6 +1300,12 @@ func _on_stage_cleared() -> void:
 		profile.stage += 1
 	profile.world_map_region = profile.region
 	profile.save()
+	_play_audio("gem_reward", "SFX")
+	if gem_reward > 0:
+		gems_text.pivot_offset = gems_text.size * 0.5
+		var reward_tween := create_tween()
+		reward_tween.tween_property(gems_text, "scale", Vector2(1.18, 1.18), 0.12)
+		reward_tween.tween_property(gems_text, "scale", Vector2.ONE, 0.20).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_show_message("%s cleared! +%d first-clear Gems." % [CampaignData.label(cleared_difficulty, cleared_region, cleared_stage), gem_reward])
 	_refresh_ui()
 	if profile.campaign_complete: return

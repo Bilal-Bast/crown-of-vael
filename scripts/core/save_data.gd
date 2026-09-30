@@ -91,7 +91,11 @@ var owned_cosmetics := {}
 var equipped_cosmetics := {}
 var purchase_entitlements := {}
 var offline_last_claim := 0
+var offline_pending_rewards := {}
+var tutorial_state := {"completed": false, "skipped": false, "steps": {}, "features": {}, "migration": 1}
 var account_meta := {}
+var audio_settings := {"master": 1.0, "music": 0.75, "sfx": 0.85, "ui": 0.75, "muted": false}
+var reduced_effects := false
 var cloud_meta := {"last_cloud_sync": "", "progression_timestamp": 0, "sync_status": "Local only"}
 var friends_state := {"friends": [], "incoming": [], "outgoing": []}
 var guild_state := {}
@@ -148,6 +152,32 @@ static func load_from(path: String) -> SaveData:
 		if data.get(key, []) is Array: profile.set(key, data.get(key, []).duplicate(true))
 	profile.gold_boost_expiry = maxi(0, int(data.get("gold_boost_expiry", 0)))
 	profile.offline_last_claim = maxi(0, int(data.get("offline_last_claim", 0)))
+	var pending: Variant = data.get("offline_pending_rewards", {})
+	if pending is Dictionary:
+		profile.offline_pending_rewards = pending.duplicate(true)
+		for key in ["gold", "exp", "seconds", "gold_per_hour", "exp_per_hour", "created_at"]:
+			if profile.offline_pending_rewards.has(key): profile.offline_pending_rewards[key] = maxi(0, int(profile.offline_pending_rewards[key]))
+	var saved_tutorial: Variant = data.get("tutorial_state", null)
+	if saved_tutorial is Dictionary:
+		profile.tutorial_state.merge(saved_tutorial, true)
+	else:
+		var meaningful_progress := profile.stage > 1 or int(data.get("level", 1)) > 1 or int(data.get("gold", 0)) > 0 or int(data.get("phase8_version", 0)) > 0 or int(data.get("phase10_version", 0)) > 0
+		for key in ["campaign_first_clears", "first_clears", "purchase_entitlements"]:
+			var migrated_field: Variant = data.get(key, {})
+			if migrated_field is Dictionary and not migrated_field.is_empty(): meaningful_progress = true
+		var migrated_inventory: Variant = data.get("inventory", [])
+		if migrated_inventory is Array and migrated_inventory.size() > EquipmentData.STARTER_KINDS.size(): meaningful_progress = true
+		if meaningful_progress:
+			profile.tutorial_state.completed = true
+			profile.tutorial_state.skipped = true
+	if not profile.tutorial_state.get("steps", {}) is Dictionary: profile.tutorial_state.steps = {}
+	if not profile.tutorial_state.get("features", {}) is Dictionary: profile.tutorial_state.features = {}
+	var saved_audio: Variant = data.get("audio_settings", {})
+	if saved_audio is Dictionary:
+		for key in profile.audio_settings:
+			if saved_audio.has(key):
+				profile.audio_settings[key] = clampf(float(saved_audio[key]), 0.0, 1.0) if key != "muted" else bool(saved_audio[key])
+	profile.reduced_effects = bool(data.get("reduced_effects", false))
 	for key in ["account_meta", "cloud_meta", "friends_state", "guild_state", "pvp_state"]:
 		if data.get(key, {}) is Dictionary: profile.set(key, data.get(key, {}).duplicate(true))
 	profile._ensure_account_meta()
@@ -344,7 +374,7 @@ func save() -> void:
 		push_error("Could not save profile: %s" % error_string(FileAccess.get_open_error()))
 		return
 	file.store_string(JSON.stringify({
-		"phase4_version": 1, "phase5_version": 1, "phase6_version": 1, "phase7_version": 1, "phase8_version": 1, "phase9_version": 1, "phase10_version": 1, "phase11_version": 1,
+		"phase4_version": 1, "phase5_version": 1, "phase6_version": 1, "phase7_version": 1, "phase8_version": 1, "phase9_version": 1, "phase10_version": 1, "phase11_version": 1, "phase12d_version": 1,
 		"account_meta": account_meta, "cloud_meta": cloud_meta, "friends_state": friends_state, "guild_state": guild_state, "pvp_state": pvp_state,
 		"bp_season": bp_season, "premium_pass_owned": premium_pass_owned, "starter_pack_purchased": starter_pack_purchased,
 		"subscription_active": subscription_active, "subscription_expiry_date": subscription_expiry_date, "subscription_last_claim": subscription_last_claim,
@@ -353,6 +383,9 @@ func save() -> void:
 		"offer_daily_reset": offer_daily_reset, "offer_weekly_reset": offer_weekly_reset, "offer_daily_viewed": offer_daily_viewed, "offer_weekly_viewed": offer_weekly_viewed,
 		"owned_cosmetics": owned_cosmetics, "equipped_cosmetics": equipped_cosmetics, "purchase_entitlements": purchase_entitlements,
 		"offline_last_claim": offline_last_claim,
+		"offline_pending_rewards": offline_pending_rewards,
+		"tutorial_state": tutorial_state,
+		"audio_settings": audio_settings, "reduced_effects": reduced_effects,
 		"daily_reset_date": daily_reset_date, "weekly_reset_week": weekly_reset_week,
 		"daily_quest_ids": daily_quest_ids, "weekly_quest_ids": weekly_quest_ids,
 		"lifetime_stats": lifetime_stats, "daily_counters": daily_counters, "weekly_counters": weekly_counters,
