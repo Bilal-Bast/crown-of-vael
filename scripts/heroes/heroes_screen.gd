@@ -159,7 +159,7 @@ func _build_path(data: Dictionary, record: Dictionary) -> void:
 		add_child(_label("%d. %s  •  %s" % [stage + 1, str(path[stage]).to_upper(), status], 29, Color("a9d6ad") if stage == int(record["evolution"]) else Color("aebdb4")))
 	var cost := HeroData.evolution_cost(selected_id, int(record["evolution"]))
 	if not cost.is_empty():
-		add_child(_label("Next: Level %d  •  %d Crests  •  %d Gold" % [cost["level"], cost["crests"], cost["gold"]], 29, Color("e9e8d7")))
+		add_child(_label("Next evolution\nLevel %d / %d   •   Crests %d / %d\nGold %s / %s" % [profile.level, cost["level"], profile.evolution_crests, cost["crests"], NumberFormat.compact(profile.gold), NumberFormat.compact(int(cost["gold"]))], 29, Color("e9e8d7")))
 		var evolve := _button("EVOLVE HERO")
 		evolve.disabled = battle.active or not progress.can_evolve(selected_id)
 		evolve.pressed.connect(_evolve)
@@ -200,11 +200,14 @@ func _build_evolution_result() -> void:
 	new_portrait.evolution = int(profile.heroes[selected_id]["evolution"])
 	new_portrait.custom_minimum_size = Vector2(260, 320)
 	evolution_row.add_child(new_portrait)
-	new_portrait.modulate.a = 0.35
+	old_portrait.modulate.a = 0.9
+	new_portrait.modulate = Color(1.0, 0.88, 0.58, 0.35)
 	new_portrait.scale = Vector2(0.94, 0.94)
 	var reveal := create_tween()
-	reveal.tween_property(new_portrait, "modulate:a", 1.0, 0.45)
-	reveal.parallel().tween_property(new_portrait, "scale", Vector2.ONE, 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	reveal.tween_property(old_portrait, "modulate:a", 0.35, 0.42)
+	reveal.parallel().tween_property(new_portrait, "modulate", Color.WHITE, 0.45)
+	reveal.parallel().tween_property(new_portrait, "scale", Vector2(1.03, 1.03), 0.24).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	reveal.tween_property(new_portrait, "scale", Vector2.ONE, 0.20)
 	add_child(_label("%s  →  %s" % [evolution_result["previous"], evolution_result["next"]], 37, Color("e9c87d")))
 	add_child(_label("Element: %s  •  New title earned" % evolution_result["element"], 29, Color("a9d6ad")))
 	var before: Dictionary = evolution_result.get("before_stats", {})
@@ -242,6 +245,9 @@ func _star_up() -> void:
 func _evolve() -> void:
 	evolution_result = progress.evolve(selected_id)
 	if not evolution_result.is_empty():
+		var audio := get_node_or_null("/root/AudioService") if is_inside_tree() else null
+		if audio != null:
+			audio.play_event("evolution", "SFX")
 		view = "evolution_result"
 		_changed()
 

@@ -180,23 +180,19 @@ func activate_gold_boost() -> bool:
 	return true
 
 func offline_cap_hours() -> int:
-	return 16 if subscription_valid() else 12
+	return IdleRewardService.new(profile).offline_cap_hours()
 
 func offline_reward(now: int = 0) -> Dictionary:
 	now = int(Time.get_unix_time_from_system()) if now == 0 else now
 	if profile.offline_last_claim == 0: return {"gold": 0, "seconds": 0}
-	var seconds := clampi(now - profile.offline_last_claim, 0, offline_cap_hours() * 3600)
-	return {"gold": int(seconds / 60.0) * 10, "seconds": seconds}
+	return IdleRewardService.new(profile).calculate(now - profile.offline_last_claim)
 
 func claim_offline(double_with_ad: bool = false, now: int = 0) -> int:
 	now = int(Time.get_unix_time_from_system()) if now == 0 else now
-	var reward := offline_reward(now)
-	if double_with_ad and not _ad("offline_double"): return 0
-	var amount := int(reward.gold) * (2 if double_with_ad else 1)
-	profile.gold += amount
-	profile.offline_last_claim = now
-	profile.save()
-	return amount
+	var idle := IdleRewardService.new(profile)
+	if profile.offline_pending_rewards.is_empty(): idle.prepare(now)
+	var reward := idle.claim(double_with_ad, now, ads)
+	return int(reward.get("gold", 0))
 
 func shop_badge() -> bool:
 	refresh_offers()

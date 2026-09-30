@@ -32,6 +32,8 @@ func refresh() -> void:
 	back.pressed.connect(on_back)
 	head.add_child(back)
 	add_child(_label("ACTIVE COMPANIONS  •  4 SLOTS", 32, Color("e9c87d")))
+	if profile.companions.is_empty():
+		add_child(_label("No companions unlocked yet. Summon companions to add an ally.", 29, Color("aebdb4")))
 	var slots := HBoxContainer.new()
 	slots.add_theme_constant_override("separation", 8)
 	add_child(slots)

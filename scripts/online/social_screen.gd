@@ -1,6 +1,8 @@
 class_name SocialScreen
 extends VBoxContainer
 
+signal tutorial_feature_opened(feature_name: String)
+
 var profile: SaveData
 var friends: SocialService
 var guild: GuildService
@@ -38,6 +40,7 @@ func refresh() -> void:
 func _friends_view() -> void:
 	var list: Array = profile.friends_state.get("friends", [])
 	add_child(_label("FRIENDS %d/%d" % [list.size(), SocialService.FRIEND_LIMIT], 30))
+	if list.is_empty(): add_child(_label("No friends yet. Add a friend with their Player ID.", 26))
 	var add_row := HBoxContainer.new()
 	add_child(add_row)
 	var id := LineEdit.new()
@@ -88,6 +91,7 @@ func _guild_view() -> void:
 	var record: Dictionary = state.get("guild", {})
 	if record.is_empty():
 		add_child(_label("GUILDS", 30))
+		add_child(_label("Join a Guild or create one to take part in group activities.", 26))
 		var name := LineEdit.new(); name.placeholder_text = "Guild name (3–24)"; add_child(name)
 		var tag := LineEdit.new(); tag.placeholder_text = "Tag (2–6)"; add_child(tag)
 		var description := LineEdit.new(); description.placeholder_text = "Description"; add_child(description)
@@ -195,6 +199,7 @@ func _select(value: String) -> void:
 		profile.save()
 	if tab == "PvP" and opponents.is_empty(): _find_opponents()
 	else: refresh()
+	tutorial_feature_opened.emit(tab)
 
 func _add_friend(id: LineEdit) -> void:
 	notice = "Friend request sent." if friends.add_friend(id.text) else "Friend could not be added. Check the ID or friend limit."
