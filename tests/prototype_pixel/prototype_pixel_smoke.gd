@@ -65,7 +65,7 @@ func _run() -> void:
 	if tutorial_popup_after_select != null:
 		tutorial_popup_after_select.hide()
 	_check(PixelBattleArt.is_active(battle), "Prototype activates for Squire in Greenvale campaign")
-	_check(PixelBattleArt.validation_report().is_empty(), "All prototype textures load and sprite sheets have three frames")
+	_check(PixelBattleArt.validation_report().is_empty(), "All prototype textures and combat animation sheets load")
 	var run_frames: Array[Texture2D] = []
 	for frame_index in 6:
 		var run_frame := PixelBattleArt.hero_run_frame(frame_index)
@@ -152,9 +152,15 @@ func _run() -> void:
 	battle.wave = 1
 	battlefield._on_presentation_event("wave_run", {"duration": 1.5})
 	battlefield.hero_run_time = 0.75
+	battlefield.hero_attack_art_time = 0.0
+	battlefield.hero_guard_art_time = 0.0
+	battlefield.hero_hit_art_time = 0.0
 	battlefield.queue_redraw()
 	await process_frame
-	_check(battlefield.pixel_hero_sprite != null and battlefield.pixel_hero_sprite.texture == PixelBattleArt.hero_run_frame(1), "Squire run animation is used during the inter-wave transition")
+	await process_frame
+	var expected_run_frame := int(floor((battlefield.hero_run_duration - battlefield.hero_run_time) * 10.0)) % 6
+	battlefield._update_pixel_hero_sprite(battlefield._hero_position(), 0.36)
+	_check(battlefield.pixel_hero_sprite != null and battlefield.pixel_hero_sprite.texture == PixelBattleArt.hero_run_frame(expected_run_frame), "Squire run animation is used during the inter-wave transition")
 	await _capture("squire_run_after_wave_1_360x640", RESOLUTION_SMALL)
 	battle.wave = 2
 	battlefield._on_presentation_event("wave_run", {"duration": 1.5})
@@ -180,9 +186,10 @@ func _run() -> void:
 			var expected_height := main.get_viewport_rect().size.y * 0.30
 			var actual_height := (main.get("battlefield_host") as Control).custom_minimum_size.y
 			_check(is_equal_approx(actual_height, expected_height), "battlefield scales to 30%% at %dx%d" % [resolution.x, resolution.y])
+	await _capture_combat_animation_samples()
 
 	main.queue_free()
-	print("PIXEL BATTLE PROTOTYPE: %s (26 captures, %d failures)" % ["FAIL" if failures else "PASS", failures])
+	print("PIXEL BATTLE PROTOTYPE: %s (42 captures, %d failures)" % ["FAIL" if failures else "PASS", failures])
 	quit(1 if failures else 0)
 
 func _set_enemies(kinds: Array, entering: bool = false) -> void:
@@ -197,6 +204,9 @@ func _set_enemies(kinds: Array, entering: bool = false) -> void:
 		battle.enemies.append(enemy)
 	battlefield.enemy_attack_times.clear()
 	battlefield.enemy_hit_times.clear()
+	battlefield.enemy_attack_art_durations.clear()
+	battlefield.enemy_hit_art_durations.clear()
+	battlefield.deaths.clear()
 	battlefield.flashes.clear()
 	battle.changed.emit()
 
@@ -211,6 +221,86 @@ func _set_mixed_entry_wave() -> void:
 		enemy["entry_time"] = 0.0
 		battle.enemies.append(enemy)
 	battle.changed.emit()
+
+func _capture_combat_animation_samples() -> void:
+	battle.active = false
+	battle.stage = 1
+	_set_enemies(["Goblin"])
+	battlefield.hero_attack_art_time = 0.0
+	battlefield.hero_guard_art_time = 0.0
+	battlefield.hero_hit_art_time = 0.0
+	battlefield.hero_run_time = 0.0
+	battlefield._process(0.0)
+	_clear_animation_capture_vfx()
+	await _capture("squire_idle_360x640", RESOLUTION_SMALL)
+	battlefield._on_attack_started(-1, 0)
+	battlefield.hero_attack_art_time = battlefield.hero_attack_art_duration - 2.0 / PixelBattleArt.animation_fps("Squire", "attack")
+	battlefield._process(0.0)
+	_clear_animation_capture_vfx()
+	await _capture("squire_attack_animation_360x640", RESOLUTION_SMALL)
+	battlefield.hero_attack_art_time = 0.0
+	battlefield._on_skill_cast("shield_bash", 0)
+	battlefield.hero_guard_art_time = battlefield.hero_guard_art_duration - 2.0 / PixelBattleArt.animation_fps("Squire", "guard")
+	battlefield.pixel_skill_effect_time = 0.24
+	# Preserve the production-sized burst through window resizing and screenshot readback.
+	battlefield.pixel_impact_overlay.duration = 1.2
+	battlefield.pixel_impact_overlay.age = 0.0
+	battlefield._process(0.0)
+	_clear_animation_capture_vfx()
+	await _capture("squire_shield_bash_360x640", RESOLUTION_SMALL)
+	battlefield.hero_guard_art_time = 0.0
+	battlefield._on_damage_popup(-1, 9, false, false)
+	battlefield.hero_hit_art_time = battlefield.hero_hit_art_duration - 1.0 / PixelBattleArt.animation_fps("Squire", "hit")
+	battlefield._process(0.0)
+	_clear_animation_capture_vfx()
+	await _capture("squire_hit_360x640", RESOLUTION_SMALL)
+
+	for kind in ENEMIES:
+		_set_enemies([kind])
+		_clear_animation_capture_vfx()
+		await _capture("%s_idle_animation_360x640" % str(kind).to_lower().replace(" ", "_"), RESOLUTION_SMALL)
+		battlefield._on_attack_started(0, -1)
+		var attack_fps := PixelBattleArt.animation_fps(kind, "attack")
+		battlefield.enemy_attack_times[0] = float(battlefield.enemy_attack_art_durations[0]) - 1.5 / attack_fps
+		battlefield._process(0.0)
+		_clear_animation_capture_vfx()
+		await _capture("%s_attack_animation_360x640" % str(kind).to_lower().replace(" ", "_"), RESOLUTION_SMALL)
+		battlefield._on_damage_popup(0, 11, false, false)
+		var hit_fps := PixelBattleArt.animation_fps(kind, "hit")
+		battlefield.enemy_hit_times[0] = float(battlefield.enemy_hit_art_durations[0]) - 1.0 / hit_fps
+		battlefield._process(0.0)
+		_clear_animation_capture_vfx()
+		await _capture("%s_hit_animation_360x640" % str(kind).to_lower().replace(" ", "_"), RESOLUTION_SMALL)
+
+	_set_seven_active_enemies()
+	_clear_animation_capture_vfx()
+	await _capture("greenvale_crowded_seven_enemy_360x640", RESOLUTION_SMALL)
+	_set_enemies(ENEMIES)
+	battlefield._on_attack_started(0, -1)
+	battlefield._process(0.12)
+	battlefield._on_attack_started(2, -1)
+	_check(battlefield.enemy_visual_state(0) == "attack" and battlefield.enemy_visual_state(2) == "attack" and battlefield.enemy_visual_state(1) == "idle", "simultaneous enemy actions remain independent")
+	_clear_animation_capture_vfx()
+	await _capture("greenvale_multiple_independent_attacks_360x640", RESOLUTION_SMALL)
+	await _capture("greenvale_combat_overview_1080x1920", RESOLUTION_LARGE)
+
+func _set_seven_active_enemies() -> void:
+	battle.enemies.clear()
+	for index in GameData.ENEMIES_PER_WAVE:
+		var kind: String = ENEMIES[index % ENEMIES.size()]
+		var enemy := CampaignData.enemy_stats(kind, 0, 1, battle.stage, 1)
+		enemy["current_hp"] = enemy["hp"]
+		enemy["spawned"] = true
+		enemy["entry_time"] = 0.0
+		enemy["attack_time"] = 3.0
+		battle.enemies.append(enemy)
+	battle.changed.emit()
+
+func _clear_animation_capture_vfx() -> void:
+	battlefield.floaters.clear()
+	battlefield.impacts.clear()
+	battlefield.deaths.clear()
+	battlefield.queue_redraw()
 
 func _capture(name: String, resolution: Vector2i) -> void:
 	DisplayServer.window_set_size(resolution)

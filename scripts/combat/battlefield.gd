@@ -3,6 +3,7 @@ extends Control
 
 const SKY := Color("b9d5c5")
 const GROUND := Color("738e65")
+const PixelBattleImpactScript = preload("res://scripts/combat/pixel_battle_impact.gd")
 var vfx := CombatVfxService.new()
 
 var battle: BattleController
@@ -13,17 +14,24 @@ var flashes: Dictionary = {}
 var lunges: Dictionary = {}
 var enemy_attack_times: Dictionary = {}
 var enemy_hit_times: Dictionary = {}
+var enemy_attack_art_durations: Dictionary = {}
+var enemy_hit_art_durations: Dictionary = {}
 var companion_lunges: Dictionary = {}
 var hero_projectiles: Array[Dictionary] = []
 var hero_lunge := 0.0
 var hero_bash := false
 var hero_attack_art_time := 0.0
 var hero_guard_art_time := 0.0
+var hero_hit_art_time := 0.0
+var hero_attack_art_duration := 0.26
+var hero_guard_art_duration := 0.32
+var hero_hit_art_duration := 0.30
 var hero_run_time := 0.0
 var hero_run_duration := 1.5
 var pixel_skill_effect_time := 0.0
 var pixel_skill_effect_pos := Vector2.ZERO
 var pixel_background_layer: TextureRect
+var pixel_impact_overlay
 var pixel_hero_sprite: Sprite2D
 var pixel_enemy_sprites: Array[Sprite2D] = []
 ## Compatibility aliases retained for the Phase 9/legacy smoke harness.
@@ -74,14 +82,23 @@ func _update_texture_filter() -> void:
 		pixel_background_layer.visible = pixel_active
 		pixel_background_layer.texture = PixelBattleArt.background_texture() if pixel_active else null
 		pixel_background_layer.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST if pixel_active else CanvasItem.TEXTURE_FILTER_LINEAR
+	if pixel_active and pixel_impact_overlay == null:
+		var impact_layer := CanvasLayer.new()
+		impact_layer.name = "PixelImpactCanvasLayer"
+		impact_layer.layer = 1
+		add_child(impact_layer)
+		pixel_impact_overlay = PixelBattleImpactScript.new()
+		pixel_impact_overlay.name = "PixelBattleImpactOverlay"
+		impact_layer.add_child(pixel_impact_overlay)
 
 func _process(delta: float) -> void:
 	hero_lunge = maxf(0.0, hero_lunge - delta)
 	hero_attack_art_time = maxf(0.0, hero_attack_art_time - delta)
 	hero_guard_art_time = maxf(0.0, hero_guard_art_time - delta)
+	hero_hit_art_time = maxf(0.0, hero_hit_art_time - delta)
 	hero_run_time = maxf(0.0, hero_run_time - delta)
 	pixel_skill_effect_time = maxf(0.0, pixel_skill_effect_time - delta)
-	hero_visual_state = "guard" if hero_guard_art_time > 0.0 else ("attack" if hero_attack_art_time > 0.0 else "idle")
+	hero_visual_state = "hit" if PixelBattleArt.is_active(battle) and hero_hit_art_time > 0.0 else ("guard" if hero_guard_art_time > 0.0 else ("attack" if hero_attack_art_time > 0.0 else "idle"))
 	shake_time = maxf(0.0, shake_time - delta)
 	vfx.reduced = battle != null and battle.profile != null and battle.profile.reduced_effects
 	vfx.tick(delta)
@@ -102,7 +119,7 @@ func _process(delta: float) -> void:
 			group[i]["age"] = float(group[i]["age"]) + delta
 			if float(group[i]["age"]) >= float(group[i]["life"]):
 				group.remove_at(i)
-	if hero_lunge > 0.0 or hero_attack_art_time > 0.0 or hero_guard_art_time > 0.0 or hero_run_time > 0.0 or pixel_skill_effect_time > 0.0 or shake_time > 0.0 or not floaters.is_empty() or not impacts.is_empty() or not deaths.is_empty() or not companion_lunges.is_empty() or not vfx.projectiles.is_empty() or battle != null and battle.active:
+	if hero_lunge > 0.0 or hero_attack_art_time > 0.0 or hero_guard_art_time > 0.0 or hero_hit_art_time > 0.0 or hero_run_time > 0.0 or pixel_skill_effect_time > 0.0 or shake_time > 0.0 or not floaters.is_empty() or not impacts.is_empty() or not deaths.is_empty() or not companion_lunges.is_empty() or not vfx.projectiles.is_empty() or battle != null and battle.active:
 		queue_redraw()
 
 func _on_companion_attack(slot: int, target: int, amount: int) -> void:
@@ -141,6 +158,11 @@ func _on_skill_cast(skill_id: String, _slot: int) -> void:
 	if PixelBattleArt.is_active(battle) and skill_id == "shield_bash":
 		pixel_skill_effect_pos = target + Vector2(0, -84)
 		pixel_skill_effect_time = 0.28
+		var unit := minf(size.x / 1000.0, size.y / 560.0)
+		var impact_screen_position := get_global_transform_with_canvas() * pixel_skill_effect_pos
+		pixel_impact_overlay.show_impact(impact_screen_position, 18.0 * unit, 0.28)
+		hero_guard_art_duration = PixelBattleArt.animation_duration("Squire", "guard", 0.28)
+		hero_guard_art_time = hero_guard_art_duration
 	else:
 		vfx.skill_effect(skill_id, _hero_position() + Vector2(0, -82), target + Vector2(0, -76), tint)
 	_play_audio("shield_bash" if skill_id == "shield_bash" else "skill_activation")
@@ -179,8 +201,16 @@ func _on_attack_started(attacker_index: int, target_index: int) -> void:
 		if attacker_index == -1:
 			_play_audio("projectile_launch" if battle.profile.selected_hero_id in ["mage", "ranger", "necromancer"] else "sword_swing")
 		var selected_form := int(battle.profile.heroes.get(battle.profile.selected_hero_id, {}).get("evolution", 0)) if battle != null and battle.profile != null else 0
-		if attacker_index == -1 or attacker_index == -2:
-			hero_attack_art_time = float(HeroArtService.metadata(selected_form).get("attack_duration", 0.26)) * (1.25 if attacker_index == -2 else 1.0)
+		if attacker_index == -1:
+			hero_attack_art_duration = float(HeroArtService.metadata(selected_form).get("attack_duration", 0.26))
+			if PixelBattleArt.is_active(battle):
+				hero_attack_art_duration = PixelBattleArt.animation_duration("Squire", "attack", hero_attack_art_duration)
+			hero_attack_art_time = hero_attack_art_duration
+		elif attacker_index == -2:
+			hero_guard_art_duration = float(HeroArtService.metadata(selected_form).get("attack_duration", 0.26)) * 1.25
+			if PixelBattleArt.is_active(battle):
+				hero_guard_art_duration = PixelBattleArt.animation_duration("Squire", "guard", hero_guard_art_duration)
+			hero_guard_art_time = hero_guard_art_duration
 		var style := str(HeroData.HEROES[battle.profile.selected_hero_id]["style"])
 		if attacker_index == -1 and style in ["magic", "arrow", "dark_bolt"]:
 			var projectile_color := Color("8fe4f4") if style == "magic" else (Color("b08bda") if style == "dark_bolt" else Color("ead3a1"))
@@ -200,7 +230,11 @@ func _on_attack_started(attacker_index: int, target_index: int) -> void:
 	else:
 		var enemy: Dictionary = battle.enemies[attacker_index]
 		var enemy_id := str(enemy.get("visual", enemy.get("kind", "")))
-		enemy_attack_times[attacker_index] = float(EnemyArtService.metadata(enemy_id).get("attack_duration", 0.26))
+		var attack_duration := float(EnemyArtService.metadata(enemy_id).get("attack_duration", 0.26))
+		if PixelBattleArt.is_active(battle):
+			attack_duration = PixelBattleArt.animation_duration(enemy_id, "attack", attack_duration)
+		enemy_attack_times[attacker_index] = attack_duration
+		enemy_attack_art_durations[attacker_index] = attack_duration
 		if str(enemy.get("archetype", "")) == "BOSS":
 			vfx.shake(0.12, 2.0)
 		if str(battle.enemies[attacker_index].get("archetype", "")) in ["RANGED", "MAGIC", "HEALER"]:
@@ -214,11 +248,19 @@ func _on_attack_started(attacker_index: int, target_index: int) -> void:
 func _on_damage_popup(target_index: int, amount: int, critical: bool, bash: bool) -> void:
 	if target_index < 0:
 		var evolution := int(battle.profile.heroes.get("knight", {}).get("evolution", 0)) if battle != null and battle.profile != null and battle.profile.selected_hero_id == "knight" else 0
-		hero_guard_art_time = float(HeroArtService.metadata(evolution).get("hit_duration", 0.30))
+		hero_hit_art_duration = float(HeroArtService.metadata(evolution).get("hit_duration", 0.30))
+		if PixelBattleArt.is_active(battle):
+			hero_hit_art_duration = PixelBattleArt.animation_duration("Squire", "hit", hero_hit_art_duration)
+		hero_hit_art_time = hero_hit_art_duration
+		hero_guard_art_time = hero_hit_art_duration
 	elif battle != null and target_index < battle.enemies.size():
 		var enemy: Dictionary = battle.enemies[target_index]
 		var enemy_id := str(enemy.get("visual", enemy.get("kind", "")))
-		enemy_hit_times[target_index] = float(EnemyArtService.metadata(enemy_id).get("hit_duration", 0.22))
+		var hit_duration := float(EnemyArtService.metadata(enemy_id).get("hit_duration", 0.22))
+		if PixelBattleArt.is_active(battle):
+			hit_duration = PixelBattleArt.animation_duration(enemy_id, "hit", hit_duration)
+		enemy_hit_times[target_index] = hit_duration
+		enemy_hit_art_durations[target_index] = hit_duration
 	var pos := _hero_position() if target_index < 0 else _enemy_position(target_index)
 	var text_value := NumberFormat.compact(amount)
 	if critical:
@@ -302,7 +344,7 @@ func _draw() -> void:
 			if hit_time > 0.0:
 				var hit_duration := float(EnemyArtService.metadata(str(enemy.get("visual", enemy["kind"]))).get("hit_duration", 0.22))
 				pos.x += sin((1.0 - hit_time / hit_duration) * PI) * 16.0 * unit
-			var enemy_unit := unit * (0.76 if battle.enemies.size() > 3 and battle.stage != 20 else 1.0)
+			var enemy_unit := unit * (0.64 if battle.enemies.size() > 3 and battle.stage != 20 else 1.0)
 			_draw_enemy(pos, enemy, enemy_unit, float(flashes.get(i, 0.0)) > 0.0, i)
 			_update_pixel_enemy_sprite(i, pos, enemy, enemy_visual_state(i), enemy_unit)
 		for i in range(battle.enemies.size(), pixel_enemy_sprites.size()):
@@ -313,17 +355,6 @@ func _draw() -> void:
 			_sync_pixel_enemy_visibility(i, false)
 	_draw_effects(unit)
 	_draw_artifact_indicators(unit)
-	_draw_pixel_impact(unit)
-
-func _draw_pixel_impact(unit: float) -> void:
-	if not PixelBattleArt.is_active(battle) or pixel_skill_effect_time <= 0.0:
-		return
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	var fade := clampf(pixel_skill_effect_time / 0.28, 0.0, 1.0)
-	var block := maxf(3.0, 12.0 * unit)
-	for point in [Vector2(-2, -1), Vector2(-1, -2), Vector2(1, -2), Vector2(2, -1), Vector2(2, 1), Vector2(1, 2), Vector2(-1, 2), Vector2(-2, 1)]:
-		draw_rect(Rect2(pixel_skill_effect_pos + (point * block).round(), Vector2(block, block)), Color("ffd56a", fade))
-	draw_rect(Rect2(pixel_skill_effect_pos + Vector2(-block * 0.5, -block * 0.5).round(), Vector2(block, block)), Color("fff1b5", fade))
 
 func _draw_companions(unit: float) -> void:
 	if battle == null or battle.profile == null:
@@ -463,7 +494,7 @@ func _enemy_position(index: int) -> Vector2:
 		return target
 	if battle != null and (str(battle.mode_config.get("mode", "campaign")) == "boss_rush" or str(battle.mode_config.get("mode", "campaign")) == "campaign" and battle.stage == 20):
 		return Vector2(size.x * 0.75, size.y * 0.71)
-	var positions := [Vector2(0.42, 0.64), Vector2(0.58, 0.64), Vector2(0.74, 0.64), Vector2(0.90, 0.64), Vector2(0.50, 0.81), Vector2(0.68, 0.81), Vector2(0.86, 0.81)]
+	var positions := [Vector2(0.42, 0.52), Vector2(0.58, 0.52), Vector2(0.74, 0.52), Vector2(0.90, 0.52), Vector2(0.50, 0.91), Vector2(0.68, 0.91), Vector2(0.86, 0.91)]
 	var target := Vector2(size.x * positions[index % positions.size()].x, size.y * positions[index % positions.size()].y)
 	if battle != null and index < battle.enemies.size() and bool(battle.enemies[index].get("spawned", false)):
 		var entry_progress := 1.0 - clampf(float(battle.enemies[index].get("entry_time", 0.0)) / 0.45, 0.0, 1.0)
@@ -550,14 +581,23 @@ func _update_pixel_hero_sprite(pos: Vector2, unit: float, allow_visible: bool = 
 		pixel_hero_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		pixel_hero_sprite.z_index = 1
 		add_child(pixel_hero_sprite)
-	var state := "guard" if hero_guard_art_time > 0.0 else "attack" if hero_attack_art_time > 0.0 else "idle"
-	if hero_run_time > 0.0:
+	var state := hero_visual_state
+	if state == "hit":
+		pixel_hero_sprite.texture = _pixel_animation_frame("Squire", "hit", hero_hit_art_duration - hero_hit_art_time, false, 0, "guard")
+	elif state == "guard":
+		pixel_hero_sprite.texture = _pixel_animation_frame("Squire", "guard", hero_guard_art_duration - hero_guard_art_time, false, 0, "guard")
+	elif state == "attack":
+		pixel_hero_sprite.texture = _pixel_animation_frame("Squire", "attack", hero_attack_art_duration - hero_attack_art_time, false, 0, "attack")
+	elif hero_run_time > 0.0:
 		var run_elapsed := maxf(0.0, hero_run_duration - hero_run_time)
 		var run_frame := int(floor(run_elapsed * 10.0)) % 6
 		var run_texture := PixelBattleArt.hero_run_frame(run_frame)
 		pixel_hero_sprite.texture = run_texture if run_texture != null else PixelBattleArt.frame_texture(PixelBattleArt.hero_sheet(), "idle", "squire")
 	else:
-		pixel_hero_sprite.texture = PixelBattleArt.frame_texture(PixelBattleArt.hero_sheet(), state, "squire")
+		var idle_frame := int(floor(Time.get_ticks_msec() * 0.001 * PixelBattleArt.animation_fps("Squire", "idle"))) % maxi(1, PixelBattleArt.animation_frame_count("Squire", "idle"))
+		pixel_hero_sprite.texture = PixelBattleArt.animation_frame("Squire", "idle", idle_frame)
+		if pixel_hero_sprite.texture == null:
+			pixel_hero_sprite.texture = PixelBattleArt.frame_texture(PixelBattleArt.hero_sheet(), "idle", "squire")
 	pixel_hero_sprite.position = pos + Vector2(0.0, -158.0 * unit)
 	var form_scale := float(HeroArtService.metadata(0).get("scale", 1.0))
 	pixel_hero_sprite.scale = Vector2(370.0 / 256.0, 392.0 / 256.0) * unit * form_scale
@@ -579,6 +619,7 @@ func _update_pixel_enemy_sprite(index: int, pos: Vector2, enemy: Dictionary, sta
 		add_child(sprite)
 		pixel_enemy_sprites.append(sprite)
 	var sprite := pixel_enemy_sprites[index]
+	var enemy_id := kind
 	var boss_scale := 1.65 if str(enemy.get("archetype", "")) == "BOSS" else 1.0
 	var elite_scale := 1.2 if str(enemy.get("archetype", "")) == "ELITE" else 1.0
 	var actor_scale := unit * boss_scale * elite_scale * shrink
@@ -587,8 +628,17 @@ func _update_pixel_enemy_sprite(index: int, pos: Vector2, enemy: Dictionary, sta
 		var frame := int(floor(maxf(0.0, 0.45 - float(enemy.get("entry_time", 0.0))) * PixelBattleArt.enemy_entry_fps(kind))) % frame_count
 		var entry_texture := PixelBattleArt.enemy_entry_frame(kind, frame)
 		sprite.texture = entry_texture if entry_texture != null else PixelBattleArt.frame_texture(sheet, "idle", "enemy:%s" % kind)
+	elif state in ["hit", "attack"]:
+		var duration_map := enemy_hit_art_durations if state == "hit" else enemy_attack_art_durations
+		var remaining_map := enemy_hit_times if state == "hit" else enemy_attack_times
+		var duration := float(duration_map.get(index, 0.0))
+		var remaining := float(remaining_map.get(index, 0.0))
+		sprite.texture = _pixel_animation_frame(enemy_id, state, duration - remaining, false, index, state)
 	else:
-		sprite.texture = PixelBattleArt.frame_texture(sheet, state, "enemy:%s" % kind)
+		var idle_frame := int(floor((Time.get_ticks_msec() * 0.001 + index * 0.37) * PixelBattleArt.animation_fps(enemy_id, "idle"))) % maxi(1, PixelBattleArt.animation_frame_count(enemy_id, "idle"))
+		sprite.texture = PixelBattleArt.animation_frame(enemy_id, "idle", idle_frame)
+		if sprite.texture == null:
+			sprite.texture = PixelBattleArt.frame_texture(sheet, "idle", "enemy:%s" % kind)
 	sprite.position = pos + Vector2(0.0, -151.0 * actor_scale)
 	sprite.scale = Vector2.ONE * (350.0 / 256.0) * actor_scale
 	sprite.modulate = Color(1.0, 1.0, 1.0, opacity)
@@ -597,6 +647,18 @@ func _update_pixel_enemy_sprite(index: int, pos: Vector2, enemy: Dictionary, sta
 func _sync_pixel_enemy_visibility(index: int, visible: bool) -> void:
 	if index >= 0 and index < pixel_enemy_sprites.size():
 		pixel_enemy_sprites[index].visible = visible
+
+func _pixel_animation_frame(character_id: String, state: String, elapsed: float, looping: bool, phase: int, fallback_state: String) -> Texture2D:
+	var count := PixelBattleArt.animation_frame_count(character_id, state)
+	var fps := PixelBattleArt.animation_fps(character_id, state)
+	if count > 0 and fps > 0.0:
+		var frame := int(floor(maxf(0.0, elapsed) * fps))
+		frame = posmod(frame, count) if looping else clampi(frame, 0, count - 1)
+		var animated := PixelBattleArt.animation_frame(character_id, state, frame)
+		if animated != null:
+			return animated
+	var source := PixelBattleArt.hero_sheet() if character_id == "Squire" else PixelBattleArt.enemy_sheet(character_id)
+	return PixelBattleArt.frame_texture(source, fallback_state, "animation-fallback:%s:%s" % [character_id, fallback_state]) if source != null else null
 
 func _draw_knight_art(form: int) -> bool:
 	var state := "guard" if hero_guard_art_time > 0.0 else "attack" if hero_attack_art_time > 0.0 else "idle"
@@ -663,12 +725,15 @@ func enemy_visual_state(index: int) -> String:
 	if PixelBattleArt.is_active(battle) and index >= 0 and index < battle.enemies.size():
 		var enemy := battle.enemies[index]
 		var kind := str(enemy.get("visual", enemy.get("kind", "")))
-		if bool(enemy.get("spawned", false)) and float(enemy.get("entry_time", 0.0)) > 0.0 and PixelBattleArt.enemy_entry_frame(kind, 0) != null:
-			return "entry"
 	if float(enemy_hit_times.get(index, 0.0)) > 0.0:
 		return "hit"
 	if float(enemy_attack_times.get(index, 0.0)) > 0.0:
 		return "attack"
+	if PixelBattleArt.is_active(battle) and index >= 0 and index < battle.enemies.size():
+		var enemy := battle.enemies[index]
+		var kind := str(enemy.get("visual", enemy.get("kind", "")))
+		if bool(enemy.get("spawned", false)) and float(enemy.get("entry_time", 0.0)) > 0.0 and PixelBattleArt.enemy_entry_frame(kind, 0) != null:
+			return "entry"
 	return "idle"
 
 func _draw_enemy(pos: Vector2, enemy: Dictionary, unit: float, flash: bool, enemy_index: int = -1) -> void:

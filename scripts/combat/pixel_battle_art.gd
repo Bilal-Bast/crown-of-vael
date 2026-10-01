@@ -17,6 +17,29 @@ const ENEMY_ENTRY_ANIMATIONS := {
 	"Skeleton": {"path": "res://assets/prototype_pixel/enemies/greenvale/skeleton/entry.png", "frames": 4, "fps": 9.0},
 	"Corrupted Wolf": {"path": "res://assets/prototype_pixel/enemies/greenvale/corrupted_wolf/entry.png", "frames": 4, "fps": 11.0},
 }
+const CHARACTER_ANIMATIONS := {
+	"Squire": {
+		"idle": {"path": "res://assets/prototype_pixel/heroes/squire/idle.png", "frames": 4, "fps": 7.0},
+		"attack": {"path": "res://assets/prototype_pixel/heroes/squire/attack.png", "frames": 6, "fps": 12.0},
+		"guard": {"path": "res://assets/prototype_pixel/heroes/squire/guard.png", "frames": 6, "fps": 12.0},
+		"hit": {"path": "res://assets/prototype_pixel/heroes/squire/hit.png", "frames": 4, "fps": 12.0},
+	},
+	"Goblin": {
+		"idle": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin/idle.png", "frames": 4, "fps": 8.0},
+		"attack": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin/attack.png", "frames": 4, "fps": 11.0},
+		"hit": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin/hit.png", "frames": 3, "fps": 11.0},
+	},
+	"Skeleton": {
+		"idle": {"path": "res://assets/prototype_pixel/enemies/greenvale/skeleton/idle.png", "frames": 4, "fps": 7.0},
+		"attack": {"path": "res://assets/prototype_pixel/enemies/greenvale/skeleton/attack.png", "frames": 4, "fps": 9.0},
+		"hit": {"path": "res://assets/prototype_pixel/enemies/greenvale/skeleton/hit.png", "frames": 3, "fps": 10.0},
+	},
+	"Corrupted Wolf": {
+		"idle": {"path": "res://assets/prototype_pixel/enemies/greenvale/corrupted_wolf/idle.png", "frames": 4, "fps": 8.0},
+		"attack": {"path": "res://assets/prototype_pixel/enemies/greenvale/corrupted_wolf/attack.png", "frames": 5, "fps": 12.0},
+		"hit": {"path": "res://assets/prototype_pixel/enemies/greenvale/corrupted_wolf/hit.png", "frames": 3, "fps": 11.0},
+	},
+}
 static var _frame_cache: Dictionary = {}
 
 static func is_active(battle: BattleController) -> bool:
@@ -74,6 +97,41 @@ static func enemy_entry_frame(enemy_id: String, frame: int) -> Texture2D:
 	_frame_cache[key] = atlas
 	return atlas
 
+static func animation_frame_count(character_id: String, state: String) -> int:
+	return int(CHARACTER_ANIMATIONS.get(character_id, {}).get(state, {}).get("frames", 0))
+
+static func animation_fps(character_id: String, state: String) -> float:
+	return float(CHARACTER_ANIMATIONS.get(character_id, {}).get(state, {}).get("fps", 0.0))
+
+static func animation_sheet(character_id: String, state: String) -> Texture2D:
+	var config: Dictionary = CHARACTER_ANIMATIONS.get(character_id, {}).get(state, {})
+	if config.is_empty() or not ResourceLoader.exists(str(config["path"]), "Texture2D"):
+		return null
+	var sheet := load(str(config["path"])) as Texture2D
+	if sheet == null or sheet.get_width() != int(config["frames"]) * 256 or sheet.get_height() != 256:
+		return null
+	return sheet
+
+static func animation_frame(character_id: String, state: String, frame: int) -> Texture2D:
+	var sheet := animation_sheet(character_id, state)
+	if sheet == null:
+		return null
+	var frame_count := animation_frame_count(character_id, state)
+	var frame_index := posmod(frame, frame_count)
+	var key := "combat_anim:%s:%s:%d" % [character_id, state, frame_index]
+	if _frame_cache.has(key):
+		return _frame_cache[key] as Texture2D
+	var atlas := AtlasTexture.new()
+	atlas.atlas = sheet
+	atlas.region = Rect2(frame_index * 256, 0, 256, 256)
+	_frame_cache[key] = atlas
+	return atlas
+
+static func animation_duration(character_id: String, state: String, fallback: float) -> float:
+	if animation_sheet(character_id, state) == null:
+		return fallback
+	return float(animation_frame_count(character_id, state)) / animation_fps(character_id, state)
+
 static func background_texture() -> Texture2D:
 	return load(BACKGROUND) as Texture2D
 
@@ -84,9 +142,23 @@ static func validation_report() -> Array[String]:
 		paths.append(str(path))
 	for config in ENEMY_ENTRY_ANIMATIONS.values():
 		paths.append(str(config["path"]))
+	for character in CHARACTER_ANIMATIONS.values():
+		for config in character.values():
+			paths.append(str(config["path"]))
 	for path in paths:
 		if not ResourceLoader.exists(path, "Texture2D") or load(path) == null:
 			warnings.append("Unable to load prototype texture: %s" % path)
+			continue
+		var animation_config: Dictionary = {}
+		for character in CHARACTER_ANIMATIONS.values():
+			for config in character.values():
+				if str(config["path"]) == path:
+					animation_config = config
+					break
+		if not animation_config.is_empty():
+			var animation_texture := load(path) as Texture2D
+			if animation_texture.get_width() != int(animation_config["frames"]) * 256 or animation_texture.get_height() != 256:
+				warnings.append("Invalid combat animation sheet: %s" % path)
 			continue
 		var entry_config: Dictionary = {}
 		for config in ENEMY_ENTRY_ANIMATIONS.values():
