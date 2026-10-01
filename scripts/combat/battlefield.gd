@@ -546,7 +546,13 @@ func _update_pixel_hero_sprite(pos: Vector2, unit: float, allow_visible: bool = 
 		pixel_hero_sprite.z_index = 1
 		add_child(pixel_hero_sprite)
 	var state := "guard" if hero_guard_art_time > 0.0 else "attack" if hero_attack_art_time > 0.0 else "idle"
-	pixel_hero_sprite.texture = PixelBattleArt.frame_texture(PixelBattleArt.hero_sheet(), state, "squire")
+	if hero_run_time > 0.0:
+		var run_elapsed := maxf(0.0, hero_run_duration - hero_run_time)
+		var run_frame := int(floor(run_elapsed * 10.0)) % 6
+		var run_texture := PixelBattleArt.hero_run_frame(run_frame)
+		pixel_hero_sprite.texture = run_texture if run_texture != null else PixelBattleArt.frame_texture(PixelBattleArt.hero_sheet(), "idle", "squire")
+	else:
+		pixel_hero_sprite.texture = PixelBattleArt.frame_texture(PixelBattleArt.hero_sheet(), state, "squire")
 	pixel_hero_sprite.position = pos + Vector2(0.0, -158.0 * unit)
 	var form_scale := float(HeroArtService.metadata(0).get("scale", 1.0))
 	pixel_hero_sprite.scale = Vector2(370.0 / 256.0, 392.0 / 256.0) * unit * form_scale

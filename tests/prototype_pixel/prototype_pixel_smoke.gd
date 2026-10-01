@@ -64,6 +64,13 @@ func _run() -> void:
 		tutorial_popup_after_select.hide()
 	_check(PixelBattleArt.is_active(battle), "Prototype activates for Squire in Greenvale campaign")
 	_check(PixelBattleArt.validation_report().is_empty(), "All prototype textures load and sprite sheets have three frames")
+	var run_frames: Array[Texture2D] = []
+	for frame_index in 6:
+		var run_frame := PixelBattleArt.hero_run_frame(frame_index)
+		_check(run_frame != null, "Squire run frame %d loads" % (frame_index + 1))
+		if run_frame != null:
+			run_frames.append(run_frame)
+	_check(run_frames.size() == 6 and run_frames[0] == PixelBattleArt.hero_run_frame(6), "Six run frames loop back to frame one")
 	_check(PixelBattleArt.enemy_sheet("Goblin") != null, "Goblin sheet loads")
 	_check(PixelBattleArt.enemy_sheet("Skeleton") != null, "Skeleton sheet loads")
 	_check(PixelBattleArt.enemy_sheet("Corrupted Wolf") != null, "Corrupted Wolf sheet loads")
@@ -104,11 +111,28 @@ func _run() -> void:
 	battlefield.queue_redraw()
 	await _capture("shield_bash_360x640", RESOLUTION_SMALL)
 	await _capture("battle_overview_360x640", RESOLUTION_SMALL)
+	battle.active = false
+	for enemy in battle.enemies:
+		enemy["current_hp"] = 0.0
+	battle.changed.emit()
+	battle.wave = 1
+	battlefield._on_presentation_event("wave_run", {"duration": 1.5})
+	battlefield.hero_run_time = 0.75
+	battlefield.queue_redraw()
+	await process_frame
+	_check(battlefield.pixel_hero_sprite != null and battlefield.pixel_hero_sprite.texture == PixelBattleArt.hero_run_frame(1), "Squire run animation is used during the inter-wave transition")
+	await _capture("squire_run_after_wave_1_360x640", RESOLUTION_SMALL)
+	battle.wave = 2
+	battlefield._on_presentation_event("wave_run", {"duration": 1.5})
+	battlefield.hero_run_time = 0.75
+	battlefield.queue_redraw()
+	await process_frame
+	await _capture("squire_run_after_wave_2_360x640", RESOLUTION_SMALL)
 	await _capture("greenvale_mixed_wave_1080x1920", RESOLUTION_LARGE)
 	await _capture("battle_overview_1080x1920", RESOLUTION_LARGE)
 
 	main.queue_free()
-	print("PIXEL BATTLE PROTOTYPE: %s (11 captures, %d failures)" % ["FAIL" if failures else "PASS", failures])
+	print("PIXEL BATTLE PROTOTYPE: %s (13 captures, %d failures)" % ["FAIL" if failures else "PASS", failures])
 	quit(1 if failures else 0)
 
 func _set_enemies(kinds: Array) -> void:

@@ -5,6 +5,7 @@ extends RefCounted
 ## to restore the existing illustrated battle presentation everywhere.
 const PROTOTYPE_ENABLED := true
 const HERO_SHEET := "res://assets/prototype_pixel/heroes/squire/sheet.png"
+const HERO_RUN_SHEET := "res://assets/prototype_pixel/heroes/squire/run.png"
 const BACKGROUND := "res://assets/prototype_pixel/backgrounds/greenvale/battle.png"
 const ENEMY_SHEETS := {
 	"Goblin": "res://assets/prototype_pixel/enemies/greenvale/goblin/sheet.png",
@@ -23,6 +24,22 @@ static func is_active(battle: BattleController) -> bool:
 static func hero_sheet() -> Texture2D:
 	return load(HERO_SHEET) as Texture2D
 
+static func hero_run_frame(frame: int) -> Texture2D:
+	if not ResourceLoader.exists(HERO_RUN_SHEET, "Texture2D"):
+		return null
+	var sheet := load(HERO_RUN_SHEET) as Texture2D
+	if sheet == null or sheet.get_width() != 1536 or sheet.get_height() != 256:
+		return null
+	var frame_index := posmod(frame, 6)
+	var key := "squire_run:%d" % frame_index
+	if _frame_cache.has(key):
+		return _frame_cache[key] as Texture2D
+	var atlas := AtlasTexture.new()
+	atlas.atlas = sheet
+	atlas.region = Rect2(frame_index * 256, 0, 256, 256)
+	_frame_cache[key] = atlas
+	return atlas
+
 static func enemy_sheet(enemy_id: String) -> Texture2D:
 	if not ENEMY_SHEETS.has(enemy_id):
 		return null
@@ -33,14 +50,18 @@ static func background_texture() -> Texture2D:
 
 static func validation_report() -> Array[String]:
 	var warnings: Array[String] = []
-	var paths: Array[String] = [HERO_SHEET, BACKGROUND]
+	var paths: Array[String] = [HERO_SHEET, BACKGROUND, HERO_RUN_SHEET]
 	for path in ENEMY_SHEETS.values():
 		paths.append(str(path))
 	for path in paths:
 		if not ResourceLoader.exists(path, "Texture2D") or load(path) == null:
 			warnings.append("Unable to load prototype texture: %s" % path)
 			continue
-		if path != BACKGROUND:
+		if path == HERO_RUN_SHEET:
+			var run_texture := load(path) as Texture2D
+			if run_texture.get_width() != 1536 or run_texture.get_height() != 256:
+				warnings.append("Invalid six-frame run sheet: %s" % path)
+		elif path != BACKGROUND:
 			var texture := load(path) as Texture2D
 			if texture.get_width() % 3 != 0 or texture.get_height() <= 0:
 				warnings.append("Invalid three-frame sprite sheet: %s" % path)
