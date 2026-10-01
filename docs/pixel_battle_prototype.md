@@ -9,6 +9,7 @@ The reversible switch is `PROTOTYPE_ENABLED` in `scripts/combat/pixel_battle_art
 - `assets/prototype_pixel/heroes/squire/sheet.png`: idle, sword attack, and shield guard/hit frames.
 - `assets/prototype_pixel/heroes/squire/run.png`: six right-facing run frames, looped at 10 FPS only during the 1.5-second between-wave transition. Missing or invalid run art falls back to the existing Squire idle sprite while movement continues.
 - `assets/prototype_pixel/enemies/greenvale/{goblin,skeleton,corrupted_wolf}/sheet.png`: idle, attack, and hit frames.
+- Matching `entry.png` sheets animate only the right-to-lane movement: Goblin (4 frames at 11 FPS), Skeleton (4 at 9 FPS), and Corrupted Wolf (4 at 11 FPS). Missing or invalid entry art falls back to the existing idle sprite while the current movement remains in effect.
 - `assets/prototype_pixel/backgrounds/greenvale/battle.png`: dusk countryside, ruined tower and fence, distant hills, and broken road.
 - Shield Bash and Squire melee attacks use a small stepped pixel impact effect drawn in the battle lane.
 

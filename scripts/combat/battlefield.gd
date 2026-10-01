@@ -455,7 +455,12 @@ func _hero_position() -> Vector2:
 func _enemy_position(index: int) -> Vector2:
 	if PixelBattleArt.is_active(battle) and battle.enemies.size() <= 3:
 		var x_positions := [0.70] if battle.enemies.size() == 1 else ([0.62, 0.84] if battle.enemies.size() == 2 else [0.52, 0.73, 0.92])
-		return Vector2(size.x * float(x_positions[index]), size.y * 0.73)
+		var target := Vector2(size.x * float(x_positions[index]), size.y * 0.73)
+		if index < battle.enemies.size() and PixelBattleArt.enemy_entry_frame(str(battle.enemies[index].get("visual", battle.enemies[index].get("kind", ""))), 0) != null:
+			if bool(battle.enemies[index].get("spawned", false)) and float(battle.enemies[index].get("entry_time", 0.0)) > 0.0:
+				var entry_progress := 1.0 - clampf(float(battle.enemies[index]["entry_time"]) / 0.45, 0.0, 1.0)
+				target.x = lerpf(size.x * 1.14, target.x, entry_progress)
+		return target
 	if battle != null and (str(battle.mode_config.get("mode", "campaign")) == "boss_rush" or str(battle.mode_config.get("mode", "campaign")) == "campaign" and battle.stage == 20):
 		return Vector2(size.x * 0.75, size.y * 0.71)
 	var positions := [Vector2(0.42, 0.64), Vector2(0.58, 0.64), Vector2(0.74, 0.64), Vector2(0.90, 0.64), Vector2(0.50, 0.81), Vector2(0.68, 0.81), Vector2(0.86, 0.81)]
@@ -577,7 +582,13 @@ func _update_pixel_enemy_sprite(index: int, pos: Vector2, enemy: Dictionary, sta
 	var boss_scale := 1.65 if str(enemy.get("archetype", "")) == "BOSS" else 1.0
 	var elite_scale := 1.2 if str(enemy.get("archetype", "")) == "ELITE" else 1.0
 	var actor_scale := unit * boss_scale * elite_scale * shrink
-	sprite.texture = PixelBattleArt.frame_texture(sheet, state, "enemy:%s" % kind)
+	if state == "entry":
+		var frame_count := PixelBattleArt.enemy_entry_frame_count(kind)
+		var frame := int(floor(maxf(0.0, 0.45 - float(enemy.get("entry_time", 0.0))) * PixelBattleArt.enemy_entry_fps(kind))) % frame_count
+		var entry_texture := PixelBattleArt.enemy_entry_frame(kind, frame)
+		sprite.texture = entry_texture if entry_texture != null else PixelBattleArt.frame_texture(sheet, "idle", "enemy:%s" % kind)
+	else:
+		sprite.texture = PixelBattleArt.frame_texture(sheet, state, "enemy:%s" % kind)
 	sprite.position = pos + Vector2(0.0, -151.0 * actor_scale)
 	sprite.scale = Vector2.ONE * (350.0 / 256.0) * actor_scale
 	sprite.modulate = Color(1.0, 1.0, 1.0, opacity)
@@ -649,6 +660,11 @@ func _draw_hero_projectiles(unit: float) -> void:
 			draw_circle(pos, 12 * unit, color)
 
 func enemy_visual_state(index: int) -> String:
+	if PixelBattleArt.is_active(battle) and index >= 0 and index < battle.enemies.size():
+		var enemy := battle.enemies[index]
+		var kind := str(enemy.get("visual", enemy.get("kind", "")))
+		if bool(enemy.get("spawned", false)) and float(enemy.get("entry_time", 0.0)) > 0.0 and PixelBattleArt.enemy_entry_frame(kind, 0) != null:
+			return "entry"
 	if float(enemy_hit_times.get(index, 0.0)) > 0.0:
 		return "hit"
 	if float(enemy_attack_times.get(index, 0.0)) > 0.0:

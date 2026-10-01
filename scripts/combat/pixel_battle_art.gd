@@ -12,6 +12,11 @@ const ENEMY_SHEETS := {
 	"Skeleton": "res://assets/prototype_pixel/enemies/greenvale/skeleton/sheet.png",
 	"Corrupted Wolf": "res://assets/prototype_pixel/enemies/greenvale/corrupted_wolf/sheet.png",
 }
+const ENEMY_ENTRY_ANIMATIONS := {
+	"Goblin": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin/entry.png", "frames": 4, "fps": 11.0},
+	"Skeleton": {"path": "res://assets/prototype_pixel/enemies/greenvale/skeleton/entry.png", "frames": 4, "fps": 9.0},
+	"Corrupted Wolf": {"path": "res://assets/prototype_pixel/enemies/greenvale/corrupted_wolf/entry.png", "frames": 4, "fps": 11.0},
+}
 static var _frame_cache: Dictionary = {}
 
 static func is_active(battle: BattleController) -> bool:
@@ -45,6 +50,30 @@ static func enemy_sheet(enemy_id: String) -> Texture2D:
 		return null
 	return load(str(ENEMY_SHEETS[enemy_id])) as Texture2D
 
+static func enemy_entry_frame_count(enemy_id: String) -> int:
+	return int(ENEMY_ENTRY_ANIMATIONS.get(enemy_id, {}).get("frames", 0))
+
+static func enemy_entry_fps(enemy_id: String) -> float:
+	return float(ENEMY_ENTRY_ANIMATIONS.get(enemy_id, {}).get("fps", 0.0))
+
+static func enemy_entry_frame(enemy_id: String, frame: int) -> Texture2D:
+	var config: Dictionary = ENEMY_ENTRY_ANIMATIONS.get(enemy_id, {})
+	if config.is_empty() or not ResourceLoader.exists(str(config["path"]), "Texture2D"):
+		return null
+	var sheet := load(str(config["path"])) as Texture2D
+	var frame_count := int(config["frames"])
+	if sheet == null or sheet.get_width() != frame_count * 256 or sheet.get_height() != 256:
+		return null
+	var frame_index := posmod(frame, frame_count)
+	var key := "enemy_entry:%s:%d" % [enemy_id, frame_index]
+	if _frame_cache.has(key):
+		return _frame_cache[key] as Texture2D
+	var atlas := AtlasTexture.new()
+	atlas.atlas = sheet
+	atlas.region = Rect2(frame_index * 256, 0, 256, 256)
+	_frame_cache[key] = atlas
+	return atlas
+
 static func background_texture() -> Texture2D:
 	return load(BACKGROUND) as Texture2D
 
@@ -53,14 +82,25 @@ static func validation_report() -> Array[String]:
 	var paths: Array[String] = [HERO_SHEET, BACKGROUND, HERO_RUN_SHEET]
 	for path in ENEMY_SHEETS.values():
 		paths.append(str(path))
+	for config in ENEMY_ENTRY_ANIMATIONS.values():
+		paths.append(str(config["path"]))
 	for path in paths:
 		if not ResourceLoader.exists(path, "Texture2D") or load(path) == null:
 			warnings.append("Unable to load prototype texture: %s" % path)
 			continue
+		var entry_config: Dictionary = {}
+		for config in ENEMY_ENTRY_ANIMATIONS.values():
+			if str(config["path"]) == path:
+				entry_config = config
+				break
 		if path == HERO_RUN_SHEET:
 			var run_texture := load(path) as Texture2D
 			if run_texture.get_width() != 1536 or run_texture.get_height() != 256:
 				warnings.append("Invalid six-frame run sheet: %s" % path)
+		elif not entry_config.is_empty():
+			var entry_texture := load(path) as Texture2D
+			if entry_texture.get_width() != int(entry_config["frames"]) * 256 or entry_texture.get_height() != 256:
+				warnings.append("Invalid enemy entry sheet: %s" % path)
 		elif path != BACKGROUND:
 			var texture := load(path) as Texture2D
 			if texture.get_width() % 3 != 0 or texture.get_height() <= 0:

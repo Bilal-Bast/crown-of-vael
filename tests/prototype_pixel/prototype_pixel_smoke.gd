@@ -4,6 +4,7 @@ const CAPTURE_DIR := "res://.godot/prototype_pixel_captures"
 const RESOLUTION_SMALL := Vector2i(360, 640)
 const RESOLUTION_LARGE := Vector2i(1080, 1920)
 const ENEMIES := ["Goblin", "Skeleton", "Corrupted Wolf"]
+const ENTRY_FPS := {"Goblin": 11.0, "Skeleton": 9.0, "Corrupted Wolf": 11.0}
 
 var failures := 0
 var main: Control
@@ -74,6 +75,14 @@ func _run() -> void:
 	_check(PixelBattleArt.enemy_sheet("Goblin") != null, "Goblin sheet loads")
 	_check(PixelBattleArt.enemy_sheet("Skeleton") != null, "Skeleton sheet loads")
 	_check(PixelBattleArt.enemy_sheet("Corrupted Wolf") != null, "Corrupted Wolf sheet loads")
+	for kind in ENEMIES:
+		var frame_count := PixelBattleArt.enemy_entry_frame_count(kind)
+		_check(frame_count in [4, 5, 6], "%s entry frame count is valid" % kind)
+	_check(PixelBattleArt.enemy_entry_frame_count("Goblin") == 4 and is_equal_approx(PixelBattleArt.enemy_entry_fps("Goblin"), ENTRY_FPS["Goblin"]), "Goblin entry uses four frames at 11 FPS")
+	_check(PixelBattleArt.enemy_entry_frame_count("Skeleton") == 4 and is_equal_approx(PixelBattleArt.enemy_entry_fps("Skeleton"), ENTRY_FPS["Skeleton"]), "Skeleton entry uses four frames at 9 FPS")
+	_check(PixelBattleArt.enemy_entry_frame_count("Corrupted Wolf") == 4 and is_equal_approx(PixelBattleArt.enemy_entry_fps("Corrupted Wolf"), ENTRY_FPS["Corrupted Wolf"]), "Wolf entry uses four frames at 11 FPS")
+	for kind in ENEMIES:
+		_check(PixelBattleArt.enemy_entry_frame(kind, 0) != null, "%s entry frame loads" % kind)
 	_check(PixelBattleArt.background_texture() != null, "Greenvale pixel background loads")
 	_check(battlefield.pixel_background_layer != null and battlefield.pixel_background_layer.visible, "Pixel background layer is active")
 	for kind in ENEMIES:
@@ -90,6 +99,30 @@ func _run() -> void:
 	await _capture("squire_vs_skeleton_360x640", RESOLUTION_SMALL)
 	_set_enemies(["Corrupted Wolf"])
 	await _capture("squire_vs_corrupted_wolf_360x640", RESOLUTION_SMALL)
+	for kind in ENEMIES:
+		_set_enemies([kind], true)
+		battle.enemies[0]["entry_time"] = 0.15
+		_check(battlefield.enemy_visual_state(0) == "entry", "%s uses entry animation while moving" % kind)
+		var frame_count := PixelBattleArt.enemy_entry_frame_count(kind)
+		var fps := PixelBattleArt.enemy_entry_fps(kind)
+		var first_frame := int(floor((0.45 - float(battle.enemies[0]["entry_time"])) * fps)) % frame_count
+		battlefield._update_pixel_enemy_sprite(0, battlefield._enemy_position(0), battle.enemies[0], "entry", 1.0)
+		var first_texture := battlefield.pixel_enemy_sprites[0].texture
+		battle.enemies[0]["entry_time"] -= 0.10
+		var next_frame := int(floor((0.45 - float(battle.enemies[0]["entry_time"])) * fps)) % frame_count
+		battlefield._update_pixel_enemy_sprite(0, battlefield._enemy_position(0), battle.enemies[0], "entry", 1.0)
+		_check(first_texture == PixelBattleArt.enemy_entry_frame(kind, first_frame) and battlefield.pixel_enemy_sprites[0].texture == PixelBattleArt.enemy_entry_frame(kind, next_frame) and first_frame != next_frame, "%s entry frames advance at the configured playback speed" % kind)
+		battle.enemies[0]["entry_time"] = 0.15
+		await _capture("%s_entry_360x640" % str(kind).to_lower().replace(" ", "_"), RESOLUTION_SMALL)
+		battle.enemies[0]["entry_time"] = 0.0
+		_check(battlefield.enemy_visual_state(0) == "idle", "%s returns to idle after entry" % kind)
+	_check(PixelBattleArt.enemy_entry_frame("Unsupported Greenvale enemy", 0) == null, "unsupported enemy falls back without an entry sheet")
+	_set_mixed_entry_wave()
+	battle.enemies[0]["entry_time"] = 0.0
+	battle.enemies[1]["entry_time"] = 0.0
+	battle.enemies[2]["entry_time"] = 0.01
+	_check(battlefield.enemy_visual_state(0) == "idle" and battlefield.enemy_visual_state(1) == "idle" and battlefield.enemy_visual_state(2) == "entry", "mixed wave holds settled enemies while another enters")
+	await _capture("greenvale_mixed_entry_360x640", RESOLUTION_SMALL)
 	_set_enemies(ENEMIES)
 	await _capture("greenvale_mixed_wave_360x640", RESOLUTION_SMALL)
 	battlefield._on_attack_started(-1, 0)
@@ -132,20 +165,34 @@ func _run() -> void:
 	await _capture("battle_overview_1080x1920", RESOLUTION_LARGE)
 
 	main.queue_free()
-	print("PIXEL BATTLE PROTOTYPE: %s (13 captures, %d failures)" % ["FAIL" if failures else "PASS", failures])
+	print("PIXEL BATTLE PROTOTYPE: %s (17 captures, %d failures)" % ["FAIL" if failures else "PASS", failures])
 	quit(1 if failures else 0)
 
-func _set_enemies(kinds: Array) -> void:
+func _set_enemies(kinds: Array, entering: bool = false) -> void:
 	battle.enemies.clear()
 	for kind in kinds:
 		var enemy := CampaignData.enemy_stats(str(kind), 0, 1, battle.stage, 1)
 		enemy["current_hp"] = enemy["hp"]
 		enemy["attack_time"] = 3.0
 		enemy["stun_time"] = 0.0
+		enemy["spawned"] = true
+		enemy["entry_time"] = 0.45 if entering else 0.0
 		battle.enemies.append(enemy)
 	battlefield.enemy_attack_times.clear()
 	battlefield.enemy_hit_times.clear()
 	battlefield.flashes.clear()
+	battle.changed.emit()
+
+func _set_mixed_entry_wave() -> void:
+	_set_enemies(ENEMIES, true)
+	for _index in range(ENEMIES.size(), GameData.ENEMIES_PER_WAVE):
+		var enemy := CampaignData.enemy_stats("Goblin", 0, 1, battle.stage, 1)
+		enemy["current_hp"] = 0.0
+		enemy["attack_time"] = 3.0
+		enemy["stun_time"] = 0.0
+		enemy["spawned"] = false
+		enemy["entry_time"] = 0.0
+		battle.enemies.append(enemy)
 	battle.changed.emit()
 
 func _capture(name: String, resolution: Vector2i) -> void:
