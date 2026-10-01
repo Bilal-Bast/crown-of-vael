@@ -3,6 +3,7 @@ extends SceneTree
 const CAPTURE_DIR := "res://.godot/prototype_pixel_captures"
 const RESOLUTION_SMALL := Vector2i(360, 640)
 const RESOLUTION_LARGE := Vector2i(1080, 1920)
+const RESOLUTION_TALL := Vector2i(1080, 2400)
 const ENEMIES := ["Goblin", "Skeleton", "Corrupted Wolf"]
 const ENTRY_FPS := {"Goblin": 11.0, "Skeleton": 9.0, "Corrupted Wolf": 11.0}
 
@@ -163,9 +164,25 @@ func _run() -> void:
 	await _capture("squire_run_after_wave_2_360x640", RESOLUTION_SMALL)
 	await _capture("greenvale_mixed_wave_1080x1920", RESOLUTION_LARGE)
 	await _capture("battle_overview_1080x1920", RESOLUTION_LARGE)
+	for layout in ["normal", "crowded", "boss"]:
+		for resolution in [RESOLUTION_SMALL, RESOLUTION_LARGE, RESOLUTION_TALL]:
+			battle.stage = 20 if layout == "boss" else 1
+			match layout:
+				"normal": _set_enemies(["Goblin"])
+				"crowded":
+					_set_mixed_entry_wave()
+					battle.enemies[0]["entry_time"] = 0.0
+					battle.enemies[1]["entry_time"] = 0.0
+					battle.enemies[2]["entry_time"] = 0.15
+					battle.changed.emit()
+				"boss": _set_enemies(["Goblin Warlord"])
+			await _capture("battle_layout_%s_%dx%d" % [layout, resolution.x, resolution.y], resolution)
+			var expected_height := main.get_viewport_rect().size.y * 0.30
+			var actual_height := (main.get("battlefield_host") as Control).custom_minimum_size.y
+			_check(is_equal_approx(actual_height, expected_height), "battlefield scales to 30%% at %dx%d" % [resolution.x, resolution.y])
 
 	main.queue_free()
-	print("PIXEL BATTLE PROTOTYPE: %s (17 captures, %d failures)" % ["FAIL" if failures else "PASS", failures])
+	print("PIXEL BATTLE PROTOTYPE: %s (26 captures, %d failures)" % ["FAIL" if failures else "PASS", failures])
 	quit(1 if failures else 0)
 
 func _set_enemies(kinds: Array, entering: bool = false) -> void:

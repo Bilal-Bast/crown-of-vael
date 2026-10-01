@@ -731,9 +731,14 @@ func _draw_enemy(pos: Vector2, enemy: Dictionary, unit: float, flash: bool, enem
 		draw_circle(Vector2(0, -62), 47, Color(1, 1, 1, 0.20 if vfx.reduced else 0.4))
 	var bar_width := 125.0 if boss else 85.0
 	var pixel_enemy := pixel_sheet != null
-	_draw_hp_bar(Vector2(-bar_width * 0.5, -374 if pixel_enemy else (-250 if boss else -116)), bar_width, float(enemy["current_hp"]) / float(enemy["hp"]), Color("eb6f67"))
+	var boss_hud_min_y := (10.0 - pos.y) / actor_scale
+	var hp_y := -374.0 if pixel_enemy else (-250.0 if boss else -116.0)
+	if boss and not pixel_enemy:
+		hp_y = maxf(hp_y, boss_hud_min_y)
+	_draw_hp_bar(Vector2(-bar_width * 0.5, hp_y), bar_width, float(enemy["current_hp"]) / float(enemy["hp"]), Color("eb6f67"))
 	if boss:
-		draw_string(ThemeDB.fallback_font, Vector2(-90, -265), kind.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color("f8dfbc"))
+		var boss_label_y := maxf(-265.0, (48.0 - pos.y) / actor_scale) if not pixel_enemy else -265.0
+		draw_string(ThemeDB.fallback_font, Vector2(-90, boss_label_y), kind.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color("f8dfbc"))
 	draw_set_transform(Vector2.ZERO)
 
 func _draw_defeated_enemy(pos: Vector2, enemy: Dictionary, unit: float, ratio: float) -> void:

@@ -35,6 +35,8 @@ var battlefield_host: Control
 var pixel_battle_background: TextureRect
 var skill_bar: SkillBar
 var battle_area: VBoxContainer
+var battle_lower_scroll: ScrollContainer
+var battle_lower_content: VBoxContainer
 var placeholder_area: PanelContainer
 var placeholder_title: Label
 var heroes_area: ScrollContainer
@@ -155,6 +157,8 @@ func _ready() -> void:
 		battle.start(profile)
 
 func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED and battlefield_host != null:
+		_update_battlefield_height()
 	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
 		_handle_back_request()
 		return
@@ -401,9 +405,9 @@ func _build_stage_card(root: VBoxContainer) -> void:
 
 func _build_battle_area() -> void:
 	battlefield_host = Control.new()
-	battlefield_host.custom_minimum_size.y = 390
-	battlefield_host.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	battlefield_host.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	battle_area.add_child(battlefield_host)
+	_update_battlefield_height()
 	pixel_battle_background = TextureRect.new()
 	pixel_battle_background.name = "GreenvalePixelBattleBackground"
 	pixel_battle_background.visible = false
@@ -420,8 +424,19 @@ func _build_battle_area() -> void:
 	battlefield.set_battle(battle)
 	battlefield_host.add_child(battlefield)
 
+	battle_lower_scroll = ScrollContainer.new()
+	battle_lower_scroll.name = "BattleLowerControlsScroll"
+	battle_lower_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	battle_lower_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	battle_lower_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	battle_area.add_child(battle_lower_scroll)
+	battle_lower_content = VBoxContainer.new()
+	battle_lower_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	battle_lower_content.add_theme_constant_override("separation", 12)
+	battle_lower_scroll.add_child(battle_lower_content)
+
 	var skill_panel := _panel()
-	battle_area.add_child(skill_panel)
+	battle_lower_content.add_child(skill_panel)
 	var skill_box := VBoxContainer.new()
 	skill_box.add_theme_constant_override("separation", 6)
 	skill_panel.add_child(skill_box)
@@ -442,7 +457,7 @@ func _build_battle_area() -> void:
 	skill_box.add_child(tutorial_text)
 
 	var hero_panel := _panel()
-	battle_area.add_child(hero_panel)
+	battle_lower_content.add_child(hero_panel)
 	var hero_box := VBoxContainer.new()
 	hero_box.add_theme_constant_override("separation", 5)
 	hero_panel.add_child(hero_box)
@@ -473,7 +488,7 @@ func _build_battle_area() -> void:
 	hero_box.add_child(action_button)
 
 	var upgrade_panel := _panel()
-	battle_area.add_child(upgrade_panel)
+	battle_lower_content.add_child(upgrade_panel)
 	var upgrade_box := VBoxContainer.new()
 	upgrade_box.add_theme_constant_override("separation", 8)
 	upgrade_panel.add_child(upgrade_box)
@@ -489,6 +504,13 @@ func _build_battle_area() -> void:
 		button.pressed.connect(_buy_upgrade.bind(stat))
 		row.add_child(button)
 		upgrade_buttons[stat] = button
+	battle_lower_content.move_child(upgrade_panel, 0)
+
+func _update_battlefield_height() -> void:
+	if battlefield_host == null:
+		return
+	var viewport_height := get_viewport_rect().size.y
+	battlefield_host.custom_minimum_size.y = maxf(1.0, viewport_height * 0.30)
 
 func _build_navigation(root: VBoxContainer) -> void:
 	var panel := _panel()
