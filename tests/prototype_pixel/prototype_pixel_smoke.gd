@@ -5,7 +5,8 @@ const RESOLUTION_SMALL := Vector2i(360, 640)
 const RESOLUTION_LARGE := Vector2i(1080, 1920)
 const RESOLUTION_TALL := Vector2i(1080, 2400)
 const ENEMIES := ["Goblin", "Skeleton", "Corrupted Wolf"]
-const ENTRY_FPS := {"Goblin": 11.0, "Skeleton": 9.0, "Corrupted Wolf": 11.0}
+const GREENVALE_ROSTER := ["Goblin", "Skeleton", "Corrupted Wolf", "Goblin Archer", "Goblin Spearman", "Bandit", "Goblin Captain", "Armored Skeleton", "Goblin Warlord"]
+const ENTRY_FPS := {"Goblin": 11.0, "Skeleton": 9.0, "Corrupted Wolf": 11.0, "Goblin Archer": 11.0, "Goblin Spearman": 10.0, "Bandit": 12.0, "Goblin Captain": 10.0, "Armored Skeleton": 8.0, "Goblin Warlord": 8.0}
 
 var failures := 0
 var main: Control
@@ -76,13 +77,14 @@ func _run() -> void:
 	_check(PixelBattleArt.enemy_sheet("Goblin") != null, "Goblin sheet loads")
 	_check(PixelBattleArt.enemy_sheet("Skeleton") != null, "Skeleton sheet loads")
 	_check(PixelBattleArt.enemy_sheet("Corrupted Wolf") != null, "Corrupted Wolf sheet loads")
-	for kind in ENEMIES:
+	for kind in GREENVALE_ROSTER:
+		_check(PixelBattleArt.enemy_sheet(kind) != null, "%s production pixel sheet loads" % kind)
 		var frame_count := PixelBattleArt.enemy_entry_frame_count(kind)
 		_check(frame_count in [4, 5, 6], "%s entry frame count is valid" % kind)
 	_check(PixelBattleArt.enemy_entry_frame_count("Goblin") == 4 and is_equal_approx(PixelBattleArt.enemy_entry_fps("Goblin"), ENTRY_FPS["Goblin"]), "Goblin entry uses four frames at 11 FPS")
 	_check(PixelBattleArt.enemy_entry_frame_count("Skeleton") == 4 and is_equal_approx(PixelBattleArt.enemy_entry_fps("Skeleton"), ENTRY_FPS["Skeleton"]), "Skeleton entry uses four frames at 9 FPS")
 	_check(PixelBattleArt.enemy_entry_frame_count("Corrupted Wolf") == 4 and is_equal_approx(PixelBattleArt.enemy_entry_fps("Corrupted Wolf"), ENTRY_FPS["Corrupted Wolf"]), "Wolf entry uses four frames at 11 FPS")
-	for kind in ENEMIES:
+	for kind in GREENVALE_ROSTER:
 		_check(PixelBattleArt.enemy_entry_frame(kind, 0) != null, "%s entry frame loads" % kind)
 	_check(PixelBattleArt.background_texture() != null, "Greenvale pixel background loads")
 	_check(battlefield.pixel_background_layer != null and battlefield.pixel_background_layer.visible, "Pixel background layer is active")
@@ -187,9 +189,10 @@ func _run() -> void:
 			var actual_height := (main.get("battlefield_host") as Control).custom_minimum_size.y
 			_check(is_equal_approx(actual_height, expected_height), "battlefield scales to 30%% at %dx%d" % [resolution.x, resolution.y])
 	await _capture_combat_animation_samples()
+	await _capture_greenvale_boss_samples()
 
 	main.queue_free()
-	print("PIXEL BATTLE PROTOTYPE: %s (42 captures, %d failures)" % ["FAIL" if failures else "PASS", failures])
+	print("PIXEL BATTLE PROTOTYPE: %s (production Greenvale captures, %d failures)" % ["FAIL" if failures else "PASS", failures])
 	quit(1 if failures else 0)
 
 func _set_enemies(kinds: Array, entering: bool = false) -> void:
@@ -271,6 +274,23 @@ func _capture_combat_animation_samples() -> void:
 		battlefield._process(0.0)
 		_clear_animation_capture_vfx()
 		await _capture("%s_hit_animation_360x640" % str(kind).to_lower().replace(" ", "_"), RESOLUTION_SMALL)
+	for kind in GREENVALE_ROSTER.slice(3):
+		_set_enemies([kind], kind == "Goblin Warlord")
+		_clear_animation_capture_vfx()
+		await _capture("%s_idle_animation_360x640" % str(kind).to_lower().replace(" ", "_"), RESOLUTION_SMALL)
+		battlefield._on_attack_started(0, -1)
+		var attack_fps := PixelBattleArt.animation_fps(kind, "attack")
+		battlefield.enemy_attack_times[0] = float(battlefield.enemy_attack_art_durations[0]) - minf(2.0, PixelBattleArt.animation_frame_count(kind, "attack") - 1.0) / attack_fps
+		battlefield._process(0.0)
+		_clear_animation_capture_vfx()
+		await _capture("%s_attack_animation_360x640" % str(kind).to_lower().replace(" ", "_"), RESOLUTION_SMALL)
+		if kind != "Goblin Warlord":
+			battlefield._on_damage_popup(0, 11, false, false)
+			var hit_fps := PixelBattleArt.animation_fps(kind, "hit")
+			battlefield.enemy_hit_times[0] = float(battlefield.enemy_hit_art_durations[0]) - 1.0 / hit_fps
+			battlefield._process(0.0)
+			_clear_animation_capture_vfx()
+			await _capture("%s_hit_animation_360x640" % str(kind).to_lower().replace(" ", "_"), RESOLUTION_SMALL)
 
 	_set_seven_active_enemies()
 	_clear_animation_capture_vfx()
@@ -283,11 +303,41 @@ func _capture_combat_animation_samples() -> void:
 	_clear_animation_capture_vfx()
 	await _capture("greenvale_multiple_independent_attacks_360x640", RESOLUTION_SMALL)
 	await _capture("greenvale_combat_overview_1080x1920", RESOLUTION_LARGE)
+	_set_enemies(["Goblin Archer"])
+	_clear_animation_capture_vfx()
+	battlefield._on_attack_started(0, -1)
+	battlefield._process(0.08)
+	if not battlefield.vfx.projectiles.is_empty():
+		battlefield.vfx.projectiles[0]["age"] = 0.18
+		battlefield.vfx.projectiles[0]["life"] = 0.8
+	await _capture("goblin_archer_pixel_projectile_360x640", RESOLUTION_SMALL)
+	_set_seven_active_enemies()
+	_clear_animation_capture_vfx()
+	await _capture("greenvale_production_battle_overview_1080x1920", RESOLUTION_LARGE)
+
+func _capture_greenvale_boss_samples() -> void:
+	battle.stage = 20
+	_set_enemies(["Goblin Warlord"], true)
+	battle.enemies[0]["entry_time"] = 0.24
+	await _capture("goblin_warlord_entrance_360x640", RESOLUTION_SMALL)
+	battle.enemies[0]["entry_time"] = 0.0
+	battlefield._on_attack_started(0, -1)
+	var boss_attack_fps := PixelBattleArt.animation_fps("Goblin Warlord", "attack")
+	battlefield.enemy_attack_times[0] = float(battlefield.enemy_attack_art_durations[0]) - 3.0 / boss_attack_fps
+	battlefield._process(0.0)
+	await _capture("goblin_warlord_attack_360x640", RESOLUTION_SMALL)
+	battle.enemies[0]["current_hp"] = 0.0
+	battlefield._on_enemy_defeated(0, 0, 0)
+	battlefield.deaths[0]["age"] = 0.42
+	battlefield.queue_redraw()
+	await _capture("goblin_warlord_defeat_360x640", RESOLUTION_SMALL)
+	await _capture("goblin_warlord_boss_overview_1080x1920", RESOLUTION_LARGE)
 
 func _set_seven_active_enemies() -> void:
 	battle.enemies.clear()
+	var crowded_kinds := ["Goblin", "Skeleton", "Corrupted Wolf", "Goblin Archer", "Goblin Spearman", "Bandit", "Goblin"]
 	for index in GameData.ENEMIES_PER_WAVE:
-		var kind: String = ENEMIES[index % ENEMIES.size()]
+		var kind: String = crowded_kinds[index % crowded_kinds.size()]
 		var enemy := CampaignData.enemy_stats(kind, 0, 1, battle.stage, 1)
 		enemy["current_hp"] = enemy["hp"]
 		enemy["spawned"] = true
