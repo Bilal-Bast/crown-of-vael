@@ -1,6 +1,6 @@
 ﻿extends SceneTree
 
-const KINDS := ["Goblin", "Skeleton", "Corrupted Wolf"]
+const KINDS := ["Goblin", "Skeleton", "Corrupted Wolf", "Goblin Archer", "Goblin Spearman", "Bandit", "Goblin Captain", "Armored Skeleton", "Goblin Warlord"]
 var failures := 0
 var field: Battlefield
 var battle: BattleController
@@ -24,8 +24,8 @@ func _run() -> void:
  await process_frame
  _check(PixelBattleArt.is_active(battle), "Greenvale Squire prototype is active")
  _check(PixelBattleArt.validation_report().is_empty(), "all animation and prototype sheets load with valid dimensions")
- var counts := {"Squire": {"idle":4,"attack":6,"guard":6,"hit":4}, "Goblin":{"idle":4,"attack":4,"hit":3}, "Skeleton":{"idle":4,"attack":4,"hit":3}, "Corrupted Wolf":{"idle":4,"attack":5,"hit":3}}
- var speeds := {"Squire": {"idle":7.0,"attack":12.0,"guard":12.0,"hit":12.0}, "Goblin":{"idle":8.0,"attack":11.0,"hit":11.0}, "Skeleton":{"idle":7.0,"attack":9.0,"hit":10.0}, "Corrupted Wolf":{"idle":8.0,"attack":12.0,"hit":11.0}}
+ var counts := {"Squire": {"idle":4,"attack":6,"guard":6,"hit":4}, "Goblin":{"idle":4,"attack":4,"hit":3}, "Skeleton":{"idle":4,"attack":4,"hit":3}, "Corrupted Wolf":{"idle":4,"attack":5,"hit":3}, "Goblin Archer":{"idle":4,"attack":5,"hit":3}, "Goblin Spearman":{"idle":4,"attack":5,"hit":3}, "Bandit":{"idle":4,"attack":5,"hit":3}, "Goblin Captain":{"idle":4,"attack":5,"hit":3}, "Armored Skeleton":{"idle":4,"attack":5,"hit":3}, "Goblin Warlord":{"idle":4,"attack":6,"hit":4,"death":6}}
+ var speeds := {"Squire": {"idle":7.0,"attack":12.0,"guard":12.0,"hit":12.0}, "Goblin":{"idle":8.0,"attack":11.0,"hit":11.0}, "Skeleton":{"idle":7.0,"attack":9.0,"hit":10.0}, "Corrupted Wolf":{"idle":8.0,"attack":12.0,"hit":11.0}, "Goblin Archer":{"idle":7.5,"attack":10.0,"hit":11.0}, "Goblin Spearman":{"idle":7.5,"attack":11.0,"hit":11.0}, "Bandit":{"idle":8.0,"attack":12.0,"hit":12.0}, "Goblin Captain":{"idle":7.0,"attack":10.0,"hit":10.0}, "Armored Skeleton":{"idle":6.5,"attack":9.0,"hit":9.0}, "Goblin Warlord":{"idle":6.0,"attack":9.0,"hit":10.0,"death":9.0}}
  for character in counts:
   for state in counts[character]:
    _check(PixelBattleArt.animation_frame_count(character,state)==counts[character][state], "%s %s frame count" % [character,state])
@@ -35,6 +35,8 @@ func _run() -> void:
  _check(PixelBattleArt.animation_duration("Squire","attack",0.26)==0.5, "Squire attack presentation fits six frames at 12 FPS")
  _check(is_equal_approx(PixelBattleArt.animation_duration("Corrupted Wolf","attack",0.23),5.0/12.0), "wolf action duration is visual-only and follows its 12 FPS sheet")
  _check(PixelBattleArt.animation_duration("Squire","missing",0.3)==0.3, "missing sheet uses existing visual duration")
+ _check(PixelBattleArt.enemy_entry_frame_count("Goblin Archer")==4 and PixelBattleArt.enemy_entry_frame_count("Goblin Warlord")==4, "all new Greenvale entry cycles contain four frames")
+ _check(PixelBattleArt.animation_duration("Goblin Warlord","death",0.62)==6.0/9.0, "Warlord death art duration fits its six-frame clip")
  _check(field._pixel_animation_frame("Squire","missing",0.0,false,0,"idle")!=null, "missing state falls back to legacy Squire sheet")
 
  field._on_attack_started(-1,0)
@@ -65,6 +67,7 @@ func _run() -> void:
   enemy["stun_time"]=0.0
   battle.enemies.append(enemy)
  battle.changed.emit()
+ await process_frame
  field.enemy_attack_times.clear()
  field.enemy_hit_times.clear()
  field.enemy_attack_art_durations.clear()

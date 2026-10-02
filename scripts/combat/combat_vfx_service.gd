@@ -98,10 +98,22 @@ func draw(canvas: Control, unit: float, battle: BattleController) -> void:
 		var trail_color: Color = projectile_item["color"]
 		trail_color.a = 1.0 - ratio * 0.35
 		canvas.draw_line(origin.lerp(destination, maxf(0, ratio - 0.18)), pos, trail_color.darkened(0.15), float(projectile_item["size"]) * 0.65 * unit)
-		if str(projectile_item.get("style", "orb")) == "arrow":
+		if str(projectile_item.get("style", "orb")) in ["arrow", "pixel_arrow"]:
 			var direction := (destination - origin).normalized()
 			var side := Vector2(-direction.y, direction.x)
-			canvas.draw_colored_polygon(PackedVector2Array([pos + direction * 9 * unit, pos - direction * 5 * unit + side * 4 * unit, pos - direction * 5 * unit - side * 4 * unit]), trail_color)
+			if str(projectile_item.get("style", "orb")) == "pixel_arrow":
+				var center := pos.round()
+				var arrow_scale := maxf(unit, 1.0)
+				var shaft_start := (center - direction * 23.0 * arrow_scale).round()
+				var tip := (center + direction * 21.0 * arrow_scale).round()
+				canvas.draw_line(shaft_start, tip, Color("382b21"), maxf(5.0, 6.0 * arrow_scale))
+				canvas.draw_line(shaft_start, tip, Color("f2d293"), maxf(2.0, 3.0 * arrow_scale))
+				canvas.draw_colored_polygon(PackedVector2Array([tip, (center + direction * 5.0 * arrow_scale + side * 7.0 * arrow_scale).round(), (center + direction * 5.0 * arrow_scale - side * 7.0 * arrow_scale).round()]), Color("fff1c8"))
+				var fletch := (center - direction * 17.0 * arrow_scale).round()
+				canvas.draw_line(fletch, (fletch + side * 7.0 * arrow_scale).round(), Color("c66f45"), maxf(2.0, 3.0 * arrow_scale))
+				canvas.draw_line(fletch, (fletch - side * 7.0 * arrow_scale).round(), Color("c66f45"), maxf(2.0, 3.0 * arrow_scale))
+			else:
+				canvas.draw_colored_polygon(PackedVector2Array([pos + direction * 9 * unit, pos - direction * 5 * unit + side * 4 * unit, pos - direction * 5 * unit - side * 4 * unit]), trail_color)
 		else:
 			canvas.draw_circle(pos, float(projectile_item["size"]) * unit, trail_color)
 	if boss_banner_time > 0.0:

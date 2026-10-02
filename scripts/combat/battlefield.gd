@@ -239,13 +239,16 @@ func _on_attack_started(attacker_index: int, target_index: int) -> void:
 			vfx.shake(0.12, 2.0)
 		if str(battle.enemies[attacker_index].get("archetype", "")) in ["RANGED", "MAGIC", "HEALER"]:
 			var origin := _enemy_position(attacker_index) + Vector2(-18, -82)
-			vfx.projectile(origin, _hero_position() + Vector2(0, -75), Color("d49aff") if str(battle.enemies[attacker_index].get("archetype", "")) == "MAGIC" else Color("dbe2c0"), 0.26, 6)
+			var archer_arrow := PixelBattleArt.is_active(battle) and enemy_id == "Goblin Archer"
+			var projectile_color := Color("d6b46e") if archer_arrow else (Color("d49aff") if str(battle.enemies[attacker_index].get("archetype", "")) == "MAGIC" else Color("dbe2c0"))
+			vfx.projectile(origin + (Vector2(-24, -8) if archer_arrow else Vector2.ZERO), _hero_position() + Vector2(0, -75), projectile_color, 0.26, 6, "pixel_arrow" if archer_arrow else "orb")
 			vfx.pulse(_hero_position() + Vector2(0, -50), Color("f4f0d5"), 0.7, 0.3)
 		else:
 			lunges[attacker_index] = 0.18
 	queue_redraw()
 
 func _on_damage_popup(target_index: int, amount: int, critical: bool, bash: bool) -> void:
+	var warlord_pixel_hit := false
 	if target_index < 0:
 		var evolution := int(battle.profile.heroes.get("knight", {}).get("evolution", 0)) if battle != null and battle.profile != null and battle.profile.selected_hero_id == "knight" else 0
 		hero_hit_art_duration = float(HeroArtService.metadata(evolution).get("hit_duration", 0.30))
@@ -256,12 +259,15 @@ func _on_damage_popup(target_index: int, amount: int, critical: bool, bash: bool
 	elif battle != null and target_index < battle.enemies.size():
 		var enemy: Dictionary = battle.enemies[target_index]
 		var enemy_id := str(enemy.get("visual", enemy.get("kind", "")))
+		warlord_pixel_hit = enemy_id == "Goblin Warlord" and PixelBattleArt.is_active(battle)
 		var hit_duration := float(EnemyArtService.metadata(enemy_id).get("hit_duration", 0.22))
 		if PixelBattleArt.is_active(battle):
 			hit_duration = PixelBattleArt.animation_duration(enemy_id, "hit", hit_duration)
 		enemy_hit_times[target_index] = hit_duration
 		enemy_hit_art_durations[target_index] = hit_duration
 	var pos := _hero_position() if target_index < 0 else _enemy_position(target_index)
+	if warlord_pixel_hit and pixel_impact_overlay != null:
+		pixel_impact_overlay.show_impact(get_global_transform_with_canvas() * (pos + Vector2(-12.0, -112.0)), 20.0 * minf(size.x / 1000.0, size.y / 560.0), 0.24, Color("f1bd65"))
 	var text_value := NumberFormat.compact(amount)
 	if critical:
 		text_value = "CRIT %s!" % NumberFormat.compact(amount)
@@ -284,7 +290,11 @@ func _on_damage_popup(target_index: int, amount: int, critical: bool, bash: bool
 
 func _on_enemy_defeated(target_index: int, gold: int, exp: int) -> void:
 	var pos := _enemy_position(target_index)
-	deaths.append({"pos": pos + Vector2(0, -50), "index": target_index, "age": 0.0, "life": 0.62})
+	var enemy_id := str(battle.enemies[target_index].get("visual", battle.enemies[target_index].get("kind", "")))
+	var death_life := PixelBattleArt.animation_duration(enemy_id, "death", 0.62) if PixelBattleArt.is_active(battle) and enemy_id == "Goblin Warlord" else 0.62
+	deaths.append({"pos": pos + Vector2(0, -50), "index": target_index, "age": 0.0, "life": death_life})
+	if PixelBattleArt.is_active(battle) and enemy_id == "Goblin Warlord" and pixel_impact_overlay != null:
+		pixel_impact_overlay.show_impact(get_global_transform_with_canvas() * (pos + Vector2(0, -115)), 25.0 * minf(size.x / 1000.0, size.y / 560.0), 0.48, Color("ed8c58"))
 	vfx.label(pos + Vector2(0, -140), "+%s GOLD  +%s EXP" % [NumberFormat.compact(gold), NumberFormat.compact(exp)], Color("ffe79c"), 22, 1.25)
 	vfx.pulse(pos + Vector2(0, -50), Color("d9f1a5"), 1.4 if int(battle.enemies[target_index].get("archetype", "") == "BOSS") else 1.0, 0.52)
 	_play_audio("enemy_death")
@@ -329,7 +339,11 @@ func _draw() -> void:
 						death_found = true
 						var death_ratio := float(death["age"]) / float(death["life"])
 						if PixelBattleArt.enemy_sheet(str(enemy.get("visual", enemy.get("kind", "")))) != null and PixelBattleArt.is_active(battle):
-							_update_pixel_enemy_sprite(i, _enemy_position(i) + shake, enemy, "idle", unit, 1.0 - death_ratio, 1.0 - death_ratio * 0.45)
+							var enemy_kind := str(enemy.get("visual", enemy.get("kind", "")))
+							if enemy_kind == "Goblin Warlord" and PixelBattleArt.animation_sheet(enemy_kind, "death") != null:
+								_update_pixel_enemy_sprite(i, _enemy_position(i) + shake, enemy, "death", unit)
+							else:
+								_update_pixel_enemy_sprite(i, _enemy_position(i) + shake, enemy, "idle", unit, 1.0 - death_ratio, 1.0 - death_ratio * 0.45)
 						else:
 							_draw_defeated_enemy(_enemy_position(i) + shake, enemy, unit, death_ratio)
 						break
@@ -493,7 +507,7 @@ func _enemy_position(index: int) -> Vector2:
 				target.x = lerpf(size.x * 1.14, target.x, entry_progress)
 		return target
 	if battle != null and (str(battle.mode_config.get("mode", "campaign")) == "boss_rush" or str(battle.mode_config.get("mode", "campaign")) == "campaign" and battle.stage == 20):
-		return Vector2(size.x * 0.75, size.y * 0.71)
+		return Vector2(size.x * 0.75, size.y * (0.92 if PixelBattleArt.is_active(battle) else 0.71))
 	var positions := [Vector2(0.42, 0.52), Vector2(0.58, 0.52), Vector2(0.74, 0.52), Vector2(0.90, 0.52), Vector2(0.50, 0.91), Vector2(0.68, 0.91), Vector2(0.86, 0.91)]
 	var target := Vector2(size.x * positions[index % positions.size()].x, size.y * positions[index % positions.size()].y)
 	if battle != null and index < battle.enemies.size() and bool(battle.enemies[index].get("spawned", false)):
@@ -627,7 +641,16 @@ func _update_pixel_enemy_sprite(index: int, pos: Vector2, enemy: Dictionary, sta
 		var frame_count := PixelBattleArt.enemy_entry_frame_count(kind)
 		var frame := int(floor(maxf(0.0, 0.45 - float(enemy.get("entry_time", 0.0))) * PixelBattleArt.enemy_entry_fps(kind))) % frame_count
 		var entry_texture := PixelBattleArt.enemy_entry_frame(kind, frame)
-		sprite.texture = entry_texture if entry_texture != null else PixelBattleArt.frame_texture(sheet, "idle", "enemy:%s" % kind)
+		sprite.texture = entry_texture if entry_texture != null else PixelBattleArt.enemy_fallback_frame(kind, "idle")
+	elif state == "death":
+		var elapsed := 0.0
+		for death in deaths:
+			if int(death.get("index", -1)) == index:
+				elapsed = float(death.get("age", 0.0))
+				break
+		sprite.texture = PixelBattleArt.animation_frame(kind, "death", int(floor(elapsed * PixelBattleArt.animation_fps(kind, "death"))))
+		if sprite.texture == null:
+			sprite.texture = PixelBattleArt.enemy_fallback_frame(kind, "idle")
 	elif state in ["hit", "attack"]:
 		var duration_map := enemy_hit_art_durations if state == "hit" else enemy_attack_art_durations
 		var remaining_map := enemy_hit_times if state == "hit" else enemy_attack_times
@@ -638,9 +661,9 @@ func _update_pixel_enemy_sprite(index: int, pos: Vector2, enemy: Dictionary, sta
 		var idle_frame := int(floor((Time.get_ticks_msec() * 0.001 + index * 0.37) * PixelBattleArt.animation_fps(enemy_id, "idle"))) % maxi(1, PixelBattleArt.animation_frame_count(enemy_id, "idle"))
 		sprite.texture = PixelBattleArt.animation_frame(enemy_id, "idle", idle_frame)
 		if sprite.texture == null:
-			sprite.texture = PixelBattleArt.frame_texture(sheet, "idle", "enemy:%s" % kind)
+			sprite.texture = PixelBattleArt.enemy_fallback_frame(kind, "idle")
 	sprite.position = pos + Vector2(0.0, -151.0 * actor_scale)
-	sprite.scale = Vector2.ONE * (350.0 / 256.0) * actor_scale
+	sprite.scale = Vector2.ONE * (350.0 / 256.0) * actor_scale * (1.35 / 1.65 if str(enemy.get("archetype", "")) == "BOSS" and PixelBattleArt.is_active(battle) else 1.0)
 	sprite.modulate = Color(1.0, 1.0, 1.0, opacity)
 	sprite.visible = true
 
@@ -657,8 +680,10 @@ func _pixel_animation_frame(character_id: String, state: String, elapsed: float,
 		var animated := PixelBattleArt.animation_frame(character_id, state, frame)
 		if animated != null:
 			return animated
-	var source := PixelBattleArt.hero_sheet() if character_id == "Squire" else PixelBattleArt.enemy_sheet(character_id)
-	return PixelBattleArt.frame_texture(source, fallback_state, "animation-fallback:%s:%s" % [character_id, fallback_state]) if source != null else null
+	if character_id == "Squire":
+		var hero_source := PixelBattleArt.hero_sheet()
+		return PixelBattleArt.frame_texture(hero_source, fallback_state, "animation-fallback:%s:%s" % [character_id, fallback_state]) if hero_source != null else null
+	return PixelBattleArt.enemy_fallback_frame(character_id, fallback_state)
 
 func _draw_knight_art(form: int) -> bool:
 	var state := "guard" if hero_guard_art_time > 0.0 else "attack" if hero_attack_art_time > 0.0 else "idle"
@@ -742,14 +767,15 @@ func _draw_enemy(pos: Vector2, enemy: Dictionary, unit: float, flash: bool, enem
 	var enemy_state := enemy_visual_state(enemy_index)
 	var art_meta := EnemyArtService.metadata(kind)
 	var elite_scale := 1.2 if str(enemy.get("archetype", "")) == "ELITE" else 1.0
-	var boss_scale := 1.65 if boss else 1.0
+	var boss_scale := (1.35 if PixelBattleArt.is_active(battle) else 1.65) if boss else 1.0
 	var actor_scale := unit * elite_scale * boss_scale
-	draw_set_transform(pos, 0.0, Vector2.ONE * actor_scale)
-	if int(enemy.get("difficulty", 0)) >= 3:
-		draw_arc(Vector2(0, -70), 65, 0, TAU, 24, Color("e3548b", 0.28 + 0.12 * (int(enemy["difficulty"]) - 3)), 7)
-	draw_ellipse_placeholder(Vector2(0, 15), Vector2(39, 10), Color("314d37", 0.33))
 	var art_region := int(enemy.get("region", battle.region if battle != null and str(battle.mode_config.get("mode", "campaign")) == "campaign" else 0))
 	var pixel_sheet: Texture2D = PixelBattleArt.enemy_sheet(kind) if PixelBattleArt.is_active(battle) else null
+	draw_set_transform(pos, 0.0, Vector2.ONE * actor_scale)
+	if int(enemy.get("difficulty", 0)) >= 3 and pixel_sheet == null:
+		draw_arc(Vector2(0, -70), 65, 0, TAU, 24, Color("e3548b", 0.28 + 0.12 * (int(enemy["difficulty"]) - 3)), 7)
+	if pixel_sheet == null:
+		draw_ellipse_placeholder(Vector2(0, 15), Vector2(39, 10), Color("314d37", 0.33))
 	var enemy_texture := EnemyArtService.presentation_texture_for(kind, enemy_state, art_region) if pixel_sheet == null else null
 	var art_size := Vector2.ZERO
 	if pixel_sheet != null:
@@ -780,7 +806,7 @@ func _draw_enemy(pos: Vector2, enemy: Dictionary, unit: float, flash: bool, enem
 				match kind:
 					"Goblin Warlord": _draw_warlord()
 					_: _draw_campaign_creature(enemy)
-	if enemy.has("region"):
+	if enemy.has("region") and pixel_sheet == null:
 		draw_circle(Vector2(0, -82), 43, Color(enemy["color"], 0.14))
 		if int(enemy.get("difficulty", 0)) == 1:
 			draw_arc(Vector2(0, -76), 49, PI * 0.15, PI * 0.85, 12, Color(enemy["color"], 0.55), 4)
@@ -797,13 +823,24 @@ func _draw_enemy(pos: Vector2, enemy: Dictionary, unit: float, flash: bool, enem
 	var bar_width := 125.0 if boss else 85.0
 	var pixel_enemy := pixel_sheet != null
 	var boss_hud_min_y := (10.0 - pos.y) / actor_scale
-	var hp_y := -374.0 if pixel_enemy else (-250.0 if boss else -116.0)
+	var hp_y := -280.0 if boss and pixel_enemy else (-250.0 if boss else -116.0)
 	if boss and not pixel_enemy:
 		hp_y = maxf(hp_y, boss_hud_min_y)
-	_draw_hp_bar(Vector2(-bar_width * 0.5, hp_y), bar_width, float(enemy["current_hp"]) / float(enemy["hp"]), Color("eb6f67"))
+	var hp_position := Vector2(-bar_width * 0.5, hp_y)
+	if boss and pixel_enemy:
+		hp_position.x = (size.x * 0.46 - pos.x) / actor_scale - bar_width * 0.5
+	_draw_hp_bar(hp_position, bar_width, float(enemy["current_hp"]) / float(enemy["hp"]), Color("eb6f67"))
 	if boss:
-		var boss_label_y := maxf(-265.0, (48.0 - pos.y) / actor_scale) if not pixel_enemy else -265.0
-		draw_string(ThemeDB.fallback_font, Vector2(-90, boss_label_y), kind.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color("f8dfbc"))
+		var boss_label_y := maxf(-265.0, (48.0 - pos.y) / actor_scale) if not pixel_enemy else -240.0
+		var boss_label_text := kind.to_upper()
+		var boss_label_position := Vector2(-90, boss_label_y)
+		var boss_label_alignment := HORIZONTAL_ALIGNMENT_LEFT
+		var boss_label_width := -1.0
+		if pixel_enemy:
+			boss_label_width = ThemeDB.fallback_font.get_string_size(boss_label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 17).x
+			boss_label_position.x = (size.x * 0.46 - pos.x) / actor_scale - boss_label_width * 0.5
+			boss_label_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		draw_string(ThemeDB.fallback_font, boss_label_position, boss_label_text, boss_label_alignment, boss_label_width, 17, Color("f8dfbc"))
 	draw_set_transform(Vector2.ZERO)
 
 func _draw_defeated_enemy(pos: Vector2, enemy: Dictionary, unit: float, ratio: float) -> void:

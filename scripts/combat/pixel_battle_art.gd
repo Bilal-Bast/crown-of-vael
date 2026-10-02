@@ -11,11 +11,23 @@ const ENEMY_SHEETS := {
 	"Goblin": "res://assets/prototype_pixel/enemies/greenvale/goblin/sheet.png",
 	"Skeleton": "res://assets/prototype_pixel/enemies/greenvale/skeleton/sheet.png",
 	"Corrupted Wolf": "res://assets/prototype_pixel/enemies/greenvale/corrupted_wolf/sheet.png",
+	"Goblin Archer": "res://assets/prototype_pixel/enemies/greenvale/goblin_archer/idle.png",
+	"Goblin Spearman": "res://assets/prototype_pixel/enemies/greenvale/goblin_spearman/idle.png",
+	"Bandit": "res://assets/prototype_pixel/enemies/greenvale/bandit/idle.png",
+	"Goblin Captain": "res://assets/prototype_pixel/enemies/greenvale/goblin_captain/idle.png",
+	"Armored Skeleton": "res://assets/prototype_pixel/enemies/greenvale/armored_skeleton/idle.png",
+	"Goblin Warlord": "res://assets/prototype_pixel/enemies/greenvale/goblin_warlord/idle.png",
 }
 const ENEMY_ENTRY_ANIMATIONS := {
 	"Goblin": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin/entry.png", "frames": 4, "fps": 11.0},
 	"Skeleton": {"path": "res://assets/prototype_pixel/enemies/greenvale/skeleton/entry.png", "frames": 4, "fps": 9.0},
 	"Corrupted Wolf": {"path": "res://assets/prototype_pixel/enemies/greenvale/corrupted_wolf/entry.png", "frames": 4, "fps": 11.0},
+	"Goblin Archer": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_archer/entry.png", "frames": 4, "fps": 11.0},
+	"Goblin Spearman": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_spearman/entry.png", "frames": 4, "fps": 10.0},
+	"Bandit": {"path": "res://assets/prototype_pixel/enemies/greenvale/bandit/entry.png", "frames": 4, "fps": 12.0},
+	"Goblin Captain": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_captain/entry.png", "frames": 4, "fps": 10.0},
+	"Armored Skeleton": {"path": "res://assets/prototype_pixel/enemies/greenvale/armored_skeleton/entry.png", "frames": 4, "fps": 8.0},
+	"Goblin Warlord": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_warlord/entry.png", "frames": 4, "fps": 8.0},
 }
 const CHARACTER_ANIMATIONS := {
 	"Squire": {
@@ -38,6 +50,37 @@ const CHARACTER_ANIMATIONS := {
 		"idle": {"path": "res://assets/prototype_pixel/enemies/greenvale/corrupted_wolf/idle.png", "frames": 4, "fps": 8.0},
 		"attack": {"path": "res://assets/prototype_pixel/enemies/greenvale/corrupted_wolf/attack.png", "frames": 5, "fps": 12.0},
 		"hit": {"path": "res://assets/prototype_pixel/enemies/greenvale/corrupted_wolf/hit.png", "frames": 3, "fps": 11.0},
+	},
+	"Goblin Archer": {
+		"idle": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_archer/idle.png", "frames": 4, "fps": 7.5},
+		"attack": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_archer/attack.png", "frames": 5, "fps": 10.0},
+		"hit": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_archer/hit.png", "frames": 3, "fps": 11.0},
+	},
+	"Goblin Spearman": {
+		"idle": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_spearman/idle.png", "frames": 4, "fps": 7.5},
+		"attack": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_spearman/attack.png", "frames": 5, "fps": 11.0},
+		"hit": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_spearman/hit.png", "frames": 3, "fps": 11.0},
+	},
+	"Bandit": {
+		"idle": {"path": "res://assets/prototype_pixel/enemies/greenvale/bandit/idle.png", "frames": 4, "fps": 8.0},
+		"attack": {"path": "res://assets/prototype_pixel/enemies/greenvale/bandit/attack.png", "frames": 5, "fps": 12.0},
+		"hit": {"path": "res://assets/prototype_pixel/enemies/greenvale/bandit/hit.png", "frames": 3, "fps": 12.0},
+	},
+	"Goblin Captain": {
+		"idle": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_captain/idle.png", "frames": 4, "fps": 7.0},
+		"attack": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_captain/attack.png", "frames": 5, "fps": 10.0},
+		"hit": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_captain/hit.png", "frames": 3, "fps": 10.0},
+	},
+	"Armored Skeleton": {
+		"idle": {"path": "res://assets/prototype_pixel/enemies/greenvale/armored_skeleton/idle.png", "frames": 4, "fps": 6.5},
+		"attack": {"path": "res://assets/prototype_pixel/enemies/greenvale/armored_skeleton/attack.png", "frames": 5, "fps": 9.0},
+		"hit": {"path": "res://assets/prototype_pixel/enemies/greenvale/armored_skeleton/hit.png", "frames": 3, "fps": 9.0},
+	},
+	"Goblin Warlord": {
+		"idle": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_warlord/idle.png", "frames": 4, "fps": 6.0},
+		"attack": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_warlord/attack.png", "frames": 6, "fps": 9.0},
+		"hit": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_warlord/hit.png", "frames": 4, "fps": 10.0},
+		"death": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_warlord/death.png", "frames": 6, "fps": 9.0},
 	},
 }
 static var _frame_cache: Dictionary = {}
@@ -131,6 +174,13 @@ static func animation_duration(character_id: String, state: String, fallback: fl
 	if animation_sheet(character_id, state) == null:
 		return fallback
 	return float(animation_frame_count(character_id, state)) / animation_fps(character_id, state)
+
+static func enemy_fallback_frame(enemy_id: String, state: String) -> Texture2D:
+	var idle := animation_frame(enemy_id, "idle", 0)
+	if idle != null:
+		return idle
+	var legacy := enemy_sheet(enemy_id)
+	return frame_texture(legacy, state, "enemy-fallback:%s" % enemy_id) if legacy != null and legacy.get_width() % 3 == 0 else null
 
 static func background_texture() -> Texture2D:
 	return load(BACKGROUND) as Texture2D
