@@ -7,6 +7,7 @@ const PROTOTYPE_ENABLED := true
 const HERO_SHEET := "res://assets/prototype_pixel/heroes/squire/sheet.png"
 const HERO_RUN_SHEET := "res://assets/prototype_pixel/heroes/squire/run.png"
 const BACKGROUND := "res://assets/prototype_pixel/backgrounds/greenvale/battle.png"
+const FOREST_BACKGROUND := "res://assets/prototype_pixel/backgrounds/whispering_forest/battle.png"
 const ENEMY_SHEETS := {
 	"Goblin": "res://assets/prototype_pixel/enemies/greenvale/goblin/sheet.png",
 	"Skeleton": "res://assets/prototype_pixel/enemies/greenvale/skeleton/sheet.png",
@@ -17,6 +18,19 @@ const ENEMY_SHEETS := {
 	"Goblin Captain": "res://assets/prototype_pixel/enemies/greenvale/goblin_captain/idle.png",
 	"Armored Skeleton": "res://assets/prototype_pixel/enemies/greenvale/armored_skeleton/idle.png",
 	"Goblin Warlord": "res://assets/prototype_pixel/enemies/greenvale/goblin_warlord/idle.png",
+}
+const FOREST_SHEETS := {
+ "Forest Goblin": "forest_goblin", "Giant Spider": "giant_spider", "Corrupted Boar": "corrupted_boar",
+ "Forest Bandit": "forest_bandit", "Skeleton Archer": "skeleton_archer", "Poison Wolf": "poison_wolf",
+ "Spider Matriarch": "spider_matriarch", "Forest Brute": "forest_brute", "Ancient Treant": "ancient_treant"
+}
+const BODY_PLACEMENT := {
+	"Giant Spider": {"width": 1.48, "height": 0.78, "offset_y": 0.50},
+	"Corrupted Boar": {"width": 1.30, "height": 0.82, "offset_y": 0.54},
+	"Poison Wolf": {"width": 1.26, "height": 0.84, "offset_y": 0.52},
+	"Spider Matriarch": {"width": 1.30, "height": 0.78, "offset_y": 0.40, "offset_x": -0.055},
+	"Forest Brute": {"width": 1.05, "height": 0.95, "offset_y": 0.32, "offset_x": -0.045},
+	"Ancient Treant": {"width": 0.95, "height": 0.90, "offset_y": 0.25}
 }
 const ENEMY_ENTRY_ANIMATIONS := {
 	"Goblin": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin/entry.png", "frames": 4, "fps": 11.0},
@@ -88,8 +102,9 @@ static var _frame_cache: Dictionary = {}
 static func is_active(battle: BattleController) -> bool:
 	if not PROTOTYPE_ENABLED or battle == null or battle.profile == null:
 		return false
-	if str(battle.mode_config.get("mode", "campaign")) != "campaign" or battle.region != 1:
+	if str(battle.mode_config.get("mode", "campaign")) != "campaign" or battle.region not in [1, 2]:
 		return false
+	set_battle_region(battle.region)
 	return battle.profile.selected_hero_id == "knight" and int(battle.profile.heroes.get("knight", {}).get("evolution", 0)) == 0
 
 static func hero_sheet() -> Texture2D:
@@ -112,17 +127,25 @@ static func hero_run_frame(frame: int) -> Texture2D:
 	return atlas
 
 static func enemy_sheet(enemy_id: String) -> Texture2D:
+	if FOREST_SHEETS.has(enemy_id):
+		return animation_sheet(enemy_id, "idle")
 	if not ENEMY_SHEETS.has(enemy_id):
 		return null
 	return load(str(ENEMY_SHEETS[enemy_id])) as Texture2D
 
 static func enemy_entry_frame_count(enemy_id: String) -> int:
+	if FOREST_SHEETS.has(enemy_id):
+		return animation_frame_count(enemy_id, "entry")
 	return int(ENEMY_ENTRY_ANIMATIONS.get(enemy_id, {}).get("frames", 0))
 
 static func enemy_entry_fps(enemy_id: String) -> float:
+	if FOREST_SHEETS.has(enemy_id):
+		return animation_fps(enemy_id, "entry")
 	return float(ENEMY_ENTRY_ANIMATIONS.get(enemy_id, {}).get("fps", 0.0))
 
 static func enemy_entry_frame(enemy_id: String, frame: int) -> Texture2D:
+	if FOREST_SHEETS.has(enemy_id):
+		return animation_frame(enemy_id, "entry", frame)
 	var config: Dictionary = ENEMY_ENTRY_ANIMATIONS.get(enemy_id, {})
 	if config.is_empty() or not ResourceLoader.exists(str(config["path"]), "Texture2D"):
 		return null
@@ -141,12 +164,27 @@ static func enemy_entry_frame(enemy_id: String, frame: int) -> Texture2D:
 	return atlas
 
 static func animation_frame_count(character_id: String, state: String) -> int:
+	if FOREST_SHEETS.has(character_id):
+		return int(_forest_config(character_id, state).get("frames", 0))
 	return int(CHARACTER_ANIMATIONS.get(character_id, {}).get(state, {}).get("frames", 0))
 
 static func animation_fps(character_id: String, state: String) -> float:
+	if FOREST_SHEETS.has(character_id):
+		return float(_forest_config(character_id, state).get("fps", 0.0))
 	return float(CHARACTER_ANIMATIONS.get(character_id, {}).get(state, {}).get("fps", 0.0))
 
 static func animation_sheet(character_id: String, state: String) -> Texture2D:
+	if FOREST_SHEETS.has(character_id):
+		var forest_config := _forest_config(character_id, state)
+		if forest_config.is_empty():
+			return null
+		var forest_path := str(forest_config["path"])
+		if not ResourceLoader.exists(forest_path, "Texture2D"):
+			return null
+		var forest_sheet := load(forest_path) as Texture2D
+		if forest_sheet == null or forest_sheet.get_width() != int(forest_config["frames"]) * 256 or forest_sheet.get_height() != 256:
+			return null
+		return forest_sheet
 	var config: Dictionary = CHARACTER_ANIMATIONS.get(character_id, {}).get(state, {})
 	if config.is_empty() or not ResourceLoader.exists(str(config["path"]), "Texture2D"):
 		return null
@@ -183,11 +221,31 @@ static func enemy_fallback_frame(enemy_id: String, state: String) -> Texture2D:
 	return frame_texture(legacy, state, "enemy-fallback:%s" % enemy_id) if legacy != null and legacy.get_width() % 3 == 0 else null
 
 static func background_texture() -> Texture2D:
+	if _active_region == 2:
+		return load(FOREST_BACKGROUND) as Texture2D
 	return load(BACKGROUND) as Texture2D
+
+static var _active_region := 1
+static func set_battle_region(region: int) -> void:
+	_active_region = region
+
+static func _forest_config(character_id: String, state: String) -> Dictionary:
+	if not FOREST_SHEETS.has(character_id):
+		return {}
+	var frames := 4
+	if state == "attack": frames = 5
+	elif state == "hit": frames = 3 if character_id not in ["Spider Matriarch", "Forest Brute"] else 4
+	elif state == "death":
+		if character_id != "Ancient Treant": return {}
+		frames = 6
+	elif state not in ["idle", "entry", "entrance"]: return {}
+	var animation := "entry" if state == "entrance" else state
+	var path := "res://assets/prototype_pixel/enemies/whispering_forest/%s/%s.png" % [FOREST_SHEETS[character_id], animation]
+	return {"path": path, "frames": frames, "fps": 8.0 if state == "idle" else (9.0 if state in ["death", "entrance"] else 11.0)}
 
 static func validation_report() -> Array[String]:
 	var warnings: Array[String] = []
-	var paths: Array[String] = [HERO_SHEET, BACKGROUND, HERO_RUN_SHEET]
+	var paths: Array[String] = [HERO_SHEET, BACKGROUND if _active_region == 1 else FOREST_BACKGROUND, HERO_RUN_SHEET]
 	for path in ENEMY_SHEETS.values():
 		paths.append(str(path))
 	for config in ENEMY_ENTRY_ANIMATIONS.values():
@@ -195,6 +253,12 @@ static func validation_report() -> Array[String]:
 	for character in CHARACTER_ANIMATIONS.values():
 		for config in character.values():
 			paths.append(str(config["path"]))
+	if _active_region == 2:
+		for character_id in FOREST_SHEETS:
+			for state in ["idle", "entry", "attack", "hit", "death"]:
+				var config := _forest_config(character_id, state)
+				if not config.is_empty():
+					paths.append(str(config["path"]))
 	for path in paths:
 		if not ResourceLoader.exists(path, "Texture2D") or load(path) == null:
 			warnings.append("Unable to load prototype texture: %s" % path)
@@ -205,9 +269,15 @@ static func validation_report() -> Array[String]:
 				if str(config["path"]) == path:
 					animation_config = config
 					break
-		if not animation_config.is_empty():
+		if not animation_config.is_empty() or path.contains("/enemies/whispering_forest/"):
 			var animation_texture := load(path) as Texture2D
-			if animation_texture.get_width() != int(animation_config["frames"]) * 256 or animation_texture.get_height() != 256:
+			var expected_frames := int(animation_config.get("frames", 0))
+			for character_id in FOREST_SHEETS:
+				for state in ["idle", "entry", "attack", "hit", "death"]:
+					var config := _forest_config(character_id, state)
+					if not config.is_empty() and str(config["path"]) == path:
+						expected_frames = int(config["frames"])
+			if animation_texture.get_width() != expected_frames * 256 or animation_texture.get_height() != 256:
 				warnings.append("Invalid combat animation sheet: %s" % path)
 			continue
 		var entry_config: Dictionary = {}
@@ -223,7 +293,7 @@ static func validation_report() -> Array[String]:
 			var entry_texture := load(path) as Texture2D
 			if entry_texture.get_width() != int(entry_config["frames"]) * 256 or entry_texture.get_height() != 256:
 				warnings.append("Invalid enemy entry sheet: %s" % path)
-		elif path != BACKGROUND:
+		elif path not in [BACKGROUND, FOREST_BACKGROUND]:
 			var texture := load(path) as Texture2D
 			if texture.get_width() % 3 != 0 or texture.get_height() <= 0:
 				warnings.append("Invalid three-frame sprite sheet: %s" % path)

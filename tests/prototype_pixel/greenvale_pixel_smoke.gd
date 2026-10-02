@@ -73,7 +73,15 @@ func _run() -> void:
 	root.add_child(non_greenvale)
 	profile.region = 2
 	non_greenvale.start(profile)
-	_check(not PixelBattleArt.is_active(non_greenvale), "pixel conversion remains isolated to Greenvale")
+	_check(PixelBattleArt.is_active(non_greenvale), "Whispering Forest shares the production pixel renderer")
+	profile.region = 3
+	var region_three := BattleController.new()
+	root.add_child(region_three)
+	region_three.start(profile)
+	region_three.active = false
+	_check(not PixelBattleArt.is_active(region_three), "pixel conversion remains scoped before Region 3")
+	root.remove_child(region_three)
+	region_three.free()
 	root.remove_child(non_greenvale)
 	non_greenvale.free()
 	field.queue_free()

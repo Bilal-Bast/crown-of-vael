@@ -92,8 +92,8 @@ func _run() -> void:
 		var sheet := PixelBattleArt.enemy_sheet(kind)
 		_check(PixelBattleArt.frame_texture(sheet, "attack", "test:%s" % kind) != null, "%s attack frame loads" % kind)
 		_check(PixelBattleArt.frame_texture(sheet, "hit", "test:%s" % kind) != null, "%s hit frame loads" % kind)
-	battle.region = 2
-	_check(not PixelBattleArt.is_active(battle), "Prototype stays scoped outside Greenvale")
+	battle.region = 3
+	_check(not PixelBattleArt.is_active(battle), "Prototype remains scoped before Region 3")
 	battle.region = 1
 
 	_set_enemies(["Goblin"])
