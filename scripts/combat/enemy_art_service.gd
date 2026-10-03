@@ -44,6 +44,7 @@ const ENEMY_META := {
 	"Goblin Warlord": {"scale": 0.92, "offset": Vector2(0, -3), "attack_duration": 0.34, "hit_duration": 0.28, "ranged_offset": Vector2(54, -125)},
 }
 const BODY_META := {
+	"Fire Imp": {"scale": 0.72, "offset": Vector2(0, -12)}, "Flame Brute": {"scale": 1.02, "offset": Vector2(0, -10)}, "Ash Knight": {"scale": 0.98, "offset": Vector2(0, -8)},
 	"Giant Spider": {"scale": 0.62, "offset": Vector2(0, 34)}, "Corrupted Boar": {"scale": 0.66, "offset": Vector2(0, 30)},
 	"Magma Hound": {"scale": 0.66, "offset": Vector2(0, 28)}, "Frost Wolf": {"scale": 0.66, "offset": Vector2(0, 28)}, "Sand Wolf": {"scale": 0.66, "offset": Vector2(0, 28)}, "Shadow Hound": {"scale": 0.66, "offset": Vector2(0, 28)}, "Hellhound": {"scale": 0.68, "offset": Vector2(0, 28)}, "Poison Wolf": {"scale": 0.66, "offset": Vector2(0, 28)},
 	"Plague Rat": {"scale": 0.59, "offset": Vector2(0, 36)}, "Poison Slime": {"scale": 0.55, "offset": Vector2(0, 42)}, "Sand Scorpion": {"scale": 0.64, "offset": Vector2(0, 35)},
@@ -51,13 +52,14 @@ const BODY_META := {
 	"Frost Spirit": {"scale": 0.72, "offset": Vector2(0, -8)}, "Shade": {"scale": 0.72, "offset": Vector2(0, -8)}, "Void Spawn": {"scale": 0.74, "offset": Vector2(0, -6)},
 	"Spider Matriarch": {"scale": 0.68, "offset": Vector2(0, 35)}, "Elder Wyvern": {"scale": 0.76, "offset": Vector2(0, 22)},
 	"Ancient Treant": {"scale": 1.08, "offset": Vector2(0, -13)}, "Infernal Ogre": {"scale": 1.04, "offset": Vector2(0, -7)}, "Frostfang Giant": {"scale": 1.08, "offset": Vector2(0, -12)}, "Marsh Hydra": {"scale": 0.94, "offset": Vector2(0, 16)}, "Ancient Sand Wyrm": {"scale": 0.98, "offset": Vector2(0, 15)}, "Corrupted King": {"scale": 1.0, "offset": Vector2(0, -7)}, "Lord of Shadows": {"scale": 1.04, "offset": Vector2(0, -12)}, "Ancient Dragon": {"scale": 1.03, "offset": Vector2(0, 10)}, "Demon Lord": {"scale": 1.08, "offset": Vector2(0, -12)},
+	"Armored Ghoul": {"scale": 0.76, "offset": Vector2(0, 18)}, "War Beast": {"scale": 0.74, "offset": Vector2(0, 24)}, "Royal Executioner": {"scale": 1.04, "offset": Vector2(0, -8)}, "Fallen Champion": {"scale": 0.98, "offset": Vector2(0, -5)},
 }
 # Source sprites in this set look right; campaign enemies stand to the hero's right.
 # Frontal and already left-facing art deliberately remain unflipped.
 const FLIP_H_ENEMIES := [
 	"Corrupted Boar", "Poison Wolf", "Magma Hound", "Fire Archer",
 	"Frost Wolf", "Swamp Beast", "Plague Rat", "Sand Scorpion",
-	"Sand Wolf", "Tomb Archer", "Ancient Sand Wyrm", "War Beast",
+	"Sand Wolf", "Tomb Archer", "Ancient Sand Wyrm",
 	"Shadow Hound", "Drake", "Elder Wyvern", "Storm Drake", "Wyvern",
 	"Hellhound", "Demon Archer", "Lesser Demon",
 ]
