@@ -104,14 +104,16 @@ func draw(canvas: Control, unit: float, battle: BattleController) -> void:
 			if str(projectile_item.get("style", "orb")) == "pixel_arrow":
 				var center := pos.round()
 				var arrow_scale := maxf(unit, 1.0)
+				var corrupted_arrow := trail_color.b > trail_color.r * 1.25
+				var fletch_color := Color("d9b7ff") if corrupted_arrow else Color("c66f45")
 				var shaft_start := (center - direction * 23.0 * arrow_scale).round()
 				var tip := (center + direction * 21.0 * arrow_scale).round()
-				canvas.draw_line(shaft_start, tip, Color("382b21"), maxf(5.0, 6.0 * arrow_scale))
+				canvas.draw_line(shaft_start, tip, Color("241d30") if corrupted_arrow else Color("382b21"), maxf(6.0, 7.0 * arrow_scale))
 				canvas.draw_line(shaft_start, tip, Color("f2d293"), maxf(2.0, 3.0 * arrow_scale))
 				canvas.draw_colored_polygon(PackedVector2Array([tip, (center + direction * 5.0 * arrow_scale + side * 7.0 * arrow_scale).round(), (center + direction * 5.0 * arrow_scale - side * 7.0 * arrow_scale).round()]), Color("fff1c8"))
 				var fletch := (center - direction * 17.0 * arrow_scale).round()
-				canvas.draw_line(fletch, (fletch + side * 7.0 * arrow_scale).round(), Color("c66f45"), maxf(2.0, 3.0 * arrow_scale))
-				canvas.draw_line(fletch, (fletch - side * 7.0 * arrow_scale).round(), Color("c66f45"), maxf(2.0, 3.0 * arrow_scale))
+				canvas.draw_line(fletch, (fletch + side * 7.0 * arrow_scale).round(), fletch_color, maxf(3.0, 4.0 * arrow_scale))
+				canvas.draw_line(fletch, (fletch - side * 7.0 * arrow_scale).round(), fletch_color, maxf(3.0, 4.0 * arrow_scale))
 			else:
 				canvas.draw_colored_polygon(PackedVector2Array([pos + direction * 9 * unit, pos - direction * 5 * unit + side * 4 * unit, pos - direction * 5 * unit - side * 4 * unit]), trail_color)
 		else:
