@@ -93,7 +93,7 @@ func _run() -> void:
 		_check(PixelBattleArt.frame_texture(sheet, "attack", "test:%s" % kind) != null, "%s attack frame loads" % kind)
 		_check(PixelBattleArt.frame_texture(sheet, "hit", "test:%s" % kind) != null, "%s hit frame loads" % kind)
 	battle.region = 3
-	_check(not PixelBattleArt.is_active(battle), "Prototype remains scoped before Region 3")
+	_check(PixelBattleArt.is_active(battle), "Ashen Highlands shares the production pixel renderer")
 	battle.region = 1
 
 	_set_enemies(["Goblin"])

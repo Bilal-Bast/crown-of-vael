@@ -73,7 +73,7 @@ func _run() -> void:
 	_check(field.vfx.projectiles.size() == 1 and field.vfx.projectiles[0]["style"] == "pixel_arrow", "Skeleton Archer reuses the existing pixel arrow queue")
 	if not field.vfx.projectiles.is_empty():
 		_check(Vector2(field.vfx.projectiles[0]["from"]).x > Vector2(field.vfx.projectiles[0]["to"]).x, "Skeleton Archer arrow travels left toward the hero")
-	_check(not PixelBattleArt.is_active(_other_region_battle(profile)), "Region 3 remains on its current renderer")
+	_check(PixelBattleArt.is_active(_other_region_battle(profile)), "Ashen Highlands shares the production pixel renderer")
 	field.queue_free()
 	battle.queue_free()
 	print("WHISPERING FOREST PIXEL SMOKE: %s (%d failures)" % ["PASS" if failures == 0 else "FAIL", failures])

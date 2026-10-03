@@ -79,7 +79,7 @@ func _run() -> void:
 	root.add_child(region_three)
 	region_three.start(profile)
 	region_three.active = false
-	_check(not PixelBattleArt.is_active(region_three), "pixel conversion remains scoped before Region 3")
+	_check(PixelBattleArt.is_active(region_three), "Ashen Highlands shares the production pixel renderer")
 	root.remove_child(region_three)
 	region_three.free()
 	root.remove_child(non_greenvale)
