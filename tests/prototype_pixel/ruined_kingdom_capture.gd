@@ -8,6 +8,7 @@ var main: Control
 var battle: BattleController
 var field: Battlefield
 var failures := 0
+var dark_archer_projectile: Dictionary = {}
 
 func _initialize() -> void:
 	OS.set_environment("VAEL_SAVE_PATH", "res://.godot/ruined_kingdom_capture.save")
@@ -42,11 +43,19 @@ func _run() -> void:
 		var node = main.get(popup)
 		if node is Window or node is Control:
 			node.hide()
+	if "--dark-archer-only" in OS.get_cmdline_user_args():
+		_set_enemies(["Dark Archer"])
+		_attack(0)
+		await _capture("ruined_dark_archer_arrow_360", SMALL)
+		main.queue_free()
+		print("DARK ARCHER CAPTURE: %s (%d failures)" % ["PASS" if failures == 0 else "FAIL", failures])
+		quit(1 if failures else 0)
+		return
 
 	_set_enemies(["Fallen Knight"]); _attack(0); await _capture("ruined_fallen_knight_attack_360", SMALL)
 	_set_enemies(["Corrupted Soldier"]); _attack(0); await _capture("ruined_corrupted_soldier_attack_360", SMALL)
 	_set_enemies(["Undead Guard"]); _attack(0); await _capture("ruined_undead_guard_attack_360", SMALL)
-	_set_enemies(["Dark Archer"]); _attack(0); _stage_dark_archer_arrow_capture(); await _capture("ruined_dark_archer_arrow_360", SMALL)
+	_set_enemies(["Dark Archer"]); _attack(0); await _capture("ruined_dark_archer_arrow_360", SMALL)
 	_set_enemies(["Armored Ghoul"]); _attack(0); await _capture("ruined_armored_ghoul_attack_360", SMALL)
 	_set_enemies(["War Beast"]); _attack(0); await _capture("ruined_war_beast_attack_360", SMALL)
 	_set_enemies(["Royal Executioner"]); _attack(0); await _capture("ruined_royal_executioner_360", SMALL)
@@ -91,24 +100,30 @@ func _attack(index: int) -> void:
 	var fps := PixelBattleArt.animation_fps(kind, "attack")
 	field.enemy_attack_times[index] = field.enemy_attack_art_durations[index] - minf(2.0, PixelBattleArt.animation_frame_count(kind, "attack") - 1.0) / fps
 	field._process(0.0)
+	if kind == "Dark Archer" and not field.vfx.projectiles.is_empty():
+		dark_archer_projectile = field.vfx.projectiles[0].duplicate()
 
 func _stage_dark_archer_arrow_capture() -> void:
-	if field.vfx.projectiles.is_empty():
+	if dark_archer_projectile.is_empty():
 		failures += 1
 		push_error("Dark Archer capture has no projectile")
 		return
-	var projectile: Dictionary = field.vfx.projectiles[0]
+	var projectile: Dictionary = dark_archer_projectile.duplicate()
 	var start := Vector2(field.size.x * 0.74, field.size.y * 0.50)
 	var finish := Vector2(field.size.x * 0.34, field.size.y * 0.50)
 	projectile["from"] = start
 	projectile["to"] = finish
-	projectile["age"] = 0.48
-	projectile["life"] = 1.0
+	projectile["age"] = float(projectile["life"]) * 0.45
+	field.vfx.projectiles.clear()
+	field.vfx.projectiles.append(projectile)
 	field.queue_redraw()
 
 func _capture(name: String, resolution: Vector2i) -> void:
 	DisplayServer.window_set_size(resolution)
 	for _i in 3:
+		await process_frame
+	if name == "ruined_dark_archer_arrow_360":
+		_stage_dark_archer_arrow_capture()
 		await process_frame
 	await RenderingServer.frame_post_draw
 	var image := root.get_texture().get_image()
