@@ -53,6 +53,7 @@ const BODY_META := {
 	"Spider Matriarch": {"scale": 0.68, "offset": Vector2(0, 35)}, "Elder Wyvern": {"scale": 0.76, "offset": Vector2(0, 22)},
 	"Ancient Treant": {"scale": 1.08, "offset": Vector2(0, -13)}, "Infernal Ogre": {"scale": 1.04, "offset": Vector2(0, -7)}, "Frostfang Giant": {"scale": 1.08, "offset": Vector2(0, -12)}, "Marsh Hydra": {"scale": 0.94, "offset": Vector2(0, 16)}, "Ancient Sand Wyrm": {"scale": 0.98, "offset": Vector2(0, 15)}, "Corrupted King": {"scale": 1.0, "offset": Vector2(0, -7)}, "Lord of Shadows": {"scale": 1.04, "offset": Vector2(0, -12)}, "Ancient Dragon": {"scale": 1.03, "offset": Vector2(0, 10)}, "Demon Lord": {"scale": 1.08, "offset": Vector2(0, -12)},
 	"Armored Ghoul": {"scale": 0.76, "offset": Vector2(0, 18)}, "War Beast": {"scale": 0.74, "offset": Vector2(0, 24)}, "Royal Executioner": {"scale": 1.04, "offset": Vector2(0, -8)}, "Fallen Champion": {"scale": 0.98, "offset": Vector2(0, -5)},
+	"Void Reaper": {"scale": 1.04, "offset": Vector2(0, -9)}, "Shadow Champion": {"scale": 1.02, "offset": Vector2(0, -7)},
 }
 # Source sprites in this set look right; campaign enemies stand to the hero's right.
 # Frontal and already left-facing art deliberately remain unflipped.
@@ -60,7 +61,7 @@ const FLIP_H_ENEMIES := [
 	"Corrupted Boar", "Poison Wolf", "Magma Hound", "Fire Archer",
 	"Frost Wolf", "Swamp Beast", "Plague Rat", "Sand Scorpion",
 	"Sand Wolf", "Tomb Archer", "Ancient Sand Wyrm",
-	"Shadow Hound", "Drake", "Elder Wyvern", "Storm Drake", "Wyvern",
+	"Drake", "Elder Wyvern", "Storm Drake", "Wyvern",
 	"Hellhound", "Demon Archer", "Lesser Demon",
 ]
 static var _resolved_paths: Dictionary = {}

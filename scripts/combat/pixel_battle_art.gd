@@ -12,6 +12,7 @@ const FROSTFANG_BACKGROUND := "res://assets/prototype_pixel/backgrounds/frostfan
 const SUNKEN_MARSHES_BACKGROUND := "res://assets/prototype_pixel/backgrounds/sunken_marshes/battle.png"
 const CRIMSON_DESERT_BACKGROUND := "res://assets/prototype_pixel/backgrounds/crimson_desert/battle.png"
 const RUINED_KINGDOM_BACKGROUND := "res://assets/prototype_pixel/backgrounds/ruined_kingdom/battle.png"
+const SHADOWLANDS_BACKGROUND := "res://assets/prototype_pixel/backgrounds/shadowlands/battle.png"
 const ENEMY_SHEETS := {
 	"Goblin": "res://assets/prototype_pixel/enemies/greenvale/goblin/sheet.png",
 	"Skeleton": "res://assets/prototype_pixel/enemies/greenvale/skeleton/sheet.png",
@@ -53,6 +54,11 @@ const RUINED_KINGDOM_SHEETS := {
 	"Dark Archer": "dark_archer", "Armored Ghoul": "armored_ghoul", "War Beast": "war_beast",
 	"Royal Executioner": "royal_executioner", "Fallen Champion": "fallen_champion", "Corrupted King": "corrupted_king"
 }
+const SHADOWLANDS_SHEETS := {
+	"Shadow Hound": "shadow_hound", "Shade": "shade", "Dark Mage": "dark_mage",
+	"Phantom Archer": "phantom_archer", "Shadow Knight": "shadow_knight", "Void Spawn": "void_spawn",
+	"Void Reaper": "void_reaper", "Shadow Champion": "shadow_champion", "Lord of Shadows": "lord_of_shadows"
+}
 const BODY_PLACEMENT := {
 	"Giant Spider": {"width": 1.48, "height": 0.78, "offset_y": 0.50},
 	"Corrupted Boar": {"width": 1.30, "height": 0.82, "offset_y": 0.54},
@@ -85,7 +91,14 @@ const BODY_PLACEMENT := {
 	"War Beast": {"width": 1.40, "height": 0.82, "offset_y": 0.56},
 	"Royal Executioner": {"width": 1.16, "height": 1.14, "offset_y": 0.46},
 	"Fallen Champion": {"width": 1.10, "height": 1.10, "offset_y": 0.46},
-	"Corrupted King": {"width": 0.98, "height": 1.04, "offset_y": 0.28, "offset_x": -0.08}
+	"Corrupted King": {"width": 0.98, "height": 1.04, "offset_y": 0.28, "offset_x": -0.08},
+	"Shadow Hound": {"width": 1.50, "height": 1.00, "offset_y": 0.56},
+	"Shade": {"width": 1.00, "height": 1.06, "offset_y": 0.20},
+	"Shadow Knight": {"width": 1.18, "height": 1.18, "offset_y": 0.37},
+	"Void Spawn": {"width": 1.22, "height": 1.13, "offset_y": 0.42},
+	"Void Reaper": {"width": 1.32, "height": 1.38, "offset_y": 0.56},
+	"Shadow Champion": {"width": 1.30, "height": 1.32, "offset_y": 0.54},
+	"Lord of Shadows": {"width": 1.48, "height": 1.50, "offset_y": 0.38}
 }
 const ENEMY_ENTRY_ANIMATIONS := {
 	"Goblin": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin/entry.png", "frames": 4, "fps": 11.0},
@@ -157,7 +170,7 @@ static var _frame_cache: Dictionary = {}
 static func is_active(battle: BattleController) -> bool:
 	if not PROTOTYPE_ENABLED or battle == null or battle.profile == null:
 		return false
-	if str(battle.mode_config.get("mode", "campaign")) != "campaign" or battle.region not in [1, 2, 3, 4, 5, 6, 7]:
+	if str(battle.mode_config.get("mode", "campaign")) != "campaign" or battle.region not in [1, 2, 3, 4, 5, 6, 7, 8]:
 		return false
 	set_battle_region(battle.region)
 	return battle.profile.selected_hero_id == "knight" and int(battle.profile.heroes.get("knight", {}).get("evolution", 0)) == 0
@@ -194,22 +207,24 @@ static func enemy_sheet(enemy_id: String) -> Texture2D:
 		return animation_sheet(enemy_id, "idle")
 	if RUINED_KINGDOM_SHEETS.has(enemy_id):
 		return animation_sheet(enemy_id, "idle")
+	if SHADOWLANDS_SHEETS.has(enemy_id):
+		return animation_sheet(enemy_id, "idle")
 	if not ENEMY_SHEETS.has(enemy_id):
 		return null
 	return load(str(ENEMY_SHEETS[enemy_id])) as Texture2D
 
 static func enemy_entry_frame_count(enemy_id: String) -> int:
-	if FOREST_SHEETS.has(enemy_id) or ASHEN_SHEETS.has(enemy_id) or FROSTFANG_SHEETS.has(enemy_id) or SUNKEN_MARSHES_SHEETS.has(enemy_id) or CRIMSON_DESERT_SHEETS.has(enemy_id) or RUINED_KINGDOM_SHEETS.has(enemy_id):
+	if FOREST_SHEETS.has(enemy_id) or ASHEN_SHEETS.has(enemy_id) or FROSTFANG_SHEETS.has(enemy_id) or SUNKEN_MARSHES_SHEETS.has(enemy_id) or CRIMSON_DESERT_SHEETS.has(enemy_id) or RUINED_KINGDOM_SHEETS.has(enemy_id) or SHADOWLANDS_SHEETS.has(enemy_id):
 		return animation_frame_count(enemy_id, "entry")
 	return int(ENEMY_ENTRY_ANIMATIONS.get(enemy_id, {}).get("frames", 0))
 
 static func enemy_entry_fps(enemy_id: String) -> float:
-	if FOREST_SHEETS.has(enemy_id) or ASHEN_SHEETS.has(enemy_id) or FROSTFANG_SHEETS.has(enemy_id) or SUNKEN_MARSHES_SHEETS.has(enemy_id) or CRIMSON_DESERT_SHEETS.has(enemy_id) or RUINED_KINGDOM_SHEETS.has(enemy_id):
+	if FOREST_SHEETS.has(enemy_id) or ASHEN_SHEETS.has(enemy_id) or FROSTFANG_SHEETS.has(enemy_id) or SUNKEN_MARSHES_SHEETS.has(enemy_id) or CRIMSON_DESERT_SHEETS.has(enemy_id) or RUINED_KINGDOM_SHEETS.has(enemy_id) or SHADOWLANDS_SHEETS.has(enemy_id):
 		return animation_fps(enemy_id, "entry")
 	return float(ENEMY_ENTRY_ANIMATIONS.get(enemy_id, {}).get("fps", 0.0))
 
 static func enemy_entry_frame(enemy_id: String, frame: int) -> Texture2D:
-	if FOREST_SHEETS.has(enemy_id) or ASHEN_SHEETS.has(enemy_id) or FROSTFANG_SHEETS.has(enemy_id) or SUNKEN_MARSHES_SHEETS.has(enemy_id) or CRIMSON_DESERT_SHEETS.has(enemy_id) or RUINED_KINGDOM_SHEETS.has(enemy_id):
+	if FOREST_SHEETS.has(enemy_id) or ASHEN_SHEETS.has(enemy_id) or FROSTFANG_SHEETS.has(enemy_id) or SUNKEN_MARSHES_SHEETS.has(enemy_id) or CRIMSON_DESERT_SHEETS.has(enemy_id) or RUINED_KINGDOM_SHEETS.has(enemy_id) or SHADOWLANDS_SHEETS.has(enemy_id):
 		return animation_frame(enemy_id, "entry", frame)
 	var config: Dictionary = ENEMY_ENTRY_ANIMATIONS.get(enemy_id, {})
 	if config.is_empty() or not ResourceLoader.exists(str(config["path"]), "Texture2D"):
@@ -241,6 +256,8 @@ static func animation_frame_count(character_id: String, state: String) -> int:
 		return int(_crimson_desert_config(character_id, state).get("frames", 0))
 	if RUINED_KINGDOM_SHEETS.has(character_id):
 		return int(_ruined_kingdom_config(character_id, state).get("frames", 0))
+	if SHADOWLANDS_SHEETS.has(character_id):
+		return int(_shadowlands_config(character_id, state).get("frames", 0))
 	return int(CHARACTER_ANIMATIONS.get(character_id, {}).get(state, {}).get("frames", 0))
 
 static func animation_fps(character_id: String, state: String) -> float:
@@ -256,6 +273,8 @@ static func animation_fps(character_id: String, state: String) -> float:
 		return float(_crimson_desert_config(character_id, state).get("fps", 0.0))
 	if RUINED_KINGDOM_SHEETS.has(character_id):
 		return float(_ruined_kingdom_config(character_id, state).get("fps", 0.0))
+	if SHADOWLANDS_SHEETS.has(character_id):
+		return float(_shadowlands_config(character_id, state).get("fps", 0.0))
 	return float(CHARACTER_ANIMATIONS.get(character_id, {}).get(state, {}).get("fps", 0.0))
 
 static func animation_sheet(character_id: String, state: String) -> Texture2D:
@@ -310,6 +329,14 @@ static func animation_sheet(character_id: String, state: String) -> Texture2D:
 		var kingdom_sheet := load(kingdom_path) as Texture2D
 		if kingdom_sheet == null or kingdom_sheet.get_width() != int(kingdom_config["frames"]) * 256 or kingdom_sheet.get_height() != 256: return null
 		return kingdom_sheet
+	if SHADOWLANDS_SHEETS.has(character_id):
+		var shadow_config := _shadowlands_config(character_id, state)
+		if shadow_config.is_empty(): return null
+		var shadow_path := str(shadow_config["path"])
+		if not ResourceLoader.exists(shadow_path, "Texture2D"): return null
+		var shadow_sheet := load(shadow_path) as Texture2D
+		if shadow_sheet == null or shadow_sheet.get_width() != int(shadow_config["frames"]) * 256 or shadow_sheet.get_height() != 256: return null
+		return shadow_sheet
 	var config: Dictionary = CHARACTER_ANIMATIONS.get(character_id, {}).get(state, {})
 	if config.is_empty() or not ResourceLoader.exists(str(config["path"]), "Texture2D"):
 		return null
@@ -346,6 +373,8 @@ static func enemy_fallback_frame(enemy_id: String, state: String) -> Texture2D:
 	return frame_texture(legacy, state, "enemy-fallback:%s" % enemy_id) if legacy != null and legacy.get_width() % 3 == 0 else null
 
 static func background_texture() -> Texture2D:
+	if _active_region == 8:
+		return load(SHADOWLANDS_BACKGROUND) as Texture2D
 	if _active_region == 7:
 		return load(RUINED_KINGDOM_BACKGROUND) as Texture2D
 	if _active_region == 5:
@@ -379,6 +408,22 @@ static func _ruined_kingdom_config(character_id: String, state: String) -> Dicti
 	var anim := "entrance" if boss and state in ["entry", "entrance"] else state
 	var fps := 7.0 if state == "idle" else (8.0 if state in ["death", "entrance"] or boss and state == "entry" else 11.0)
 	return {"path": "res://assets/prototype_pixel/enemies/ruined_kingdom/%s/%s.png" % [RUINED_KINGDOM_SHEETS[character_id], anim], "frames": frames, "fps": fps}
+
+static func _shadowlands_config(character_id: String, state: String) -> Dictionary:
+	if not SHADOWLANDS_SHEETS.has(character_id): return {}
+	var boss := character_id == "Lord of Shadows"
+	var elite := character_id in ["Void Reaper", "Shadow Champion"]
+	if state == "entrance" and not boss: return {}
+	var frames := 4
+	if state == "attack": frames = 6 if boss else 5
+	elif state == "hit": frames = 4 if elite or boss else 3
+	elif state == "death":
+		if not boss: return {}
+		frames = 6
+	elif state not in (["idle", "entry", "entrance"] if boss else ["idle", "entry"]): return {}
+	var anim := "entrance" if boss and state in ["entry", "entrance"] else state
+	var fps := 7.0 if state == "idle" else (8.0 if boss and state in ["entry", "entrance", "death"] else 11.0)
+	return {"path": "res://assets/prototype_pixel/enemies/shadowlands/%s/%s.png" % [SHADOWLANDS_SHEETS[character_id], anim], "frames": frames, "fps": fps}
 
 static func _ashen_config(character_id: String, state: String) -> Dictionary:
 	if not ASHEN_SHEETS.has(character_id): return {}
@@ -455,6 +500,7 @@ static func validation_report() -> Array[String]:
 		5: active_background = SUNKEN_MARSHES_BACKGROUND
 		6: active_background = CRIMSON_DESERT_BACKGROUND
 		7: active_background = RUINED_KINGDOM_BACKGROUND
+		8: active_background = SHADOWLANDS_BACKGROUND
 	var paths: Array[String] = [HERO_SHEET, active_background, HERO_RUN_SHEET]
 	for path in ENEMY_SHEETS.values():
 		paths.append(str(path))
@@ -494,6 +540,11 @@ static func validation_report() -> Array[String]:
 			for state in ["idle", "entry", "entrance", "attack", "hit", "death"]:
 				var config := _ruined_kingdom_config(character_id, state)
 				if not config.is_empty(): paths.append(str(config["path"]))
+	if _active_region == 8:
+		for character_id in SHADOWLANDS_SHEETS:
+			for state in ["idle", "entry", "entrance", "attack", "hit", "death"]:
+				var config := _shadowlands_config(character_id, state)
+				if not config.is_empty(): paths.append(str(config["path"]))
 	for path in paths:
 		if not ResourceLoader.exists(path, "Texture2D") or load(path) == null:
 			warnings.append("Unable to load prototype texture: %s" % path)
@@ -504,7 +555,7 @@ static func validation_report() -> Array[String]:
 				if str(config["path"]) == path:
 					animation_config = config
 					break
-		if not animation_config.is_empty() or path.contains("/enemies/whispering_forest/") or path.contains("/enemies/ashen_highlands/") or path.contains("/enemies/frostfang_mountains/") or path.contains("/enemies/sunken_marshes/") or path.contains("/enemies/crimson_desert/") or path.contains("/enemies/ruined_kingdom/"):
+		if not animation_config.is_empty() or path.contains("/enemies/whispering_forest/") or path.contains("/enemies/ashen_highlands/") or path.contains("/enemies/frostfang_mountains/") or path.contains("/enemies/sunken_marshes/") or path.contains("/enemies/crimson_desert/") or path.contains("/enemies/ruined_kingdom/") or path.contains("/enemies/shadowlands/"):
 			var animation_texture := load(path) as Texture2D
 			var expected_frames := int(animation_config.get("frames", 0))
 			for character_id in FOREST_SHEETS:
@@ -537,6 +588,11 @@ static func validation_report() -> Array[String]:
 					var config := _ruined_kingdom_config(character_id, state)
 					if not config.is_empty() and str(config["path"]) == path:
 						expected_frames = int(config["frames"])
+			for character_id in SHADOWLANDS_SHEETS:
+				for state in ["idle", "entry", "entrance", "attack", "hit", "death"]:
+					var config := _shadowlands_config(character_id, state)
+					if not config.is_empty() and str(config["path"]) == path:
+						expected_frames = int(config["frames"])
 			if animation_texture.get_width() != expected_frames * 256 or animation_texture.get_height() != 256:
 				warnings.append("Invalid combat animation sheet: %s" % path)
 			continue
@@ -553,7 +609,7 @@ static func validation_report() -> Array[String]:
 			var entry_texture := load(path) as Texture2D
 			if entry_texture.get_width() != int(entry_config["frames"]) * 256 or entry_texture.get_height() != 256:
 				warnings.append("Invalid enemy entry sheet: %s" % path)
-		elif path not in [BACKGROUND, FOREST_BACKGROUND, ASHEN_BACKGROUND, FROSTFANG_BACKGROUND, SUNKEN_MARSHES_BACKGROUND, CRIMSON_DESERT_BACKGROUND, RUINED_KINGDOM_BACKGROUND]:
+		elif path not in [BACKGROUND, FOREST_BACKGROUND, ASHEN_BACKGROUND, FROSTFANG_BACKGROUND, SUNKEN_MARSHES_BACKGROUND, CRIMSON_DESERT_BACKGROUND, RUINED_KINGDOM_BACKGROUND, SHADOWLANDS_BACKGROUND]:
 			var texture := load(path) as Texture2D
 			if texture.get_width() % 3 != 0 or texture.get_height() <= 0:
 				warnings.append("Invalid three-frame sprite sheet: %s" % path)
