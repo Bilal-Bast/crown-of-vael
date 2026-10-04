@@ -47,11 +47,22 @@ func _run() -> void:
 					for frame in expected:
 						var x := frame * 256
 						var visible := 0
+						var opaque := 0
+						var transparent := 0
+						var clear_corners := 0
+						for corner in [Vector2i(frame * 256, 0), Vector2i(frame * 256 + 255, 0), Vector2i(frame * 256, 255), Vector2i(frame * 256 + 255, 255)]:
+							if image.get_pixelv(corner).a < 0.01:
+								clear_corners += 1
 						for y in 256:
 							for px in 256:
-								if image.get_pixel(frame * 256 + px, y).a > 0.1:
+								var alpha := image.get_pixel(frame * 256 + px, y).a
+								if alpha > 0.1:
 									visible += 1
-						_check(visible > 1200, "%s %s frame %d has a visible sprite silhouette" % [id, state, frame])
+								if alpha > 0.75:
+									opaque += 1
+								if alpha < 0.01:
+									transparent += 1
+						_check(visible > 1200 and opaque > 400 and transparent > 1000 and clear_corners >= 2, "%s %s frame %d alpha QA (visible=%d opaque=%d transparent=%d clear_corners=%d)" % [id, state, frame, visible, opaque, transparent, clear_corners])
 		if boss:
 			_check(PixelBattleArt.animation_frame_count(id, "entrance") == 4 and PixelBattleArt.animation_frame(id, "entrance", 3) != null, "Ancient Dragon entrance has four frames")
 			_check(PixelBattleArt.animation_frame_count(id, "death") == 6 and PixelBattleArt.animation_frame(id, "death", 5) != null, "Ancient Dragon death has six frames")
@@ -61,7 +72,7 @@ func _run() -> void:
 	_check(PixelBattleArt.BODY_PLACEMENT["Storm Drake"].width > PixelBattleArt.BODY_PLACEMENT["Storm Drake"].height, "Storm Drake uses low agile reptile placement")
 	_check(PixelBattleArt.BODY_PLACEMENT["Wyvern"].height > 1.0 and PixelBattleArt.BODY_PLACEMENT["Elder Wyvern"].width > PixelBattleArt.BODY_PLACEMENT["Wyvern"].width, "Wyvern flight and elder scale are represented in placement")
 	_check(PixelBattleArt.BODY_PLACEMENT["Dragon Champion"].width > PixelBattleArt.BODY_PLACEMENT["Dragon Knight"].width, "Dragon Champion is larger than Dragon Knight")
-	_check(PixelBattleArt.BODY_PLACEMENT["Ancient Dragon"].width > 1.0 and PixelBattleArt.BODY_PLACEMENT["Ancient Dragon"].height > 1.0, "Ancient Dragon has custom boss placement")
+	_check(PixelBattleArt.BODY_PLACEMENT["Ancient Dragon"].width > 1.0 and PixelBattleArt.BODY_PLACEMENT["Ancient Dragon"].height > 0.8 and PixelBattleArt.BODY_PLACEMENT["Ancient Dragon"].height < 1.2, "Ancient Dragon has custom boss placement within battlefield bounds")
 	_check(GameData.ENEMIES_PER_WAVE == 7 and is_equal_approx(GameData.ENEMY_ENTRY_INTERVAL, 0.9), "seven-enemy waves retain the 0.9-second entry cadence")
 	_check(is_equal_approx(battle.wave_transition_duration, 1.5) and is_equal_approx(field.hero_run_duration, 1.5), "hero run between waves remains 1.5 seconds")
 	_check(absf(field.size.y - 190.0) < 0.01, "battlefield presentation area sizing remains unchanged")

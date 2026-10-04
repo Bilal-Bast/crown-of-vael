@@ -110,10 +110,10 @@ const BODY_PLACEMENT := {
 	"Storm Drake": {"width": 1.42, "height": 0.72, "offset_y": 0.56},
 	"Dragon Cultist": {"width": 0.90, "height": 1.08, "offset_y": 0.30},
 	"Dragon Knight": {"width": 1.08, "height": 1.16, "offset_y": 0.31},
-	"Wyvern": {"width": 1.30, "height": 1.02, "offset_y": 0.48},
-	"Elder Wyvern": {"width": 1.42, "height": 1.12, "offset_y": 0.44},
+	"Wyvern": {"width": 1.30, "height": 1.02, "offset_y": 0.48, "offset_x": -0.04},
+	"Elder Wyvern": {"width": 1.42, "height": 1.12, "offset_y": 0.44, "offset_x": -0.08},
 	"Dragon Champion": {"width": 1.30, "height": 1.34, "offset_y": 0.38},
-	"Ancient Dragon": {"width": 1.42, "height": 1.12, "offset_y": 0.66, "offset_x": -0.04}
+	"Ancient Dragon": {"width": 1.42, "height": 0.94, "offset_y": 0.56, "offset_x": -0.04}
 }
 const ENEMY_ENTRY_ANIMATIONS := {
 	"Goblin": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin/entry.png", "frames": 4, "fps": 11.0},

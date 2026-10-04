@@ -361,7 +361,8 @@ func _draw() -> void:
 			if hit_time > 0.0:
 				var hit_duration := float(EnemyArtService.metadata(str(enemy.get("visual", enemy["kind"]))).get("hit_duration", 0.22))
 				pos.x += sin((1.0 - hit_time / hit_duration) * PI) * 16.0 * unit
-			var enemy_unit := unit * (0.64 if battle.enemies.size() > 3 and battle.stage != 20 else 1.0)
+			var crowd_scale := 0.40 if PixelBattleArt.is_active(battle) and battle.region == 9 else 0.64
+			var enemy_unit := unit * (crowd_scale if battle.enemies.size() > 3 and battle.stage != 20 else 1.0)
 			_draw_enemy(pos, enemy, enemy_unit, float(flashes.get(i, 0.0)) > 0.0, i)
 			_update_pixel_enemy_sprite(i, pos, enemy, enemy_visual_state(i), enemy_unit)
 		for i in range(battle.enemies.size(), pixel_enemy_sprites.size()):
@@ -507,6 +508,14 @@ func _hero_position() -> Vector2:
 	return Vector2(size.x * hero_x, size.y * 0.72 + run_bob)
 
 func _enemy_position(index: int) -> Vector2:
+	if PixelBattleArt.is_active(battle) and battle.region == 9 and battle.enemies.size() > 3:
+		var dragon_positions := [Vector2(0.40, 0.52), Vector2(0.57, 0.52), Vector2(0.74, 0.52), Vector2(0.91, 0.52), Vector2(0.42, 0.75), Vector2(0.63, 0.75), Vector2(0.84, 0.75)]
+		var dragon_target: Vector2 = dragon_positions[index % dragon_positions.size()]
+		var position := Vector2(size.x * dragon_target.x, size.y * dragon_target.y)
+		if index < battle.enemies.size() and bool(battle.enemies[index].get("spawned", false)):
+			var entry_progress := 1.0 - clampf(float(battle.enemies[index].get("entry_time", 0.0)) / 0.45, 0.0, 1.0)
+			position.x = lerpf(size.x * 1.14, position.x, entry_progress)
+		return position
 	if PixelBattleArt.is_active(battle) and battle.enemies.size() <= 3:
 		var x_positions := [0.70] if battle.enemies.size() == 1 else ([0.62, 0.84] if battle.enemies.size() == 2 else [0.52, 0.73, 0.92])
 		var target := Vector2(size.x * float(x_positions[index]), size.y * 0.73)
