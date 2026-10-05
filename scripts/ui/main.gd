@@ -37,6 +37,8 @@ var skill_bar: SkillBar
 var battle_area: VBoxContainer
 var battle_lower_scroll: ScrollContainer
 var battle_lower_content: VBoxContainer
+var upgrade_panel: PanelContainer
+var upgrade_list_scroll: ScrollContainer
 var placeholder_area: PanelContainer
 var placeholder_title: Label
 var heroes_area: ScrollContainer
@@ -456,6 +458,7 @@ func _build_battle_area() -> void:
 	battle_lower_scroll.add_child(battle_lower_content)
 
 	var skill_panel := _panel()
+	skill_panel.name = "BattleSkillPanel"
 	battle_lower_content.add_child(skill_panel)
 	var skill_box := VBoxContainer.new()
 	skill_box.add_theme_constant_override("separation", 6)
@@ -475,8 +478,36 @@ func _build_battle_area() -> void:
 	tutorial_text = _label("AUTO COMBAT  |  Enemies drop Gold + EXP. Upgrade below; stages advance on their own.", 24, Color("a9d6ad"))
 	tutorial_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	skill_box.add_child(tutorial_text)
+	upgrade_panel = _panel()
+	upgrade_panel.name = "BattleUpgradesPanel"
+	battle_lower_content.add_child(upgrade_panel)
+	var upgrade_box := VBoxContainer.new()
+	upgrade_box.add_theme_constant_override("separation", 8)
+	upgrade_panel.add_child(upgrade_box)
+	upgrade_box.add_child(_label("GOLD UPGRADES", 36, GOLD))
+	upgrade_list_scroll = ScrollContainer.new()
+	upgrade_list_scroll.name = "BattleUpgradeList"
+	upgrade_list_scroll.custom_minimum_size.y = 225
+	upgrade_list_scroll.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	upgrade_list_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	upgrade_list_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	upgrade_box.add_child(upgrade_list_scroll)
+	var upgrade_rows := VBoxContainer.new()
+	upgrade_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	upgrade_rows.add_theme_constant_override("separation", 7)
+	upgrade_list_scroll.add_child(upgrade_rows)
+	for stat in ["atk", "hp", "armor"]:
+		var button := Button.new()
+		button.name = "Upgrade_%s" % stat.capitalize()
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.custom_minimum_size.y = 112
+		button.add_theme_font_size_override("font_size", 38)
+		button.pressed.connect(_buy_upgrade.bind(stat))
+		upgrade_rows.add_child(button)
+		upgrade_buttons[stat] = button
 
 	var hero_panel := _panel()
+	hero_panel.name = "BattleHeroInfoPanel"
 	battle_lower_content.add_child(hero_panel)
 	var hero_box := VBoxContainer.new()
 	hero_box.add_theme_constant_override("separation", 5)
@@ -506,25 +537,6 @@ func _build_battle_area() -> void:
 	action_button.add_theme_font_size_override("font_size", 30)
 	action_button.pressed.connect(_on_action_pressed)
 	hero_box.add_child(action_button)
-
-	var upgrade_panel := _panel()
-	battle_lower_content.add_child(upgrade_panel)
-	var upgrade_box := VBoxContainer.new()
-	upgrade_box.add_theme_constant_override("separation", 8)
-	upgrade_panel.add_child(upgrade_box)
-	upgrade_box.add_child(_label("SPEND GOLD TO GROW STRONGER", 27, GOLD))
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
-	upgrade_box.add_child(row)
-	for stat in ["atk", "hp", "armor"]:
-		var button := Button.new()
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.custom_minimum_size.y = 100
-		button.add_theme_font_size_override("font_size", 28)
-		button.pressed.connect(_buy_upgrade.bind(stat))
-		row.add_child(button)
-		upgrade_buttons[stat] = button
-	battle_lower_content.move_child(upgrade_panel, 0)
 
 func _update_battlefield_height() -> void:
 	if battlefield_host == null:
@@ -980,7 +992,7 @@ func _refresh_ui() -> void:
 		var rank := int(profile.upgrades[stat])
 		var cost := GameData.upgrade_cost(rank)
 		var button: Button = upgrade_buttons[stat]
-		button.text = "%s +%d\n%d GOLD" % [str(stat).to_upper(), rank, cost]
+		button.text = _upgrade_button_text(stat, stats, cost)
 		button.disabled = profile.gold < cost
 	_maybe_show_upgrade_prompt()
 	skill_bar.queue_redraw()
@@ -992,6 +1004,21 @@ func _living_enemies() -> int:
 		if float(enemy["current_hp"]) > 0.0:
 			count += 1
 	return count
+
+func _upgrade_button_text(stat: String, current_stats: Dictionary, cost: int) -> String:
+	var next_upgrades: Dictionary = profile.upgrades.duplicate(true)
+	next_upgrades[stat] = int(next_upgrades.get(stat, 0)) + 1
+	var next_stats := HeroData.apply_stats(GameData.hero_stats(profile.level, next_upgrades, profile.combat_bonuses()), profile)
+	var current_value := float(current_stats.get(stat, 0.0))
+	var next_value := float(next_stats.get(stat, current_value))
+	var labels := {"atk": "ATK", "hp": "HP", "armor": "ARMOR"}
+	var increase := next_value - current_value
+	return "%s   %s  →  %s\n+%s    •    %s GOLD" % [str(labels.get(stat, stat.to_upper())), _format_upgrade_stat(current_value), _format_upgrade_stat(next_value), _format_upgrade_stat(increase), NumberFormatScript.compact(cost)]
+
+func _format_upgrade_stat(value: float) -> String:
+	if absf(value - roundf(value)) < 0.05:
+		return NumberFormatScript.compact(roundi(value))
+	return "%.1f" % value
 
 func _show_message(value: String) -> void:
 	if message_text != null:

@@ -16,6 +16,17 @@ func _run() -> void:
 	var nav := (nav_buttons["Battle"] as Button).get_parent().get_parent() as Control
 	var upgrades: Dictionary = main.get("upgrade_buttons")
 	var upgrade := upgrades["atk"] as Control
+	var lower: VBoxContainer = main.get("battle_lower_content")
+	var upgrade_panel: Control = main.get("upgrade_panel")
+	var upgrade_list: ScrollContainer = main.get("upgrade_list_scroll")
+	if lower.get_child_count() < 3 or lower.get_child(0).get_global_rect().position.y >= upgrade_panel.get_global_rect().position.y or upgrade_panel.get_global_rect().position.y >= lower.get_child(2).get_global_rect().position.y:
+		push_error("Battle lower panel order should be Skills, Upgrades, Hero information.")
+		quit(1)
+		return
+	if upgrade_list.get_v_scroll_bar().max_value <= upgrade_list.get_v_scroll_bar().page:
+		push_error("Battle upgrades need their own scrollable list.")
+		quit(1)
+		return
 	var fits := field.size.y >= 390 and battle_area.get_global_rect().end.y <= nav.get_global_rect().position.y and nav.get_global_rect().end.y <= main.get_global_rect().end.y + 1
 	print("Layout: viewport=%s field=%s battle_end=%.0f nav_start=%.0f nav_end=%.0f upgrade_end=%.0f" % [str(main.size), str(field.size), battle_area.get_global_rect().end.y, nav.get_global_rect().position.y, nav.get_global_rect().end.y, upgrade.get_global_rect().end.y])
 	if not fits:
