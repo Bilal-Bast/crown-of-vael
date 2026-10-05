@@ -4,7 +4,9 @@ extends RefCounted
 const MAX_STAGE := 20
 const WAVES_PER_STAGE := 3
 const ENEMIES_PER_WAVE := 7
-const ENEMY_ENTRY_INTERVAL := 0.9
+const ENEMY_ENTRY_INTERVAL := 0.60
+const ENEMY_ENTRY_DURATION := 0.60
+const BOSS_ENTRY_ANIMATION_DURATION := 0.45
 const EVOLUTION_PATH := [
 	{"name": "Squire", "level": 1, "crests": 0},
 	{"name": "Knight", "level": 20, "crests": 1},

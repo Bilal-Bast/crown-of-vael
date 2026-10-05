@@ -59,7 +59,7 @@ func cast(id: String, battle: BattleController) -> bool:
 	if effect in ["single", "area"]:
 		var targets: Array[int] = []
 		for index in battle.enemies.size():
-			if float(battle.enemies[index]["current_hp"]) > 0.0:
+			if battle.is_enemy_combat_ready(index):
 				targets.append(index)
 		if targets.is_empty():
 			return false

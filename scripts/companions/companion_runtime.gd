@@ -31,7 +31,7 @@ func process(delta: float, battle: BattleController) -> void:
 			continue
 		timers[id] += 1.0 / CompanionData.attack_speed(id, battle.profile.companions[id])
 		for target in battle.enemies.size():
-			if float(battle.enemies[target]["current_hp"]) <= 0.0:
+			if not battle.is_enemy_combat_ready(target):
 				continue
 			var amount := CompanionData.attack(id, battle.profile.companions[id]) * (1.0 + float(battle.hero.get("companion_damage", 0.0)))
 			if battle.stage == 10:

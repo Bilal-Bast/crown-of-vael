@@ -70,7 +70,7 @@ func on_hero_attack(battle: BattleController, target: int, amount: int, critical
 				if hero_attacks % 20 == 0:
 					var burst := roundi(float(battle.hero["atk"]) * float(effect["value"]) * (1.0 + float(battle.hero.get("fire_burst_bonus", 0.0))))
 					for index in battle.enemies.size():
-						if battle.active and float(battle.enemies[index]["current_hp"]) > 0.0:
+						if battle.active and battle.is_enemy_combat_ready(index):
 							battle._hit_enemy(index, burst, false, false)
 					battle.artifact_proc.emit("FIRE BURST • SET" if float(battle.hero.get("fire_burst_bonus", 0.0)) > 0.0 else "FIRE BURST", Color("ffce6e") if float(battle.hero.get("fire_burst_bonus", 0.0)) > 0.0 else Color("ff9f68"))
 

@@ -7,11 +7,11 @@ const FORMS := ["squire", "knight", "royal_knight", "paladin", "divine_paladin"]
 const TITLES := ["Squire", "Knight", "Royal Knight", "Paladin", "Divine Paladin"]
 const FRAME_COLORS := [Color("aeb8b4"), Color("7899bd"), Color("839bc5"), Color("e6d79a"), Color("f7d56e")]
 const FORM_META := [
-	{"scale": 0.90, "offset": Vector2.ZERO, "portrait_scale": 1.0, "attack_duration": 0.26, "hit_duration": 0.30, "aura": 0.0},
-	{"scale": 0.94, "offset": Vector2.ZERO, "portrait_scale": 1.0, "attack_duration": 0.26, "hit_duration": 0.30, "aura": 0.0},
-	{"scale": 0.98, "offset": Vector2.ZERO, "portrait_scale": 1.0, "attack_duration": 0.26, "hit_duration": 0.30, "aura": 0.0},
-	{"scale": 1.02, "offset": Vector2.ZERO, "portrait_scale": 1.0, "attack_duration": 0.26, "hit_duration": 0.30, "aura": 0.35},
-	{"scale": 1.05, "offset": Vector2.ZERO, "portrait_scale": 1.0, "attack_duration": 0.26, "hit_duration": 0.30, "aura": 0.62},
+	{"scale": 0.675, "offset": Vector2.ZERO, "portrait_scale": 1.0, "attack_duration": 0.26, "hit_duration": 0.30, "aura": 0.0},
+	{"scale": 0.705, "offset": Vector2.ZERO, "portrait_scale": 1.0, "attack_duration": 0.26, "hit_duration": 0.30, "aura": 0.0},
+	{"scale": 0.735, "offset": Vector2.ZERO, "portrait_scale": 1.0, "attack_duration": 0.26, "hit_duration": 0.30, "aura": 0.0},
+	{"scale": 0.765, "offset": Vector2.ZERO, "portrait_scale": 1.0, "attack_duration": 0.26, "hit_duration": 0.30, "aura": 0.35},
+	{"scale": 0.7875, "offset": Vector2.ZERO, "portrait_scale": 1.0, "attack_duration": 0.26, "hit_duration": 0.30, "aura": 0.62},
 ]
 const BASE := "res://assets/heroes/knight"
 const SQUIRE_FILES := {"idle": "squire_idle.png", "attack": "squire_attack.png", "guard": "squire_guard.png", "portrait": "squire_portrait.png"}

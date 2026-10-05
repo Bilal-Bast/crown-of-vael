@@ -111,6 +111,7 @@ func _spawn_wave() -> void:
 		for template in PveData.wave_enemies(mode_config, wave):
 			var enemy := template.duplicate(true)
 			enemy["current_hp"] = enemy["hp"]
+			enemy["combat_ready"] = true
 			enemy["attack_time"] = 0.7 + randf_range(0.0, 0.5)
 			enemy["stun_time"] = 0.0
 			enemies.append(enemy)
@@ -128,7 +129,8 @@ func _spawn_wave() -> void:
 		enemy["spawned"] = enters_now
 		enemy["attack_time"] = 0.7 + randf_range(0.0, 0.5)
 		enemy["stun_time"] = 0.0
-		enemy["entry_time"] = 0.45 if enters_now else 0.0
+		enemy["entry_time"] = GameData.ENEMY_ENTRY_DURATION if paced_entries and enters_now else (GameData.BOSS_ENTRY_ANIMATION_DURATION if enters_now else 0.0)
+		enemy["combat_ready"] = not paced_entries
 		enemies.append(enemy)
 		if enters_now:
 			spawned_enemy_count += 1
@@ -152,6 +154,7 @@ func _process(delta: float) -> void:
 			_advance_campaign_wave()
 		changed.emit()
 		return
+	_advance_enemy_entry_states(delta)
 	_process_enemy_entries(delta)
 	artifact_runtime.process(delta, self)
 	skill_runtime.process(delta, self)
@@ -168,8 +171,9 @@ func _process(delta: float) -> void:
 			return
 	for i in enemies.size():
 		var enemy := enemies[i]
-		enemy["entry_time"] = maxf(0.0, float(enemy.get("entry_time", 0.0)) - delta)
 		if float(enemy["current_hp"]) <= 0.0:
+			continue
+		if not is_enemy_combat_ready(i):
 			continue
 		enemy["stun_time"] = maxf(0.0, float(enemy["stun_time"]) - delta)
 		if float(enemy["stun_time"]) > 0.0:
@@ -182,7 +186,7 @@ func _process(delta: float) -> void:
 				var lowest := 1.0
 				for ally in enemies.size():
 					var ratio := float(enemies[ally]["current_hp"]) / float(enemies[ally]["hp"])
-					if ratio > 0.0 and ratio < lowest:
+					if is_enemy_combat_ready(ally) and ratio > 0.0 and ratio < lowest:
 						lowest = ratio
 						target = ally
 				if target >= 0:
@@ -208,7 +212,8 @@ func _process_enemy_entries(delta: float) -> void:
 			continue
 		enemies[index]["current_hp"] = enemies[index]["hp"]
 		enemies[index]["spawned"] = true
-		enemies[index]["entry_time"] = 0.45
+		enemies[index]["entry_time"] = GameData.ENEMY_ENTRY_DURATION
+		enemies[index]["combat_ready"] = false
 		enemies[index]["attack_time"] = 0.7 + randf_range(0.0, 0.5)
 		spawned_enemy_count += 1
 		enemy_entry_timer = GameData.ENEMY_ENTRY_INTERVAL
@@ -216,9 +221,26 @@ func _process_enemy_entries(delta: float) -> void:
 		changed.emit()
 		return
 
+func _advance_enemy_entry_states(delta: float) -> void:
+	for index in enemies.size():
+		var enemy := enemies[index]
+		if not bool(enemy.get("spawned", true)) or float(enemy.get("entry_time", 0.0)) <= 0.0:
+			continue
+		enemy["entry_time"] = maxf(0.0, float(enemy.get("entry_time", 0.0)) - delta)
+		if float(enemy["entry_time"]) <= 0.0 and not bool(enemy.get("combat_ready", true)):
+			enemy["combat_ready"] = true
+
+func is_enemy_combat_ready(index: int) -> bool:
+	if index < 0 or index >= enemies.size():
+		return false
+	var enemy := enemies[index]
+	if float(enemy.get("current_hp", 0.0)) <= 0.0 or not bool(enemy.get("spawned", true)):
+		return false
+	return bool(enemy.get("combat_ready", float(enemy.get("entry_time", 0.0)) <= 0.0))
+
 func _hero_attack() -> void:
 	for i in enemies.size():
-		if float(enemies[i]["current_hp"]) > 0.0:
+		if is_enemy_combat_ready(i):
 			attack_started.emit(-1, i)
 			var critical := randf() < float(hero["crit_chance"])
 			var amount := float(hero["atk"]) * (float(hero["crit_damage"]) if critical else 1.0)
@@ -239,15 +261,19 @@ func _process_hero_projectiles(delta: float) -> void:
 			continue
 		pending_hero_hits.remove_at(index)
 		var target := int(hit["target"])
-		if int(hit["wave"]) == wave and target < enemies.size() and float(enemies[target]["current_hp"]) > 0.0:
+		if int(hit["wave"]) == wave and is_enemy_combat_ready(target):
 			_resolve_hero_hit(target, int(hit["amount"]), bool(hit["critical"]))
 
 func _resolve_hero_hit(target: int, amount: int, critical: bool) -> void:
+	if not is_enemy_combat_ready(target):
+		return
 	var dealt := mini(amount, ceili(float(enemies[target]["current_hp"])))
 	_hit_enemy(target, amount, critical, false)
 	artifact_runtime.on_hero_attack(self, target, dealt, critical)
 
 func _hit_enemy(index: int, amount: int, critical: bool, bash: bool) -> void:
+	if not is_enemy_combat_ready(index):
+		return
 	var enemy := enemies[index]
 	amount = maxi(1, roundi(amount - float(enemy.get("armor", 0.0))))
 	var tracker := ProgressionService.new(profile)

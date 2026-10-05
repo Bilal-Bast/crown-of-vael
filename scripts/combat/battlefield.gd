@@ -149,7 +149,7 @@ func _on_artifact_proc(label: String, color: Color) -> void:
 func _on_skill_cast(skill_id: String, _slot: int) -> void:
 	var target := _hero_position()
 	for index in battle.enemies.size():
-		if float(battle.enemies[index]["current_hp"]) > 0.0:
+		if battle.is_enemy_combat_ready(index):
 			target = _enemy_position(index)
 			break
 	var hero_id := battle.profile.selected_hero_id if battle.profile != null else "knight"
@@ -513,7 +513,7 @@ func _enemy_position(index: int) -> Vector2:
 		var dragon_target: Vector2 = dragon_positions[index % dragon_positions.size()]
 		var position := Vector2(size.x * dragon_target.x, size.y * dragon_target.y)
 		if index < battle.enemies.size() and bool(battle.enemies[index].get("spawned", false)):
-			var entry_progress := 1.0 - clampf(float(battle.enemies[index].get("entry_time", 0.0)) / 0.45, 0.0, 1.0)
+			var entry_progress := 1.0 - clampf(float(battle.enemies[index].get("entry_time", 0.0)) / GameData.ENEMY_ENTRY_DURATION, 0.0, 1.0)
 			position.x = lerpf(size.x * 1.14, position.x, entry_progress)
 		return position
 	if PixelBattleArt.is_active(battle) and battle.region == 10 and battle.enemies.size() > 3:
@@ -521,7 +521,7 @@ func _enemy_position(index: int) -> Vector2:
 		var demon_target: Vector2 = demon_positions[index % demon_positions.size()]
 		var demon_position := Vector2(size.x * demon_target.x, size.y * demon_target.y)
 		if index < battle.enemies.size() and bool(battle.enemies[index].get("spawned", false)):
-			var demon_entry_progress := 1.0 - clampf(float(battle.enemies[index].get("entry_time", 0.0)) / 0.45, 0.0, 1.0)
+			var demon_entry_progress := 1.0 - clampf(float(battle.enemies[index].get("entry_time", 0.0)) / GameData.ENEMY_ENTRY_DURATION, 0.0, 1.0)
 			demon_position.x = lerpf(size.x * 1.14, demon_position.x, demon_entry_progress)
 		return demon_position
 	if PixelBattleArt.is_active(battle) and battle.enemies.size() <= 3:
@@ -530,7 +530,7 @@ func _enemy_position(index: int) -> Vector2:
 		var target := Vector2(size.x * float(x_positions[index]), size.y * target_y)
 		if index < battle.enemies.size() and PixelBattleArt.enemy_entry_frame(str(battle.enemies[index].get("visual", battle.enemies[index].get("kind", ""))), 0) != null:
 			if bool(battle.enemies[index].get("spawned", false)) and float(battle.enemies[index].get("entry_time", 0.0)) > 0.0:
-				var entry_progress := 1.0 - clampf(float(battle.enemies[index]["entry_time"]) / 0.45, 0.0, 1.0)
+				var entry_progress := 1.0 - clampf(float(battle.enemies[index]["entry_time"]) / GameData.ENEMY_ENTRY_DURATION, 0.0, 1.0)
 				target.x = lerpf(size.x * 1.14, target.x, entry_progress)
 		return target
 	if battle != null and (str(battle.mode_config.get("mode", "campaign")) == "boss_rush" or str(battle.mode_config.get("mode", "campaign")) == "campaign" and battle.stage == 20):
@@ -538,7 +538,7 @@ func _enemy_position(index: int) -> Vector2:
 	var positions := [Vector2(0.42, 0.52), Vector2(0.58, 0.52), Vector2(0.74, 0.52), Vector2(0.90, 0.52), Vector2(0.50, 0.91), Vector2(0.68, 0.91), Vector2(0.86, 0.91)]
 	var target := Vector2(size.x * positions[index % positions.size()].x, size.y * positions[index % positions.size()].y)
 	if battle != null and index < battle.enemies.size() and bool(battle.enemies[index].get("spawned", false)):
-		var entry_progress := 1.0 - clampf(float(battle.enemies[index].get("entry_time", 0.0)) / 0.45, 0.0, 1.0)
+		var entry_progress := 1.0 - clampf(float(battle.enemies[index].get("entry_time", 0.0)) / GameData.ENEMY_ENTRY_DURATION, 0.0, 1.0)
 		target.x = lerpf(size.x * 1.14, target.x, entry_progress)
 	return target
 
@@ -667,7 +667,7 @@ func _update_pixel_enemy_sprite(index: int, pos: Vector2, enemy: Dictionary, sta
 	var body: Dictionary = PixelBattleArt.BODY_PLACEMENT.get(kind, {})
 	if state == "entry":
 		var frame_count := PixelBattleArt.enemy_entry_frame_count(kind)
-		var frame := int(floor(maxf(0.0, 0.45 - float(enemy.get("entry_time", 0.0))) * PixelBattleArt.enemy_entry_fps(kind))) % frame_count
+		var frame := int(floor(maxf(0.0, GameData.ENEMY_ENTRY_DURATION - float(enemy.get("entry_time", 0.0))) * PixelBattleArt.enemy_entry_fps(kind))) % frame_count
 		var entry_texture := PixelBattleArt.enemy_entry_frame(kind, frame)
 		sprite.texture = entry_texture if entry_texture != null else PixelBattleArt.enemy_fallback_frame(kind, "idle")
 	elif state == "death":
