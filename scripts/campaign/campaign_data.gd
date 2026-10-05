@@ -5,6 +5,7 @@ const STAGES_PER_REGION := 20
 const DIFFICULTIES := ["Easy", "Normal", "Hard", "Nightmare", "Hell", "Infernal"]
 const HP_MULTIPLIERS := [1.0, 2.0, 5.0, 12.0, 30.0, 75.0]
 const DAMAGE_MULTIPLIERS := [1.0, 1.8, 4.2, 9.0, 21.0, 48.0]
+const DEMON_LORD_INFERNAL_HP_SCALE := 0.90
 const TREASURE_CHANCE := 0.015
 const ADVANTAGE := 1.20
 const DISADVANTAGE := 0.90
@@ -109,6 +110,8 @@ static func enemy_stats(kind: String, difficulty: int, region: int, stage: int, 
 	var rank := 1.0 + (region - 1) * 0.72 + (stage - 1) * 0.045 + (wave - 1) * 0.04
 	var base_hp: float = 28.0 * rank * float(modifier["hp"]) * float(HP_MULTIPLIERS[difficulty])
 	var base_atk: float = 3.0 * rank * float(modifier["atk"]) * float(DAMAGE_MULTIPLIERS[difficulty])
+	if boss and region == 10 and stage == 20 and difficulty == 5:
+		base_hp *= DEMON_LORD_INFERNAL_HP_SCALE
 	if boss and region == 1 and difficulty == 0:
 		base_hp = 1250.0
 		base_atk = 24.0
