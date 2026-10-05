@@ -251,7 +251,7 @@ func _reward_name(reward: Dictionary) -> String:
 
 func _reward_icon(reward: Dictionary) -> Texture2D:
 	match result_banner:
-		"equipment": return PixelUiIcons.item(str(reward.kind))
+		"equipment": return PixelUiIcons.item(str(reward.kind), int(reward.rarity))
 		"artifacts": return PixelUiIcons.artifact(str(reward.kind))
 		"companions": return CompanionPixelArt.frame(str(reward.kind),1 if reward.kind == "dire_wolf" else 0)
 	return PixelUiIcons.skill(str(reward.kind))

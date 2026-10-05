@@ -3,6 +3,17 @@ extends RefCounted
 
 static var _cache: Dictionary = {}
 static var _nav_cache: Dictionary = {}
+static var _equipment_rarity_cache: Dictionary = {}
+
+const EQUIPMENT_RARITY_ATLASES := {
+	"weapon": preload("res://assets/pixel_ui/equipment/rarity_atlas/weapon.png"),
+	"helmet": preload("res://assets/pixel_ui/equipment/rarity_atlas/helmet.png"),
+	"armor": preload("res://assets/pixel_ui/equipment/rarity_atlas/armor.png"),
+	"gloves": preload("res://assets/pixel_ui/equipment/rarity_atlas/gloves.png"),
+	"boots": preload("res://assets/pixel_ui/equipment/rarity_atlas/boots.png"),
+	"necklace": preload("res://assets/pixel_ui/equipment/rarity_atlas/necklace.png"),
+	"ring": preload("res://assets/pixel_ui/equipment/rarity_atlas/ring.png"),
+}
 
 const NAV_PATTERNS := {
 	"Battle": ["...#....#...", "..##....##..", ".###....###.", "..##....##..", "...##..##...", "....####....", "...##..##...", "..##....##..", ".##......##.", "##........##", "............", "............"],
@@ -21,12 +32,36 @@ const NAV_PATTERNS := {
 }
 const NAV_COLORS := {"Battle":Color("e9c87d"), "Heroes":Color("d79ba3"), "Equipment":Color("b9d7e2"), "Summon":Color("be9ce2"), "Adventure":Color("a4c99d"), "Skills":Color("b8a0df"), "Quests":Color("e4c77d"), "Login":Color("9bd6d2"), "Pass":Color("e4ba71"), "Shop":Color("d7a86c"), "Account":Color("aac8d0"), "Social":Color("90c8a7"), "Settings":Color("b8c0c4")}
 
-static func equipment(slot: String) -> Texture2D:
+static func equipment(slot: String, rarity: int = -1) -> Texture2D:
+	if rarity >= 0:
+		return _equipment_rarity_icon(slot, rarity)
 	return _load_icon("equipment", slot.to_lower())
 
-static func item(kind: String) -> Texture2D:
+static func item(kind: String, rarity: int = -1) -> Texture2D:
 	var slot := str(EquipmentData.ITEMS.get(kind, {}).get("slot", "Weapon"))
-	return equipment(slot)
+	return equipment(slot, rarity)
+
+static func _equipment_rarity_icon(slot: String, rarity: int) -> Texture2D:
+	var slot_key := slot.to_lower()
+	if not EQUIPMENT_RARITY_ATLASES.has(slot_key):
+		return _load_icon("equipment", slot_key)
+	var atlas := EQUIPMENT_RARITY_ATLASES[slot_key] as Texture2D
+	if atlas == null:
+		return _load_icon("equipment", slot_key)
+	var safe_rarity := clampi(rarity, 0, EquipmentData.RARITIES.size() - 1)
+	var key := "%s:%d" % [slot_key, safe_rarity]
+	if _equipment_rarity_cache.has(key):
+		return _equipment_rarity_cache[key] as Texture2D
+	var atlas_size := Vector2i(atlas.get_width(), atlas.get_height())
+	var left := roundi(float(safe_rarity % 4) * atlas_size.x / 4.0)
+	var right := roundi(float(safe_rarity % 4 + 1) * atlas_size.x / 4.0)
+	var top := roundi(float(safe_rarity / 4) * atlas_size.y / 2.0)
+	var bottom := roundi(float(safe_rarity / 4 + 1) * atlas_size.y / 2.0)
+	var icon := AtlasTexture.new()
+	icon.atlas = atlas
+	icon.region = Rect2i(left, top, right - left, bottom - top)
+	_equipment_rarity_cache[key] = icon
+	return icon
 
 static func skill(id: String) -> Texture2D:
 	return _load_icon("skills", id)

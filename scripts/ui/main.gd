@@ -1266,7 +1266,7 @@ func _build_equipment_screen() -> void:
 		item_icon.custom_minimum_size = Vector2(112, 112)
 		item_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		item_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		item_icon.texture = PixelUiIcons.item(str(selected["kind"]))
+		item_icon.texture = PixelUiIcons.item(str(selected["kind"]), int(selected["rarity"]))
 		box.add_child(item_icon)
 		box.add_child(_label("%s  +%d" % [EquipmentData.title(selected), selected["level"]], 30, EquipmentData.COLORS[int(selected["rarity"])]))
 		box.add_child(_label(EquipmentData.stat_lines(selected), 31, PALE))
@@ -1295,7 +1295,7 @@ func _build_equipment_screen() -> void:
 		button.add_theme_font_size_override("font_size", 31)
 		button.text = "%s    %s" % [slot.to_upper(), "EMPTY" if item.is_empty() else "%s  +%d" % [EquipmentData.title(item), item["level"]]]
 		if not item.is_empty():
-			button.icon = PixelUiIcons.item(str(item["kind"]))
+			button.icon = PixelUiIcons.item(str(item["kind"]), int(item["rarity"]))
 			button.expand_icon = true
 			button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		if not item.is_empty():
@@ -1313,7 +1313,7 @@ func _build_equipment_screen() -> void:
 		button.custom_minimum_size = Vector2(485, 132)
 		button.add_theme_font_size_override("font_size", 30)
 		button.text = "%s\n+%d  %s" % [EquipmentData.ITEMS[item["kind"]]["name"], item["level"], EquipmentData.RARITIES[int(item["rarity"])]]
-		button.icon = PixelUiIcons.item(str(item["kind"]))
+		button.icon = PixelUiIcons.item(str(item["kind"]), int(item["rarity"]))
 		button.expand_icon = true
 		button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		_style_rarity(button, int(item["rarity"]))

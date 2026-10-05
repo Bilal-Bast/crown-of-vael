@@ -56,6 +56,14 @@ func _run() -> void:
 	await _capture("battle_ui_360", 360)
 	var screen := main.get("summon_screen") as SummonScreen
 	main.call("_select_tab","Summon")
+	for sample in [{"rarity":0, "name":"common"}, {"rarity":7, "name":"divine"}]:
+		screen.result_banner = "equipment"
+		screen.results = [{"kind":"sacred_sword", "rarity":sample.rarity, "is_new":true}]
+		screen.featured_index = 0
+		screen.page = 0
+		screen.revealing = false
+		screen.refresh()
+		await _capture("summon_equipment_%s_rarity_360" % sample.name, 360)
 	for sample in [
 		{"banner":"equipment", "kind":"sacred_sword", "name":"equipment"},
 		{"banner":"skills", "kind":"healing_light", "name":"skill"},
