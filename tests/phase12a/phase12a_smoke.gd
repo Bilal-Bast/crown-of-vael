@@ -69,18 +69,23 @@ func _run() -> void:
 	check(field.hero_visual_state == "idle", "attack visual returns to idle")
 	field._on_damage_popup(-1, 1, false, false)
 	field._process(0.01)
-	check(field.hero_visual_state == "guard", "idle to guard visual state")
-	check(HeroArtService.texture_for(1, field.hero_visual_state) != null, "Knight guard state uses supplied guard art")
+	check(field.hero_visual_state == "hit", "idle to hit visual state")
+	check(HeroArtService.texture_for(1, field.hero_visual_state) != null, "Knight hit state uses supplied hit art")
 	field._process(0.31)
-	check(field.hero_visual_state == "idle", "guard visual returns to idle")
+	check(field.hero_visual_state == "idle", "hit visual returns to idle")
+	field._on_attack_started(-2, 0)
+	field._process(0.01)
+	check(field.hero_visual_state == "guard" and HeroArtService.texture_for(1, "guard") != null, "Knight Shield Bash uses supplied guard art")
+	field._process(0.41)
 	profile.heroes["knight"]["evolution"] = 2
 	field._on_attack_started(-1, 0)
 	field._process(0.01)
 	check(HeroArtService.texture_for(2, field.hero_visual_state) != null, "Royal Knight attack state uses supplied attack art")
 	field._on_damage_popup(-1, 1, false, false)
 	field._process(0.01)
-	check(HeroArtService.texture_for(2, field.hero_visual_state) != null, "Royal Knight guard state uses supplied guard art")
+	check(field.hero_visual_state == "hit" and HeroArtService.texture_for(2, field.hero_visual_state) != null, "Royal Knight hit state uses supplied hit art")
 	profile.heroes["knight"]["evolution"] = 3
+	field.hero_hit_art_time = 0.0
 	field.hero_visual_state = "idle"
 	field.hero_guard_art_time = 0.0
 	check(HeroArtService.texture_for(3, field.hero_visual_state) != null, "Paladin idle uses supplied idle art")
@@ -92,9 +97,14 @@ func _run() -> void:
 	field.hero_attack_art_time = 0.0
 	field._on_damage_popup(-1, 1, false, false)
 	field._process(0.01)
-	check(field.hero_visual_state == "guard" and HeroArtService.texture_for(3, field.hero_visual_state) != null, "Paladin guard transition uses supplied art")
+	check(field.hero_visual_state == "hit" and HeroArtService.texture_for(3, field.hero_visual_state) != null, "Paladin hit transition uses supplied art")
+	field._process(0.31)
+	field._on_attack_started(-2, 0)
+	field._process(0.01)
+	check(field.hero_visual_state == "guard" and HeroArtService.texture_for(3, "guard") != null, "Paladin guard transition uses supplied art")
 	check(float(HeroArtService.metadata(3).aura) > 0.0 and float(HeroArtService.metadata(3).aura) < float(HeroArtService.metadata(4).aura), "Paladin holy aura stays softer than Divine aura")
 	profile.heroes["knight"]["evolution"] = 4
+	field.hero_hit_art_time = 0.0
 	field.hero_visual_state = "idle"
 	field.hero_guard_art_time = 0.0
 	check(HeroArtService.texture_for(4, "idle") != null, "Divine Paladin idle uses supplied idle art")
@@ -106,7 +116,11 @@ func _run() -> void:
 	field.hero_attack_art_time = 0.0
 	field._on_damage_popup(-1, 1, false, false)
 	field._process(0.01)
-	check(field.hero_visual_state == "guard" and HeroArtService.texture_for(4, field.hero_visual_state) != null, "Divine Paladin guard transition uses supplied art")
+	check(field.hero_visual_state == "hit" and HeroArtService.texture_for(4, field.hero_visual_state) != null, "Divine Paladin hit transition uses supplied art")
+	field._process(0.31)
+	field._on_attack_started(-2, 0)
+	field._process(0.01)
+	check(field.hero_visual_state == "guard" and HeroArtService.texture_for(4, "guard") != null, "Divine Paladin guard transition uses supplied art")
 	check(float(HeroArtService.metadata(4).aura) > float(HeroArtService.metadata(3).aura), "Divine Paladin aura is stronger than Paladin aura")
 	field._on_attack_started(-2, 0)
 	check(field.hero_bash and field.shake_time > 0.0 and field.hero_lunge == 0.26, "Shield Bash visual emphasis")

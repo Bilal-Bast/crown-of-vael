@@ -1,4 +1,4 @@
-﻿extends SceneTree
+extends SceneTree
 
 const KINDS := ["Goblin", "Skeleton", "Corrupted Wolf", "Goblin Archer", "Goblin Spearman", "Bandit", "Goblin Captain", "Armored Skeleton", "Goblin Warlord"]
 var failures := 0
@@ -52,7 +52,7 @@ func _run() -> void:
  field._process(0.0)
  _check(field.hero_visual_state=="idle", "run is selected below combat action priority")
  field._update_pixel_hero_sprite(field._hero_position(),0.32)
- _check(field.pixel_hero_sprite.texture==PixelBattleArt.hero_run_frame(1), "Squire keeps the run cycle during the run transition")
+ _check(field.pixel_hero_sprite.texture==HeroArtService.animation_frame(0,"run",2), "Squire keeps its evolution-line run cycle during the run transition")
  field._on_skill_cast("shield_bash",0)
  field._process(0.0)
  _check(field.hero_visual_state=="guard" and field.pixel_skill_effect_time>0.0 and field.pixel_impact_overlay.visible, "Shield Bash selects guard animation and visible pixel impact")

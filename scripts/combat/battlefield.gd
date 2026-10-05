@@ -226,12 +226,12 @@ func _on_attack_started(attacker_index: int, target_index: int) -> void:
 		var selected_form := int(battle.profile.heroes.get(battle.profile.selected_hero_id, {}).get("evolution", 0)) if battle != null and battle.profile != null else 0
 		if attacker_index == -1:
 			hero_attack_art_duration = float(HeroArtService.metadata(selected_form).get("attack_duration", 0.26))
-			if PixelBattleArt.is_active(battle):
+			if PixelBattleArt.is_active(battle) and selected_form == 0:
 				hero_attack_art_duration = PixelBattleArt.animation_duration("Squire", "attack", hero_attack_art_duration)
 			hero_attack_art_time = hero_attack_art_duration
 		elif attacker_index == -2:
 			hero_guard_art_duration = float(HeroArtService.metadata(selected_form).get("attack_duration", 0.26)) * 1.25
-			if PixelBattleArt.is_active(battle):
+			if PixelBattleArt.is_active(battle) and selected_form == 0:
 				hero_guard_art_duration = PixelBattleArt.animation_duration("Squire", "guard", hero_guard_art_duration)
 			hero_guard_art_time = hero_guard_art_duration
 		var style := str(HeroData.HEROES[battle.profile.selected_hero_id]["style"])
@@ -277,7 +277,7 @@ func _on_damage_popup(target_index: int, amount: int, critical: bool, bash: bool
 	if target_index < 0:
 		var evolution := int(battle.profile.heroes.get("knight", {}).get("evolution", 0)) if battle != null and battle.profile != null and battle.profile.selected_hero_id == "knight" else 0
 		hero_hit_art_duration = float(HeroArtService.metadata(evolution).get("hit_duration", 0.30))
-		if PixelBattleArt.is_active(battle):
+		if PixelBattleArt.is_active(battle) and evolution == 0:
 			hero_hit_art_duration = PixelBattleArt.animation_duration("Squire", "hit", hero_hit_art_duration)
 		hero_hit_art_time = hero_hit_art_duration
 		hero_guard_art_time = hero_hit_art_duration
@@ -654,24 +654,31 @@ func _update_pixel_hero_sprite(pos: Vector2, unit: float, allow_visible: bool = 
 		pixel_hero_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		pixel_hero_sprite.z_index = 1
 		add_child(pixel_hero_sprite)
+	var hero_id := battle.profile.selected_hero_id if battle != null and battle.profile != null else "knight"
+	var hero_record: Dictionary = battle.profile.heroes.get(hero_id, {}) if battle != null and battle.profile != null else {}
+	var form := clampi(int(hero_record.get("evolution", 0)), 0, 4) if hero_id == "knight" else 0
 	var state := hero_visual_state
+	var elapsed := 0.0
+	var looping := false
 	if state == "hit":
-		pixel_hero_sprite.texture = _pixel_animation_frame("Squire", "hit", hero_hit_art_duration - hero_hit_art_time, false, 0, "guard")
+		elapsed = hero_hit_art_duration - hero_hit_art_time
 	elif state == "guard":
-		pixel_hero_sprite.texture = _pixel_animation_frame("Squire", "guard", hero_guard_art_duration - hero_guard_art_time, false, 0, "guard")
+		elapsed = hero_guard_art_duration - hero_guard_art_time
 	elif state == "attack":
-		pixel_hero_sprite.texture = _pixel_animation_frame("Squire", "attack", hero_attack_art_duration - hero_attack_art_time, false, 0, "attack")
+		elapsed = hero_attack_art_duration - hero_attack_art_time
 	elif hero_run_time > 0.0:
-		var run_elapsed := maxf(0.0, hero_run_duration - hero_run_time)
-		var run_frame := int(floor(run_elapsed * 10.0)) % 6
-		var run_texture := PixelBattleArt.hero_run_frame(run_frame)
-		pixel_hero_sprite.texture = run_texture if run_texture != null else PixelBattleArt.frame_texture(PixelBattleArt.hero_sheet(), "idle", "squire")
+		state = "run"
+		elapsed = hero_run_duration - hero_run_time
+		looping = true
 	else:
-		var idle_frame := int(floor(Time.get_ticks_msec() * 0.001 * PixelBattleArt.animation_fps("Squire", "idle"))) % maxi(1, PixelBattleArt.animation_frame_count("Squire", "idle"))
-		pixel_hero_sprite.texture = PixelBattleArt.animation_frame("Squire", "idle", idle_frame)
-		if pixel_hero_sprite.texture == null:
-			pixel_hero_sprite.texture = PixelBattleArt.frame_texture(PixelBattleArt.hero_sheet(), "idle", "squire")
-	var form_scale := float(HeroArtService.metadata(0).get("scale", 1.0))
+		state = "idle"
+		elapsed = float(Time.get_ticks_msec()) * 0.001
+		looping = true
+	var frame_count := HeroArtService.animation_frame_count(state)
+	var frame := int(floor(maxf(0.0, elapsed) * HeroArtService.animation_fps(state)))
+	frame = posmod(frame, frame_count) if looping else clampi(frame, 0, frame_count - 1)
+	pixel_hero_sprite.texture = HeroArtService.animation_frame(form, state, frame)
+	var form_scale := float(HeroArtService.metadata(form).get("scale", 1.0))
 	pixel_hero_sprite.scale = Vector2(370.0 / 256.0, 392.0 / 256.0) * unit * form_scale
 	pixel_hero_sprite.position = pos + Vector2(0.0, -(PIXEL_FRAME_GROUND_Y - 128.0) * pixel_hero_sprite.scale.y)
 	pixel_hero_sprite.rotation = sin(float(Time.get_ticks_msec()) * 0.035) * 0.06 if hero_run_time > 0.0 else 0.0
@@ -752,14 +759,11 @@ func _pixel_animation_frame(character_id: String, state: String, elapsed: float,
 	return PixelBattleArt.enemy_fallback_frame(character_id, fallback_state)
 
 func _draw_knight_art(form: int) -> bool:
-	var state := "guard" if hero_guard_art_time > 0.0 else "attack" if hero_attack_art_time > 0.0 else "idle"
-	if form == 0 and PixelBattleArt.is_active(battle):
-		return PixelBattleArt.hero_sheet() != null
+	var state := "hit" if hero_hit_art_time > 0.0 else "guard" if hero_guard_art_time > 0.0 else "attack" if hero_attack_art_time > 0.0 else "idle"
+	if PixelBattleArt.is_active(battle):
+		return HeroArtService.texture_for(form, state) != null
 	var texture: Texture2D = null
-	if form == 0:
-		texture = squire_guard_texture if state == "guard" else squire_attack_texture if state == "attack" else squire_idle_texture
-	else:
-		texture = HeroArtService.texture_for(form, state)
+	texture = HeroArtService.animation_frame(form, state, 0)
 	if texture == null:
 		return false
 	var art_height := 285.0 * float(HeroArtService.metadata(form).get("portrait_scale", 1.0))

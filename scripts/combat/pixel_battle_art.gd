@@ -212,7 +212,7 @@ static func is_active(battle: BattleController) -> bool:
 	if str(battle.mode_config.get("mode", "campaign")) != "campaign" or battle.region not in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
 		return false
 	set_battle_region(battle.region)
-	return battle.profile.selected_hero_id == "knight" and int(battle.profile.heroes.get("knight", {}).get("evolution", 0)) == 0
+	return battle.profile.selected_hero_id == "knight" and int(battle.profile.heroes.get("knight", {}).get("evolution", 0)) in [0, 1, 2, 3, 4]
 
 static func hero_sheet() -> Texture2D:
 	return load(HERO_SHEET) as Texture2D

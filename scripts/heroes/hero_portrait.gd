@@ -7,7 +7,7 @@ var locked_preview := false
 var profile_frame := ""
 
 func _ready() -> void:
-	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
 func _draw() -> void:
 	var scale_factor := minf(size.x / 210.0, size.y / 250.0)
