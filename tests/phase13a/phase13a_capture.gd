@@ -82,15 +82,23 @@ func _run() -> void:
 		enemy.entry_time = 0.0
 		battle.enemies.append(enemy)
 	battle.changed.emit()
-	profile.equipped_companion_slots.assign(["wolf", "", "", ""])
+	profile.equipped_companion_slots.assign(["", "", "wolf", ""])
+	profile.companions["wolf"].evolution = 0
 	field.queue_redraw()
-	await _capture("battle_one_companion", 360)
-	field.companion_lunges[0] = 0.18
+	await _capture("battle_wolf_base", 360)
+	_check_wolf_sprite(field, 1, 2)
+	profile.companions["wolf"].evolution = 2
+	field.queue_redraw()
+	await _capture("battle_shadow_wolf", 360)
+	_check_wolf_sprite(field, 1, 2)
+	field.companion_lunges[2] = 0.18
 	field.queue_redraw()
 	await _capture("battle_companion_attack", 360)
+	_check_wolf_sprite(field, 1, 2)
 	profile.equipped_companion_slots.assign(["wolf", "griffin", "archer_companion", "cleric_companion"])
 	field.queue_redraw()
 	await _capture("battle_multiple_companions", 360)
+	_check_wolf_sprite(field, 4)
 	await _capture("battle_overview", 1080)
 	main.queue_free()
 	print("PHASE 13A CAPTURE: %s (%d failures)" % ["PASS" if failures == 0 else "FAIL", failures])
@@ -126,3 +134,20 @@ func _dismiss_feature_popups(node: Node) -> void:
 		node.emit_signal("pressed")
 	for child in node.get_children():
 		_dismiss_feature_popups(child)
+
+func _check_wolf_sprite(field: Battlefield, expected_visible: int, wolf_slot: int = 0) -> void:
+	var hero := field.get("pixel_hero_sprite") as Sprite2D
+	var visible_count := 0
+	for sprite in field.get("pixel_companion_sprites") as Array[Sprite2D]:
+		if not sprite.visible:
+			continue
+		visible_count += 1
+		if hero != null and sprite.z_index >= hero.z_index:
+			failures += 1
+			push_error("Companion sprite is not behind the hero")
+	if field.pixel_companion_sprites.size() > wolf_slot and expected_visible >= 1 and not field.pixel_companion_sprites[wolf_slot].flip_h:
+		failures += 1
+		push_error("Wolf-line sprite is not flipped to face right")
+	if visible_count != expected_visible:
+		failures += 1
+		push_error("Unexpected visible companion count in capture")

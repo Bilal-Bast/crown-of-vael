@@ -18,6 +18,10 @@ func _run() -> void:
 		_check(icon != null and icon.get_width() > 0 and icon.get_height() > 0, "equipment icon: " + slot)
 	for id in CompanionData.COMPANIONS:
 		_check(CompanionPixelArt.hover_height(id) >= 0.0 and CompanionPixelArt.hover_height(id) <= 64.0, "valid companion hover metadata: " + id)
+	for id in ["wolf", "dire_wolf", "shadow_wolf", "fenrir"]:
+		_check(CompanionPixelArt.battle_flip_h(id), "wolf-line battle facing: " + id)
+	for id in ["fairy", "young_dragon", "griffin", "archer_companion", "cleric_companion", "apprentice_mage"]:
+		_check(not CompanionPixelArt.battle_flip_h(id), "unrelated battle facing unchanged: " + id)
 	_check(CompanionPixelArt.scale_for("wolf") > 0.0 and CompanionPixelArt.scale_for("wolf") < 1.0, "wolf presentation scale")
 	_check(CompanionPixelArt.scale_for("fairy") > 0.0 and CompanionPixelArt.scale_for("fairy") < 1.0, "fairy presentation scale")
 	print("PHASE 13A PIXEL PRESENTATION SMOKE: %s (%d failures)" % ["PASS" if failures == 0 else "FAIL", failures])

@@ -387,7 +387,7 @@ func _draw_companions(unit: float) -> void:
 			var sprite := Sprite2D.new()
 			sprite.name = "PixelCompanionSprite%d" % pixel_companion_sprites.size()
 			sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			sprite.z_index = 2
+			sprite.z_index = 0
 			pixel_companion_sprites.append(sprite)
 			add_child(sprite)
 		var id := battle.profile.equipped_companion_slots[slot]
@@ -411,6 +411,7 @@ func _draw_companions(unit: float) -> void:
 		sprite.texture = texture
 		sprite.scale = Vector2.ONE * draw_scale
 		sprite.position = pos
+		sprite.flip_h = CompanionPixelArt.battle_flip_h(id)
 		sprite.visible = true
 
 func _draw_artifact_indicators(unit: float) -> void:

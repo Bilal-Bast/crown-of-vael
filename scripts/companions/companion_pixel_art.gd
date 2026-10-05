@@ -29,3 +29,7 @@ static func scale_for(id: String) -> float:
 
 static func contact_y(id: String) -> float:
 	return 359.0 if id in ["wolf", "dire_wolf", "shadow_wolf", "fenrir"] else 247.0
+
+## The wolf atlas artwork faces left, so only this battle presentation is flipped.
+static func battle_flip_h(id: String) -> bool:
+	return id in ["wolf", "dire_wolf", "shadow_wolf", "fenrir"]
