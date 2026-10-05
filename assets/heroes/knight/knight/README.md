@@ -1,3 +1,3 @@
-# Knight art (integrated)
+# Knight art
 
-The Knight evolution uses `idle.png`, `attack.png`, `guard.png`, and `portrait.png` through `HeroArtService`. Optional future slots are `skill.png`, `death.png`, `evolution_fx.png`, and `aura.png`. Any missing state continues to fall back to the procedural Knight rendering.
+Four-frame state sheets: `idle.png`, `run.png`, `attack.png`, `guard.png`, and `hit.png`; portrait: `portrait.png`. See `../ART_PIPELINE.md` for the shared atlas and runtime layout.
