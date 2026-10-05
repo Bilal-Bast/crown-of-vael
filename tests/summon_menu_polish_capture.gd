@@ -24,9 +24,12 @@ func _run() -> void:
 	profile.gems = 100000
 	profile.tutorial_state.completed = true
 	profile.tutorial_state.skipped = true
+	profile.inventory.clear()
+	profile.equipped.clear()
 	for kind in EquipmentData.STARTER_KINDS:
 		var item := EquipmentData.create_item(kind, 3)
 		profile.inventory.append(item)
+		profile.equipped[EquipmentData.ITEMS[kind].slot] = item.id
 	for id in ArtifactData.ARTIFACTS:
 		profile.artifacts[id] = {"level":2,"duplicates":1,"rarity":4}
 	profile.equipped_artifact_slots.assign(["dragon_fang","dragon_eye","", "", "", ""])
@@ -36,8 +39,37 @@ func _run() -> void:
 	var toggle := main.get("menu_toggle") as Button
 	toggle.pressed.emit()
 	await _capture("menu_drawer_360",360)
+	main.call("_select_tab", "Heroes")
+	await _capture("heroes_360", 360)
+	await _capture("heroes_overview_1080", 1080)
+	var heroes := main.get("heroes_screen") as HeroesScreen
+	heroes.call("_open_detail", profile.selected_hero_id)
+	await _capture("hero_detail_360", 360)
+	main.call("_select_tab", "Adventure")
+	await _capture("adventure_360", 360)
+	await _capture("adventure_overview_1080", 1080)
+	main.call("_select_tab", "Companions")
+	await _capture("companions_360", 360)
+	main.call("_select_tab", "Skills")
+	await _capture("skills_360", 360)
+	main.call("_select_tab", "Battle")
+	await _capture("battle_ui_360", 360)
 	var screen := main.get("summon_screen") as SummonScreen
 	main.call("_select_tab","Summon")
+	for sample in [
+		{"banner":"equipment", "kind":"sacred_sword", "name":"equipment"},
+		{"banner":"skills", "kind":"healing_light", "name":"skill"},
+		{"banner":"artifacts", "kind":"dragon_heart", "name":"artifact"},
+		{"banner":"companions", "kind":"wolf", "name":"companion"},
+	]:
+		screen.result_banner = sample.banner
+		screen.results = [{"kind":sample.kind, "rarity":4, "is_new":true}]
+		screen.featured_index = 0
+		screen.page = 0
+		screen.revealing = false
+		screen.refresh()
+		await _capture("summon_reveal_%s_1x_360" % sample.name, 360)
+		if sample.banner == "equipment": await _capture("summon_reveal_overview_1080", 1080)
 	for banner in SummonData.BANNERS:
 		screen.selected_banner = banner
 		screen.results.clear()
@@ -51,19 +83,32 @@ func _run() -> void:
 		screen.result_banner = "equipment"
 		screen.revealing = false
 		screen.page = 0
+		screen.featured_index = 0
 		screen.refresh()
-		await _capture("summon_reveal_%dx_360" % count,360)
+		if count == 1: await _capture("summon_reveal_equipment_1x_360",360)
+		if count == 10: await _capture("summon_reveal_10x_page1_360",360)
+		if count == 30:
+			await _capture("summon_reveal_30x_page1_360",360)
+			await _capture("summon_reveal_30x_overview_1080", 1080)
 		if count == 30:
 			screen.page = 1
+			screen.featured_index = 6
 			screen.refresh()
-			await _capture("summon_reveal_30x_page2_360",360)
+			await _capture("summon_reveal_30x_later_page_360",360)
 			screen.page = 0
 	main.call("_select_tab","Equipment")
 	await _capture("equipment_inventory_360",360)
 	await _capture("equipment_inventory_1080",1080)
+	if not profile.inventory.is_empty():
+		main.call("_select_item", profile.inventory[0].id)
+		await _capture("equipment_detail_360", 360)
 	main.call("_select_tab","Artifacts")
 	await _capture("artifact_collection_360",360)
 	await _capture("artifact_collection_1080",1080)
+	var artifacts := main.get("artifacts_screen") as ArtifactsScreen
+	if ArtifactData.ARTIFACTS.size() > 0:
+		artifacts.call("_select", str(ArtifactData.ARTIFACTS.keys()[0]))
+		await _capture("artifact_detail_360", 360)
 	main.queue_free()
 	print("SUMMON / MENU CAPTURES: %s (%d failures)" % ["PASS" if failures == 0 else "FAIL",failures])
 	quit(1 if failures else 0)
@@ -90,6 +135,10 @@ func _capture(name: String, width: int) -> void:
 		print("CAPTURE " + path)
 
 func _dismiss(node: Node) -> void:
+	if node == main:
+		for property in ["login_popup", "tutorial_popup", "offline_popup"]:
+			var popup := main.get(property) as Control
+			if popup != null: popup.hide()
 	if node.name in ["DailyLoginPopup", "TutorialPopup", "OfflinePopup"]: node.hide()
 	if node is Window: node.hide()
 	if node is Button and str(node.text).to_upper() in ["GOT IT","CONTINUE","OK"]: node.emit_signal("pressed")

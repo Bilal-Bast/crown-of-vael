@@ -99,11 +99,12 @@ func _slot_pressed(index: int) -> void:
 func _panel(border: Color = Color("7b7159")) -> PanelContainer:
 	var panel := PanelContainer.new()
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("253739")
+	style.bg_color = Color("202f39")
 	style.border_color = border
 	style.set_border_width_all(2)
-	style.set_corner_radius_all(11)
-	style.set_content_margin_all(13)
+	style.border_width_bottom = 4
+	style.set_corner_radius_all(5)
+	style.set_content_margin_all(14)
 	panel.add_theme_stylebox_override("panel", style)
 	return panel
 

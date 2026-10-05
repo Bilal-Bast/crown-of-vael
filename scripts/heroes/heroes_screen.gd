@@ -56,6 +56,11 @@ func _build_roster() -> void:
 		add_child(panel)
 		var box := VBoxContainer.new()
 		panel.add_child(box)
+		var portrait := HeroPortrait.new()
+		portrait.hero_id = id
+		portrait.evolution = int(record["evolution"])
+		portrait.custom_minimum_size = Vector2(92, 108)
+		box.add_child(portrait)
 		box.add_child(_label("%s  •  %s  •  %s" % [HeroData.title(id, record).to_upper(), EquipmentData.RARITIES[int(data["rarity"])], "SELECTED" if id == profile.selected_hero_id else ("OWNED" if owned else "LOCKED")], 31, EquipmentData.COLORS[int(data["rarity"])]))
 		box.add_child(_label("%s  •  %s" % [data["role"], HeroData.element(id, record)], 27, Color("e9e8d7")))
 		box.add_child(_label("Stars %d/5  •  Pieces %d%s" % [record["stars"], record["pieces"], " / %d to unlock" % data["unlock"] if not owned else ""], 27, Color("a9d6ad")))
@@ -276,11 +281,12 @@ func _changed() -> void:
 func _panel(border: Color) -> PanelContainer:
 	var panel := PanelContainer.new()
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("253739")
+	style.bg_color = Color("202f39")
 	style.border_color = border
-	style.set_border_width_all(3)
-	style.set_corner_radius_all(11)
-	style.set_content_margin_all(12)
+	style.set_border_width_all(2)
+	style.border_width_bottom = 4
+	style.set_corner_radius_all(5)
+	style.set_content_margin_all(14)
 	panel.add_theme_stylebox_override("panel", style)
 	return panel
 

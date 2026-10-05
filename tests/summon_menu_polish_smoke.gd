@@ -107,6 +107,19 @@ func _test_result_pages() -> void:
 	screen.refresh()
 	_check(_grid_card_count(screen) == 4, "10x second page renders remaining four cards")
 	_check(_all_reward_cards_have_icons(screen), "summon rewards include pixel icons")
+	_check(_featured_reward_is_centered(screen), "multi-summon page has a large featured reward")
+	for sample in [
+		{"banner":"equipment", "kind":str(EquipmentData.ITEMS.keys()[0])},
+		{"banner":"skills", "kind":str(SkillData.SKILLS.keys()[0])},
+		{"banner":"artifacts", "kind":str(ArtifactData.ARTIFACTS.keys()[0])},
+		{"banner":"companions", "kind":str(CompanionData.COMPANIONS.keys()[0])},
+	]:
+		screen.result_banner = sample.banner
+		screen.results = [{"kind":sample.kind,"rarity":4,"is_new":true}]
+		screen.page = 0
+		screen.featured_index = 0
+		screen.refresh()
+		_check(_featured_reward_is_centered(screen), "%s reward has centered pixel art" % sample.banner)
 	screen.queue_free()
 
 func _test_menu_navigation() -> void:
@@ -149,6 +162,12 @@ func _all_reward_cards_have_icons(node: Node) -> bool:
 				if icon.texture == null: return false
 			return child.get_child_count() > 0
 	return false
+
+func _featured_reward_is_centered(node: Node) -> bool:
+	var icon := node.find_child("FeaturedRewardImage", true, false) as TextureRect
+	var frame := node.find_child("FeaturedRewardFrame", true, false) as PanelContainer
+	var title := node.find_child("FeaturedRewardName", true, false) as Label
+	return icon != null and icon.texture != null and icon.custom_minimum_size.y >= 300 and frame != null and title != null
 
 func _check(condition: bool, label: String) -> void:
 	if not condition:

@@ -250,11 +250,12 @@ func _heading(title: String, subtitle: String) -> void:
 func _card(title: String, detail: String, reward: String, action: String, callback: Callable, disabled: bool = false) -> void:
 	var panel := PanelContainer.new()
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("182426") if disabled else Color("253739")
+	style.bg_color = Color("182630") if disabled else Color("202f39")
 	style.border_color = Color("786947") if not disabled else Color("4a5554")
-	style.set_border_width_all(3)
-	style.set_corner_radius_all(12)
-	style.set_content_margin_all(14)
+	style.set_border_width_all(2)
+	style.border_width_bottom = 4
+	style.set_corner_radius_all(5)
+	style.set_content_margin_all(16)
 	panel.add_theme_stylebox_override("panel", style)
 	add_child(panel)
 	var box := VBoxContainer.new()

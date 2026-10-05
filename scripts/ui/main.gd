@@ -205,8 +205,9 @@ func _handle_back_request() -> void:
 	exit_confirmation.popup_centered()
 
 func _build_ui() -> void:
+	_apply_ui_theme()
 	var backdrop := ColorRect.new()
-	backdrop.color = INK
+	backdrop.color = Color("121e29")
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(backdrop)
 
@@ -216,7 +217,7 @@ func _build_ui() -> void:
 	root.offset_right = -24
 	root.offset_top = 22
 	root.offset_bottom = -18
-	root.add_theme_constant_override("separation", 13)
+	root.add_theme_constant_override("separation", 15)
 	add_child(root)
 	_build_top_bar(root)
 	_build_stage_card(root)
@@ -344,13 +345,13 @@ func _build_top_bar(root: VBoxContainer) -> void:
 	box.add_theme_constant_override("separation", 7)
 	panel.add_child(box)
 	var frame := StyleBoxFlat.new()
-	frame.bg_color = Color("17212c")
-	frame.border_color = Color("766348")
+	frame.bg_color = Color("182633")
+	frame.border_color = Color("c29b59")
 	frame.border_width_top = 3
 	frame.border_width_bottom = 3
-	frame.set_content_margin_all(13)
+	frame.set_content_margin_all(15)
 	panel.add_theme_stylebox_override("panel", frame)
-	var title := _label("C R O W N   O F   V A E L", 32, GOLD)
+	var title := _label("CROWN  OF  VAEL", 36, GOLD)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title)
 	var metrics := HBoxContainer.new()
@@ -366,13 +367,23 @@ func _build_top_bar(root: VBoxContainer) -> void:
 	metrics.add_child(power_help)
 
 func _metric(parent: HBoxContainer, heading: String, value_color: Color) -> Label:
+	var metric_panel := PanelContainer.new()
+	var frame := StyleBoxFlat.new()
+	frame.bg_color = Color("1b2a34")
+	frame.border_color = value_color.darkened(0.45)
+	frame.set_border_width_all(1)
+	frame.border_width_bottom = 3
+	frame.set_content_margin_all(6)
+	metric_panel.add_theme_stylebox_override("panel", frame)
+	metric_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	parent.add_child(metric_panel)
 	var cell := VBoxContainer.new()
 	cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	parent.add_child(cell)
-	var caption := _label(heading, 25, MUTED)
+	metric_panel.add_child(cell)
+	var caption := _label(heading, 22, MUTED)
 	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	cell.add_child(caption)
-	var value := _label("0", 36, value_color)
+	var value := _label("0", 34, value_color)
 	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	cell.add_child(value)
 	return value
@@ -526,21 +537,24 @@ func _build_navigation(root: VBoxContainer) -> void:
 	root.add_child(panel)
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color("111c26")
-	style.border_color = Color("8e7950")
-	style.border_width_top = 3
-	style.set_content_margin_all(10)
+	style.border_color = Color("a58a57")
+	style.border_width_top = 2
+	style.set_content_margin_all(8)
 	panel.add_theme_stylebox_override("panel",style)
 	var rows := VBoxContainer.new()
+	rows.add_theme_constant_override("separation", 7)
 	panel.add_child(rows)
 	menu_drawer = VBoxContainer.new()
+	menu_drawer.add_theme_constant_override("separation", 2)
 	rows.add_child(menu_drawer)
 	menu_drawer.visible = false
-	for tab_row in [["Adventure","Skills","Quests","Login"],["Pass","Shop","Account","Social"],["Settings"]]:
-		var row := HBoxContainer.new()
-		menu_drawer.add_child(row)
-		for tab_name in tab_row:
-			_add_nav_button(row,tab_name)
+	_drawer_group(menu_drawer, "JOURNEY", ["Adventure"])
+	_drawer_group(menu_drawer, "CHARACTER", ["Skills"])
+	_drawer_group(menu_drawer, "REWARDS", ["Quests", "Login", "Pass", "Shop"])
+	_drawer_group(menu_drawer, "COMMUNITY", ["Account", "Social"])
+	_drawer_group(menu_drawer, "PREFERENCES", ["Settings"])
 	var primary := HBoxContainer.new()
+	primary.add_theme_constant_override("separation", 4)
 	rows.add_child(primary)
 	for tab_name in ["Battle","Heroes","Equipment","Summon"]:
 		_add_nav_button(primary,tab_name)
@@ -552,8 +566,10 @@ func _build_navigation(root: VBoxContainer) -> void:
 	menu_toggle.pressed.connect(func():
 		menu_drawer.visible = not menu_drawer.visible
 		menu_toggle.text = "Menu -" if menu_drawer.visible else "Menu +"
+		_style_menu_toggle()
 	)
 	primary.add_child(menu_toggle)
+	_style_menu_toggle()
 	login_popup = PopupPanel.new()
 	login_popup.name = "DailyLoginPopup"
 	add_child(login_popup)
@@ -569,6 +585,49 @@ func _add_nav_button(parent: Container, tab_name: String) -> void:
 	button.pressed.connect(_play_audio.bind("button_click","UI"))
 	parent.add_child(button)
 	nav_buttons[tab_name] = button
+
+func _drawer_group(parent: VBoxContainer, title: String, destinations: Array) -> void:
+	var section := VBoxContainer.new()
+	section.add_theme_constant_override("separation", 3)
+	parent.add_child(section)
+	var heading := HBoxContainer.new()
+	heading.add_theme_constant_override("separation", 8)
+	section.add_child(heading)
+	var icon := TextureRect.new()
+	icon.texture = PixelUiIcons.navigation(str(destinations[0]))
+	icon.custom_minimum_size = Vector2(26, 26)
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	heading.add_child(icon)
+	var label := _label(title, 20, Color("c8a966"))
+	label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	heading.add_child(label)
+	var rule := ColorRect.new()
+	rule.color = Color("5f523b")
+	rule.custom_minimum_size = Vector2(0, 2)
+	rule.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rule.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	heading.add_child(rule)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 5)
+	section.add_child(row)
+	for tab_name in destinations:
+		_add_nav_button(row, str(tab_name))
+
+func _style_menu_toggle() -> void:
+	if menu_toggle == null: return
+	var selected := menu_drawer.visible
+	var style := _button_style(Color("c5a566"), selected)
+	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
+		var feedback := style.duplicate() as StyleBoxFlat
+		if state == "hover" or state == "focus":
+			feedback.bg_color = Color("34414a")
+			feedback.border_color = Color("e2c783")
+		if state == "disabled":
+			feedback.bg_color = Color("1a252d")
+			feedback.border_color = Color("4a5352")
+		menu_toggle.add_theme_stylebox_override(state, feedback)
+	menu_toggle.add_theme_color_override("font_color", Color("f0d28a") if selected else PALE)
 
 func _build_guidance_popups() -> void:
 	tutorial_popup = PopupPanel.new()
@@ -799,17 +858,65 @@ func _on_feature_ack() -> void:
 	active_feature_tip = ""
 	tutorial_skip.visible = true
 
+func _apply_ui_theme() -> void:
+	var shared := Theme.new()
+	shared.set_color("font_color", "Label", PALE)
+	shared.set_color("font_hover_color", "Button", Color("fff0c8"))
+	shared.set_color("font_pressed_color", "Button", GOLD)
+	shared.set_color("font_disabled_color", "Button", Color("7e8b89"))
+	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
+		shared.set_stylebox(state, "Button", _button_style(Color("86744f"), false, state))
+	var panel_frame := StyleBoxFlat.new()
+	panel_frame.bg_color = Color("202f39")
+	panel_frame.border_color = Color("75694f")
+	panel_frame.set_border_width_all(2)
+	panel_frame.border_width_bottom = 3
+	panel_frame.set_corner_radius_all(5)
+	panel_frame.set_content_margin_all(16)
+	panel_frame.shadow_color = Color(0.02, 0.03, 0.04, 0.38)
+	panel_frame.shadow_size = 3
+	panel_frame.shadow_offset = Vector2(0, 2)
+	shared.set_stylebox("panel", "PanelContainer", panel_frame)
+	var progress_bg := StyleBoxFlat.new()
+	progress_bg.bg_color = Color("14212a")
+	progress_bg.border_color = Color("56605d")
+	progress_bg.set_border_width_all(1)
+	shared.set_stylebox("background", "ProgressBar", progress_bg)
+	var progress_fill := StyleBoxFlat.new()
+	progress_fill.bg_color = Color("bd9a5f")
+	shared.set_stylebox("fill", "ProgressBar", progress_fill)
+	theme = shared
+
+func _button_style(accent: Color, selected: bool, state := "normal") -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("2c3740") if selected else Color("182630")
+	if state == "hover" or state == "focus": style.bg_color = Color("35434b")
+	if state == "pressed": style.bg_color = Color("111c25")
+	if state == "disabled": style.bg_color = Color("1b252c")
+	style.border_color = accent if selected else Color("52606a")
+	if state == "hover" or state == "focus": style.border_color = Color("e4c87f")
+	if state == "disabled": style.border_color = Color("39464a")
+	style.set_border_width_all(1)
+	style.border_width_bottom = 4 if selected else 3
+	style.set_corner_radius_all(3)
+	style.set_content_margin_all(9)
+	return style
+
 func _panel() -> PanelContainer:
 	var panel := PanelContainer.new()
 	var style := StyleBoxFlat.new()
-	style.bg_color = PANEL
-	style.border_color = EDGE
+	style.bg_color = Color("202f39")
+	style.border_color = Color("82714d")
 	style.set_border_width_all(2)
-	style.set_corner_radius_all(13)
-	style.content_margin_left = 19
-	style.content_margin_right = 19
-	style.content_margin_top = 12
-	style.content_margin_bottom = 12
+	style.border_width_bottom = 3
+	style.set_corner_radius_all(5)
+	style.content_margin_left = 17
+	style.content_margin_right = 17
+	style.content_margin_top = 14
+	style.content_margin_bottom = 14
+	style.shadow_color = Color(0.02, 0.03, 0.04, 0.32)
+	style.shadow_size = 3
+	style.shadow_offset = Vector2(0, 2)
 	panel.add_theme_stylebox_override("panel", style)
 	return panel
 
@@ -895,6 +1002,7 @@ func _select_tab(tab_name: String) -> void:
 	if menu_drawer != null:
 		menu_drawer.hide()
 		menu_toggle.text = "Menu +"
+		_style_menu_toggle()
 	stage_panel.visible = tab_name == "Battle"
 	battle_area.visible = tab_name == "Battle"
 	heroes_area.visible = tab_name == "Heroes"
@@ -1122,7 +1230,16 @@ func _build_heroes_screen() -> void:
 		card.add_child(_label("Reach Level %d  •  2 Gems  •  %s" % [threshold, "CLAIMED" if claimed else "LOCKED"], 29, Color("a9d6ad") if claimed else MUTED))
 
 func _section_title(parent: VBoxContainer, value: String) -> void:
-	parent.add_child(_label(value, 33, GOLD))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	parent.add_child(row)
+	row.add_child(_label(value, 32, GOLD))
+	var divider := ColorRect.new()
+	divider.color = Color("6f6148")
+	divider.custom_minimum_size = Vector2(0, 2)
+	divider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	divider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(divider)
 
 func _build_equipment_screen() -> void:
 	_clear_content(equipment_content)
@@ -1321,17 +1438,8 @@ func _update_navigation() -> void:
 	for tab_name in nav_buttons:
 		var button: Button = nav_buttons[tab_name]
 		var selected: bool = tab_name == selected_tab
-		var style := StyleBoxFlat.new()
-		style.bg_color = Color("3b3740") if selected else Color("17242e")
-		style.border_color = GOLD if selected else Color("405153")
-		style.set_border_width_all(2)
-		style.border_width_bottom = 5 if selected else 2
-		button.add_theme_stylebox_override("normal", style)
-		for state in ["hover", "pressed", "focus"]:
-			var feedback := style.duplicate() as StyleBoxFlat
-			feedback.border_color = GOLD
-			feedback.bg_color = Color("35414b")
-			button.add_theme_stylebox_override(state, feedback)
+		for state in ["normal", "hover", "pressed", "focus", "disabled"]:
+			button.add_theme_stylebox_override(state, _button_style(GOLD, selected, state))
 		button.add_theme_color_override("font_color", GOLD if selected else MUTED)
 		button.add_theme_color_override("font_hover_color", PALE)
 		var badge := MonetizationService.new(profile).bp_badge() if tab_name == "Pass" else MonetizationService.new(profile).shop_badge() if tab_name == "Shop" else SocialService.new(profile).badge() if tab_name == "Social" else ProgressionService.new(profile).badge(tab_name)
