@@ -8,6 +8,14 @@ const GROUND_LINE_RATIO := 0.78
 ## Pixel animation frames are packed into a 256px cell with 16px transparent padding.
 const PIXEL_FRAME_GROUND_Y := 240.0
 const PixelBattleImpactScript = preload("res://scripts/combat/pixel_battle_impact.gd")
+
+class EffectsOverlay extends Control:
+	var source: Node
+
+	func _draw() -> void:
+		if source != null:
+			source.call("_draw_effects_on", self)
+
 var vfx := CombatVfxService.new()
 
 var battle: BattleController
@@ -39,6 +47,7 @@ var pixel_impact_overlay
 var pixel_hero_sprite: Sprite2D
 var pixel_enemy_sprites: Array[Sprite2D] = []
 var pixel_companion_sprites: Array[Sprite2D] = []
+var effects_overlay: EffectsOverlay
 ## Compatibility aliases retained for the Phase 9/legacy smoke harness.
 var squire_idle_texture: Texture2D
 var squire_attack_texture: Texture2D
@@ -53,6 +62,13 @@ func _init() -> void:
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	effects_overlay = EffectsOverlay.new()
+	effects_overlay.name = "CombatEffectsOverlay"
+	effects_overlay.source = self
+	effects_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	effects_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	effects_overlay.z_index = 3
+	add_child(effects_overlay)
 	squire_idle_texture = HeroArtService.texture_for(0, "idle")
 	squire_attack_texture = HeroArtService.texture_for(0, "attack")
 	squire_guard_texture = HeroArtService.texture_for(0, "guard")
@@ -126,6 +142,8 @@ func _process(delta: float) -> void:
 				group.remove_at(i)
 	if hero_lunge > 0.0 or hero_attack_art_time > 0.0 or hero_guard_art_time > 0.0 or hero_hit_art_time > 0.0 or hero_run_time > 0.0 or pixel_skill_effect_time > 0.0 or shake_time > 0.0 or not floaters.is_empty() or not impacts.is_empty() or not deaths.is_empty() or not companion_lunges.is_empty() or not vfx.projectiles.is_empty() or battle != null and battle.active:
 		queue_redraw()
+		if effects_overlay != null:
+			effects_overlay.queue_redraw()
 
 func _on_companion_attack(slot: int, target: int, amount: int) -> void:
 	companion_lunges[slot] = 0.24
@@ -137,7 +155,7 @@ func _on_companion_attack(slot: int, target: int, amount: int) -> void:
 		vfx.pulse(_enemy_position(target) + Vector2(0, -70), cue_color, 0.55, 0.18, "slash")
 	else:
 		vfx.projectile(origin, _enemy_position(target) + Vector2(0, -72), cue_color, 0.18, 5)
-	vfx.label(_enemy_position(target) + Vector2(0, -130), "ALLY %d" % amount, Color("a9e5c4"), 23, 0.8)
+	vfx.label(_enemy_position(target) + Vector2(0, -220), "ALLY %d" % amount, Color("a9e5c4"), 28, 0.8)
 	queue_redraw()
 
 func _play_audio(event: String) -> void:
@@ -282,7 +300,7 @@ func _on_damage_popup(target_index: int, amount: int, critical: bool, bash: bool
 	elif bash:
 		text_value = "BASH %s!" % NumberFormat.compact(amount)
 	var label_color := Color("ffdf72") if critical else (Color("9de8f2") if bash else (Color("ffb4a0") if target_index < 0 else Color.WHITE))
-	vfx.label(pos + Vector2(0, -100), text_value, label_color, 36 if critical else (34 if bash else 28), 0.72 if critical else 0.9, critical)
+	vfx.label(pos + Vector2(0, -220), text_value, label_color, 40 if critical else (36 if bash else 32), 0.72 if critical else 0.9, critical)
 	if not (PixelBattleArt.is_active(battle) and bash):
 		vfx.pulse(pos + Vector2(0, -56), Color("ffe59d") if critical or bash else Color("f4f0d5"), 1.7 if critical else (1.5 if bash else 0.8), 0.30)
 	flashes[target_index] = 0.16
@@ -376,7 +394,6 @@ func _draw() -> void:
 		_update_pixel_hero_sprite(Vector2.ZERO, 0.0, false)
 		for i in pixel_enemy_sprites.size():
 			_sync_pixel_enemy_visibility(i, false)
-	_draw_effects(unit)
 	_draw_artifact_indicators(unit)
 
 func _draw_companions(unit: float) -> void:
@@ -879,8 +896,9 @@ func _draw_enemy(pos: Vector2, enemy: Dictionary, unit: float, flash: bool, enem
 	var hp_position := Vector2(-bar_width * 0.5, hp_y)
 	if boss and pixel_enemy:
 		hp_position.x = (size.x * 0.46 - pos.x) / actor_scale - bar_width * 0.5
-	_draw_hp_bar(hp_position, bar_width, float(enemy["current_hp"]) / float(enemy["hp"]), Color("eb6f67"))
-	if boss:
+	if not (boss and pixel_enemy):
+		_draw_hp_bar(hp_position, bar_width, float(enemy["current_hp"]) / float(enemy["hp"]), Color("eb6f67"))
+	if boss and not pixel_enemy:
 		var boss_label_y := maxf(-265.0, (48.0 - pos.y) / actor_scale) if not pixel_enemy else (-130.0 if battle.region == 10 else -240.0)
 		var boss_label_text := kind.to_upper()
 		var boss_label_position := Vector2(-90, boss_label_y)
@@ -1063,17 +1081,19 @@ func _draw_warlord() -> void:
 	draw_line(Vector2(52, -55), Vector2(81, -116), Color("665341"), 10)
 	draw_colored_polygon(PackedVector2Array([Vector2(70, -124), Vector2(95, -143), Vector2(109, -116), Vector2(91, -96)]), Color("adb1a4"))
 
-func _draw_effects(unit: float) -> void:
-	vfx.draw(self, unit, battle)
+func _draw_effects_on(canvas: Control) -> void:
+	var unit := minf(size.x / 1000.0, size.y / (560.0 if PixelBattleArt.is_active(battle) else 650.0))
+	vfx.draw(canvas, unit, battle)
+	_draw_pixel_boss_hud(canvas, unit)
 	for death in deaths:
 		var ratio := float(death["age"]) / float(death["life"])
-		var color := Color("b7e6a8", 0.7 * (1.0 - ratio))
-		draw_arc(death["pos"], (20 + ratio * 85) * unit, 0, TAU, 24, color, 7 * unit)
-		for i in 3:
-			var coin_color := Color("f5cf72", 1.0 - ratio)
-			var coin_pos: Vector2 = death["pos"] + Vector2((i - 1) * (26 + ratio * 32) * unit, (-18 - ratio * (45 + i * 9)) * unit)
-			draw_circle(coin_pos, 8 * unit, coin_color)
-			draw_circle(coin_pos, 4 * unit, Color("fff0ac", 1.0 - ratio))
+		var fade := 1.0 - ratio
+		var color := Color("b7e6a8", 0.62 * fade)
+		var center: Vector2 = death["pos"]
+		canvas.draw_arc(center, (10 + ratio * 34) * unit, 0, TAU, 16, color, maxf(1.2, 2.5 * unit))
+		for i in 2:
+			var fleck_pos := (center + Vector2((i * 2 - 1) * (14 + ratio * 20) * unit, (-8 - ratio * (20 + i * 5)) * unit)).round()
+			canvas.draw_rect(Rect2(fleck_pos, Vector2(maxf(2.0, 4 * unit), maxf(2.0, 4 * unit))), Color("f5cf72", fade))
 	for floater in floaters:
 		var ratio := float(floater["age"]) / float(floater["life"])
 		var pos: Vector2 = floater["pos"] + Vector2(0, -ratio * 74 * unit)
@@ -1081,7 +1101,34 @@ func _draw_effects(unit: float) -> void:
 		color.a = 1.0 - ratio
 		var font_size := roundi(float(floater["size"]) * unit)
 		var x_offset := -ThemeDB.fallback_font.get_string_size(str(floater["text"]), HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x * 0.5 if bool(floater.get("centered", false)) else -70.0 * unit
-		draw_string(ThemeDB.fallback_font, pos + Vector2(x_offset, 0), str(floater["text"]), HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
+		var text_pos := pos + Vector2(x_offset, 0)
+		var outline := 2 if bool(floater.get("critical", false)) else 1
+		var shadow := Color("171820", color.a)
+		for offset in [Vector2(-outline, 0), Vector2(outline, 0), Vector2(0, -outline), Vector2(0, outline)]:
+			canvas.draw_string(ThemeDB.fallback_font, text_pos + offset, str(floater["text"]), HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, shadow)
+		canvas.draw_string(ThemeDB.fallback_font, text_pos, str(floater["text"]), HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
+
+func _draw_pixel_boss_hud(canvas: Control, unit: float) -> void:
+	if battle == null or not PixelBattleArt.is_active(battle):
+		return
+	for enemy in battle.enemies:
+		if str(enemy.get("archetype", "")) != "BOSS" or float(enemy.get("current_hp", 0.0)) <= 0.0:
+			continue
+		var width := minf(canvas.size.x * 0.55, 260.0 * unit)
+		var height := maxf(5.0, 8.0 * unit)
+		var center_x := canvas.size.x * 0.46
+		var font_size := roundi(maxf(13.0, 17.0 * unit * 1.35))
+		var name := str(enemy.get("visual", enemy.get("kind", "BOSS"))).to_upper()
+		var label_y := 14.0 + font_size
+		var label_width := ThemeDB.fallback_font.get_string_size(name, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+		var label_pos := Vector2(center_x - label_width * 0.5, label_y)
+		for offset in [Vector2(-1, 0), Vector2(1, 0), Vector2(0, -1), Vector2(0, 1)]:
+			canvas.draw_string(ThemeDB.fallback_font, label_pos + offset, name, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color("161720"))
+		canvas.draw_string(ThemeDB.fallback_font, label_pos, name, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color("f8dfbc"))
+		var bar := Rect2(Vector2(center_x - width * 0.5, label_y + 5.0), Vector2(width, height))
+		canvas.draw_rect(bar.grow(1.0), Color("191b26"))
+		canvas.draw_rect(bar, Color("3d2930"))
+		canvas.draw_rect(Rect2(bar.position, Vector2(width * clampf(float(enemy["current_hp"]) / maxf(1.0, float(enemy["hp"])), 0.0, 1.0), height)), Color("eb6f67"))
 
 func _draw_hp_bar(pos: Vector2, width: float, ratio: float, color: Color) -> void:
 	draw_rect(Rect2(pos, Vector2(width, 10)), Color("233934"))

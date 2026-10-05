@@ -77,19 +77,40 @@ func draw(canvas: Control, unit: float, battle: BattleController) -> void:
 			color.a *= 0.55
 		color.a *= 1.0 - ratio
 		var center: Vector2 = effect["pos"]
-		var radius := (10.0 + ratio * (58.0 if float(effect["strength"]) > 1.1 else 36.0)) * unit
 		var shape := str(effect.get("shape", "burst"))
-		var start := -PI * 0.8 if shape in ["slash", "spin"] else 0.0
-		var finish := PI * 0.7 if shape == "slash" else TAU
-		canvas.draw_arc(center, radius, start, finish, 22, color, (6.0 if shape == "slash" else (5.0 if float(effect["strength"]) > 1.1 else 3.5)) * unit)
-		if shape == "heal":
+		var expansion := (230.0 if shape == "spin" else (110.0 if shape in ["guard", "heal", "pulse", "shockwave"] else (44.0 if float(effect["strength"]) > 1.1 else 28.0)))
+		var radius := (10.0 + ratio * expansion) * unit
+		var stroke := maxf(1.5, (4.5 if float(effect["strength"]) > 1.1 else 3.0) * unit)
+		if shape == "slash":
+			canvas.draw_line(center + Vector2(-radius * 0.75, radius * 0.35), center + Vector2(radius * 0.72, -radius * 0.45), color.darkened(0.3), stroke * 1.7)
+			canvas.draw_line(center + Vector2(-radius * 0.75, radius * 0.35), center + Vector2(radius * 0.72, -radius * 0.45), color, stroke)
+		elif shape == "spin":
+			var spin_rect := Rect2(center - Vector2(radius, radius * 0.52), Vector2(radius * 2.0, radius * 1.04))
+			canvas.draw_arc(spin_rect.get_center(), radius, PI * 0.12, TAU * 0.82, 18, color.darkened(0.55), stroke * 2.6)
+			canvas.draw_arc(spin_rect.get_center(), radius, PI * 0.12, TAU * 0.82, 18, color, stroke * 1.2)
+			canvas.draw_arc(spin_rect.get_center(), radius * 0.72, PI * 0.20, TAU * 0.78, 14, color, stroke)
+		elif shape == "guard":
+			var shield := PackedVector2Array([center + Vector2(0, -radius), center + Vector2(radius * 0.72, -radius * 0.58), center + Vector2(radius * 0.62, radius * 0.36), center + Vector2(0, radius), center + Vector2(-radius * 0.62, radius * 0.36), center + Vector2(-radius * 0.72, -radius * 0.58)])
+			canvas.draw_polyline(shield, color, stroke * 1.5, true)
+			canvas.draw_line(center + Vector2(-radius * 0.45, 0), center + Vector2(radius * 0.45, 0), color, maxf(1.0, stroke * 0.65))
+		elif shape == "heal":
+			canvas.draw_line(center + Vector2(-radius * 0.35, 0), center + Vector2(radius * 0.35, 0), color, maxf(2.0, stroke))
+			canvas.draw_line(center + Vector2(0, -radius * 0.35), center + Vector2(0, radius * 0.35), color, maxf(2.0, stroke))
 			for mote in 4 if reduced else 7:
 				var mote_pos := center + Vector2(sin(float(mote) * 2.1) * 24, -ratio * 92 - mote * 7) * unit
-				canvas.draw_circle(mote_pos, 4 * unit, color)
-		var rays := 3 if reduced else (8 if float(effect["strength"]) > 1.1 else 6)
-		for ray in rays:
-			var direction := Vector2.RIGHT.rotated(TAU * ray / rays)
-			canvas.draw_line(center + direction * radius * 0.4, center + direction * radius * 0.85, color, 3.0 * unit)
+				canvas.draw_rect(Rect2(mote_pos.round() - Vector2.ONE * maxf(1.0, unit * 2.0), Vector2.ONE * maxf(2.0, unit * 4.0)), color)
+		elif shape == "pulse":
+			canvas.draw_arc(center, radius, 0.0, TAU, 16, color.darkened(0.25), stroke * 1.5)
+			canvas.draw_arc(center, radius * 0.72, 0.0, TAU, 16, color, stroke)
+		else:
+			var rays := 3 if reduced else (6 if float(effect["strength"]) > 1.1 else 4)
+			for ray in rays:
+				var direction := Vector2.RIGHT.rotated(TAU * ray / rays)
+				var from := (center + direction * radius * 0.35).round()
+				var to := (center + direction * radius * 0.8).round()
+				canvas.draw_line(from, to, color, stroke)
+			var core := Rect2(center.round() - Vector2.ONE * maxf(1.0, unit * 3.0), Vector2.ONE * maxf(2.0, unit * 6.0))
+			canvas.draw_rect(core, color)
 	for projectile_item in projectiles:
 		var ratio := clampf(float(projectile_item["age"]) / float(projectile_item["life"]), 0.0, 1.0)
 		var origin: Vector2 = projectile_item["from"]
@@ -97,7 +118,9 @@ func draw(canvas: Control, unit: float, battle: BattleController) -> void:
 		var pos := origin.lerp(destination, ratio)
 		var trail_color: Color = projectile_item["color"]
 		trail_color.a = 1.0 - ratio * 0.35
-		canvas.draw_line(origin.lerp(destination, maxf(0, ratio - 0.18)), pos, trail_color.darkened(0.15), float(projectile_item["size"]) * 0.65 * unit)
+		var projectile_size := float(projectile_item["size"])
+		canvas.draw_line(origin.lerp(destination, maxf(0, ratio - 0.18)), pos, Color("1a1a24", trail_color.a), maxf(2.0, projectile_size * 0.9 * unit))
+		canvas.draw_line(origin.lerp(destination, maxf(0, ratio - 0.18)), pos, trail_color, maxf(1.5, projectile_size * 0.5 * unit))
 		if str(projectile_item.get("style", "orb")) in ["arrow", "pixel_arrow"]:
 			var direction := (destination - origin).normalized()
 			var side := Vector2(-direction.y, direction.x)
@@ -117,7 +140,10 @@ func draw(canvas: Control, unit: float, battle: BattleController) -> void:
 			else:
 				canvas.draw_colored_polygon(PackedVector2Array([pos + direction * 9 * unit, pos - direction * 5 * unit + side * 4 * unit, pos - direction * 5 * unit - side * 4 * unit]), trail_color)
 		else:
-			canvas.draw_circle(pos, float(projectile_item["size"]) * unit, trail_color)
+			var radius := maxf(3.0, projectile_size * unit)
+			canvas.draw_circle(pos.round(), radius + 1.0, Color("211c2d", trail_color.a))
+			canvas.draw_circle(pos.round(), radius, trail_color)
+			canvas.draw_rect(Rect2(pos.round() - Vector2.ONE, Vector2(2.0, 2.0)), Color("fff3cf", trail_color.a))
 	if boss_banner_time > 0.0:
 		var alpha := minf(1.0, boss_banner_time * 3.5)
 		var width := minf(190.0, canvas.size.x - 100.0)
