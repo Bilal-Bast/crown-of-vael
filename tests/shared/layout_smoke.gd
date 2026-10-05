@@ -14,13 +14,12 @@ func _run() -> void:
 	var battle_area := main.get("battle_area") as Control
 	var nav_buttons: Dictionary = main.get("nav_buttons")
 	var nav := (nav_buttons["Battle"] as Button).get_parent().get_parent() as Control
+	var power_divider := main.get("battle_power_divider") as Control
 	var upgrades: Dictionary = main.get("upgrade_buttons")
 	var upgrade := upgrades["atk"] as Control
-	var lower: VBoxContainer = main.get("battle_lower_content")
-	var upgrade_panel: Control = main.get("upgrade_panel")
 	var upgrade_list: ScrollContainer = main.get("upgrade_list_scroll")
-	if lower.get_child_count() < 3 or lower.get_child(0).get_global_rect().position.y >= upgrade_panel.get_global_rect().position.y or upgrade_panel.get_global_rect().position.y >= lower.get_child(2).get_global_rect().position.y:
-		push_error("Battle lower panel order should be Skills, Upgrades, Hero information.")
+	if battle_area.get_child_count() != 4 or battle_area.get_child(1).name != "BattleSkillPanel" or battle_area.get_child(2) != power_divider or upgrade.get_global_rect().position.y <= power_divider.get_global_rect().position.y:
+		push_error("Battle order should be Battlefield, Skills, Power, scrollable upgrade cards.")
 		quit(1)
 		return
 	if upgrade_list.get_v_scroll_bar().max_value <= upgrade_list.get_v_scroll_bar().page:

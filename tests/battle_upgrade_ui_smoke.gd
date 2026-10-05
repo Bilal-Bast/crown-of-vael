@@ -19,21 +19,35 @@ func _run() -> void:
 	profile.tutorial_state.completed = true
 	profile.tutorial_state.skipped = true
 	profile.gold = 10000
-	var lower: VBoxContainer = main.get("battle_lower_content")
+	var battle_area: VBoxContainer = main.get("battle_area")
 	var upgrades_panel: Control = main.get("upgrade_panel")
 	var upgrade_scroll: ScrollContainer = main.get("upgrade_list_scroll")
 	var upgrade_buttons: Dictionary = main.get("upgrade_buttons")
-	_check(lower.get_child_count() >= 3, "battle lower section contains skills, upgrades, and hero information")
-	_check(lower.get_child(0).get_global_rect().position.y < upgrades_panel.get_global_rect().position.y, "skill bar is above upgrade panel")
-	_check(upgrades_panel.get_global_rect().position.y < lower.get_child(2).get_global_rect().position.y, "hero information is below upgrades")
+	var nav_buttons: Dictionary = main.get("nav_buttons")
+	var skill_bar: SkillBar = main.get("skill_bar")
+	var nav_top_before := (nav_buttons["Battle"] as Control).get_global_rect().position.y
+	_check(battle_area.get_child_count() == 4, "battle area has field, skills, Power divider, and scrolling upgrades")
+	_check(battle_area.get_child(0).name == "BattlefieldHost", "battlefield remains first in Battle layout")
+	_check(battle_area.get_child(1).name == "BattleSkillPanel", "skill strip sits directly below battlefield")
+	_check(battle_area.get_child(2).name == "BattlePowerDivider", "Power divider separates combat from upgrades")
+	_check(upgrades_panel.get_global_rect().position.y > battle_area.get_child(2).get_global_rect().position.y, "upgrade cards follow the Power divider")
+	_check(upgrade_scroll == main.get("battle_lower_scroll"), "upgrade cards use one continuous dedicated vertical scroller")
+	_check(skill_bar.battle == battle, "four-skill row remains connected to the current battle runtime")
 	var order := ["atk", "hp", "armor", "speed", "crit_chance", "crit_damage"]
 	_check(upgrade_buttons.size() == order.size() and upgrade_buttons.has_all(order), "all six Gold-upgradeable stats are listed")
 	await process_frame
-	_check(upgrade_scroll.get_v_scroll_bar().max_value > upgrade_scroll.get_v_scroll_bar().page, "upgrade rows scroll inside their own bounded list")
+	_check(upgrade_scroll.get_v_scroll_bar().max_value > upgrade_scroll.get_v_scroll_bar().page, "upgrade rows scroll while fixed Battle controls remain outside the scroller")
+	for stat in order:
+		_check(upgrade_buttons[stat].get_parent().get_parent().name == "UpgradeCard_%s" % stat, "%s has an individual RPG card" % stat)
+		_check(main.get("_upgrade_stat_icon").call(stat) != null, "%s uses a production pixel icon" % stat)
 	var scroll_max := int(upgrade_scroll.get_v_scroll_bar().max_value - upgrade_scroll.get_v_scroll_bar().page)
 	upgrade_scroll.scroll_vertical = scroll_max
 	await process_frame
 	_check(upgrade_scroll.scroll_vertical > 0, "upgrade list can scroll to later rows")
+	_check(is_equal_approx((nav_buttons["Battle"] as Control).get_global_rect().position.y, nav_top_before), "bottom navigation stays fixed while upgrades scroll")
+	var run_time_before_scroll := battle.run_time
+	await create_timer(0.35).timeout
+	_check(battle.run_time > run_time_before_scroll and battle.active, "combat and automatic skill runtime continue while the upgrade list scrolls")
 	upgrade_scroll.scroll_vertical = 0
 	for stat in order:
 		var before_gold := profile.gold
@@ -41,18 +55,16 @@ func _run() -> void:
 		var before_value := float(profile.hero_stats()[stat])
 		var expected_cost := GameData.upgrade_cost(before_rank, stat)
 		var button := upgrade_buttons[stat] as Button
-		_check(not button.disabled and button.text.contains("GOLD"), "%s row shows an enabled purchase and cost" % stat)
+		_check(not button.disabled and main.get("upgrade_actions")[stat].text == "ENHANCE", "%s card shows an enabled Enhance action" % stat)
+		_check(main.get("upgrade_costs")[stat].text != "", "%s card shows its Gold price" % stat)
 		button.pressed.emit()
 		await process_frame
 		var after_value := float(profile.hero_stats()[stat])
 		_check(int(profile.upgrades[stat]) == before_rank + 1, "%s purchase increments rank" % stat)
 		_check(profile.gold == before_gold - expected_cost, "%s purchase deducts the correct Gold cost" % stat)
 		_check(after_value > before_value, "%s purchase raises its combat stat" % stat)
-		_check((upgrade_buttons[stat] as Button).text.contains("→"), "%s row shows current and next values" % stat)
-	var hero_info := (main.get("hero_stats_text") as Label).text
-	_check(hero_info.contains("SPEED %.2f/s" % float(profile.hero_stats()["speed"])), "Attack Speed purchase immediately updates hero information")
-	_check(hero_info.contains("CRIT %d%%" % roundi(float(profile.hero_stats()["crit_chance"]) * 100.0)), "Crit Chance purchase immediately updates hero information")
-	_check(hero_info.contains("CRIT DMG %d%%" % roundi(float(profile.hero_stats()["crit_damage"]) * 100.0)), "Crit Damage purchase immediately updates hero information")
+		_check(main.get("upgrade_values")[stat].text != "" and main.get("upgrade_ranks")[stat].text != "", "%s card shows current value and upgrade rank" % stat)
+	_check((main.get("battle_power_value") as Label).text.contains((main.get("power_text") as Label).text), "Power divider immediately reflects Gold upgrades")
 	_check(battle.active, "combat continues while the player uses upgrade controls")
 	var restored := SaveData.load_from(profile.save_path)
 	for stat in order:
@@ -86,7 +98,7 @@ func _run() -> void:
 		_check(not profile.buy_upgrade(stat), "%s refuses purchases above its rank cap" % stat)
 	main.call("_refresh_ui")
 	for stat in ["speed", "crit_chance", "crit_damage"]:
-		_check((upgrade_buttons[stat] as Button).disabled and (upgrade_buttons[stat] as Button).text.contains("MAX RANK"), "%s maximum rank is visible and disabled" % stat)
+		_check((upgrade_buttons[stat] as Button).disabled and main.get("upgrade_actions")[stat].text == "MAX LEVEL", "%s maximum rank is visible and disabled" % stat)
 	main.call("_select_tab", "Heroes")
 	_check((main.get("heroes_area") as Control).visible and not (main.get("battle_area") as Control).visible, "navigation remains available while battle controls are shown")
 	main.queue_free()

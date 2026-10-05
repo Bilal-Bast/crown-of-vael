@@ -4,6 +4,7 @@ extends RefCounted
 static var _cache: Dictionary = {}
 static var _nav_cache: Dictionary = {}
 static var _equipment_rarity_cache: Dictionary = {}
+static var _gold_coin_cache: Texture2D
 
 const EQUIPMENT_RARITY_ATLASES := {
 	"weapon": preload("res://assets/pixel_ui/equipment/rarity_atlas/weapon.png"),
@@ -86,6 +87,37 @@ static func navigation(id: String) -> Texture2D:
 					image.set_pixel(4 + x * 2 + px, 4 + y * 2 + py, accent.darkened(0.4) if x == 0 or x == 11 or y == 0 or y == 11 else accent)
 	var texture := ImageTexture.create_from_image(image)
 	_nav_cache[id] = texture
+	return texture
+
+static func gold_coin() -> Texture2D:
+	if _gold_coin_cache != null:
+		return _gold_coin_cache
+	var image := Image.create(16, 16, false, Image.FORMAT_RGBA8)
+	var transparent := Color(0, 0, 0, 0)
+	var outline := Color("533a22")
+	var shadow := Color("a56b27")
+	var gold := Color("efbd55")
+	var light := Color("ffe99a")
+	for y in 16:
+		for x in 16:
+			var dx := x - 7.5
+			var dy := y - 7.5
+			var distance := dx * dx + dy * dy
+			if distance > 55.0:
+				image.set_pixel(x, y, transparent)
+			elif distance > 40.0:
+				image.set_pixel(x, y, outline)
+			elif x <= 7:
+				image.set_pixel(x, y, light if distance < 30.0 else gold)
+			else:
+				image.set_pixel(x, y, gold if distance < 30.0 else shadow)
+	for x in range(6, 10):
+		image.set_pixel(x, 5, outline)
+		image.set_pixel(x, 10, outline)
+	image.set_pixel(6, 6, outline)
+	image.set_pixel(9, 9, outline)
+	var texture := ImageTexture.create_from_image(image)
+	_gold_coin_cache = texture
 	return texture
 
 static func _load_icon(category: String, id: String) -> Texture2D:

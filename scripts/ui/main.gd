@@ -99,6 +99,13 @@ var message_text: Label
 var tutorial_text: Label
 var action_button: Button
 var upgrade_buttons: Dictionary = {}
+var upgrade_ranks: Dictionary = {}
+var upgrade_values: Dictionary = {}
+var upgrade_costs: Dictionary = {}
+var upgrade_actions: Dictionary = {}
+var upgrade_coins: Dictionary = {}
+var battle_power_divider: PanelContainer
+var battle_power_value: Label
 var nav_buttons: Dictionary = {}
 var menu_drawer: VBoxContainer
 var menu_toggle: Button
@@ -226,7 +233,7 @@ func _build_ui() -> void:
 
 	battle_area = VBoxContainer.new()
 	battle_area.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	battle_area.add_theme_constant_override("separation", 12)
+	battle_area.add_theme_constant_override("separation", 5)
 	root.add_child(battle_area)
 	_build_battle_area()
 
@@ -395,38 +402,55 @@ func _build_stage_card(root: VBoxContainer) -> void:
 	stage_panel = panel
 	root.add_child(panel)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 7)
+	box.add_theme_constant_override("separation", 3)
 	panel.add_child(box)
 	var heading := HBoxContainer.new()
 	box.add_child(heading)
-	stage_text = _label("", 40, PALE)
+	stage_text = _label("", 36, PALE)
 	stage_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	heading.add_child(stage_text)
-	boss_text = _label("", 34, Color("ff9f84"))
+	boss_text = _label("", 30, Color("ff9f84"))
 	heading.add_child(boss_text)
-	region_text = _label(str(CampaignData.REGIONS[0]["name"]), 30, Color("a9d6ad"))
-	box.add_child(region_text)
-	wave_text = _label("", 29, MUTED)
-	box.add_child(wave_text)
+	var context := HBoxContainer.new()
+	context.add_theme_constant_override("separation", 10)
+	box.add_child(context)
+	region_text = _label(str(CampaignData.REGIONS[0]["name"]), 27, Color("a9d6ad"))
+	region_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	context.add_child(region_text)
+	wave_text = _label("", 24, MUTED)
+	context.add_child(wave_text)
 	road_row = HBoxContainer.new()
 	box.add_child(road_row)
-	road_text = _label("", 25, GOLD)
+	road_text = _label("", 22, GOLD)
 	road_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	road_row.add_child(road_text)
-	road_row.add_child(_label("5 E  10 E  15 E  20 BOSS", 23, Color("d8a399")))
+	road_row.add_child(_label("5  •  10  •  15  •  20 BOSS", 19, Color("d8a399")))
 	road_track = HBoxContainer.new()
 	road_track.add_theme_constant_override("separation", 6)
 	box.add_child(road_track)
 	for i in 20:
 		var marker := ColorRect.new()
 		marker.color = Color("52605c")
-		marker.custom_minimum_size.y = 17
+		marker.custom_minimum_size.y = 11
 		marker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		road_track.add_child(marker)
 		stage_markers.append(marker)
+	var status_row := HBoxContainer.new()
+	status_row.add_theme_constant_override("separation", 8)
+	box.add_child(status_row)
+	message_text = _label("", 20, Color("a6dee2"))
+	message_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	status_row.add_child(message_text)
+	action_button = Button.new()
+	action_button.text = "RETRY BOSS"
+	action_button.custom_minimum_size = Vector2(150, 42)
+	action_button.add_theme_font_size_override("font_size", 21)
+	action_button.pressed.connect(_on_action_pressed)
+	status_row.add_child(action_button)
 
 func _build_battle_area() -> void:
 	battlefield_host = Control.new()
+	battlefield_host.name = "BattlefieldHost"
 	battlefield_host.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	battle_area.add_child(battlefield_host)
 	_update_battlefield_height()
@@ -445,6 +469,54 @@ func _build_battle_area() -> void:
 	battlefield.pixel_background_layer = pixel_battle_background
 	battlefield.set_battle(battle)
 	battlefield_host.add_child(battlefield)
+	var skill_panel := _panel()
+	skill_panel.name = "BattleSkillPanel"
+	battle_area.add_child(skill_panel)
+	var skill_box := VBoxContainer.new()
+	skill_box.add_theme_constant_override("separation", 0)
+	skill_panel.add_child(skill_box)
+	var skill_row := HBoxContainer.new()
+	skill_row.add_theme_constant_override("separation", 9)
+	skill_box.add_child(skill_row)
+	var auto_badge := PanelContainer.new()
+	auto_badge.custom_minimum_size = Vector2(100, 96)
+	var auto_style := StyleBoxFlat.new()
+	auto_style.bg_color = Color("172525")
+	auto_style.border_color = Color("7b7159")
+	auto_style.set_border_width_all(2)
+	auto_style.border_width_bottom = 4
+	auto_style.set_corner_radius_all(20)
+	auto_badge.add_theme_stylebox_override("panel", auto_style)
+	skill_row.add_child(auto_badge)
+	var auto_box := VBoxContainer.new()
+	auto_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	auto_badge.add_child(auto_box)
+	var auto_title := _label("AUTO", 26, GOLD)
+	auto_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	auto_box.add_child(auto_title)
+	var auto_state := _label("● ON", 19, Color("a9d6ad"))
+	auto_state.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	auto_box.add_child(auto_state)
+	skill_bar = SkillBarScript.new()
+	skill_bar.custom_minimum_size = Vector2(530, 104)
+	skill_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	skill_bar.battle = battle
+	skill_row.add_child(skill_bar)
+
+	battle_power_divider = PanelContainer.new()
+	battle_power_divider.name = "BattlePowerDivider"
+	battle_area.add_child(battle_power_divider)
+	var power_style := StyleBoxFlat.new()
+	power_style.bg_color = Color("171f2b")
+	power_style.border_color = Color("b18a4f")
+	power_style.border_width_top = 3
+	power_style.border_width_bottom = 3
+	power_style.set_content_margin_all(5)
+	battle_power_divider.add_theme_stylebox_override("panel", power_style)
+	battle_power_divider.custom_minimum_size.y = 48
+	battle_power_value = _label("POWER  0", 36, GOLD)
+	battle_power_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	battle_power_divider.add_child(battle_power_value)
 
 	battle_lower_scroll = ScrollContainer.new()
 	battle_lower_scroll.name = "BattleLowerControlsScroll"
@@ -454,95 +526,102 @@ func _build_battle_area() -> void:
 	battle_area.add_child(battle_lower_scroll)
 	battle_lower_content = VBoxContainer.new()
 	battle_lower_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	battle_lower_content.add_theme_constant_override("separation", 12)
 	battle_lower_scroll.add_child(battle_lower_content)
-
-	var skill_panel := _panel()
-	skill_panel.name = "BattleSkillPanel"
-	battle_lower_content.add_child(skill_panel)
-	var skill_box := VBoxContainer.new()
-	skill_box.add_theme_constant_override("separation", 6)
-	skill_panel.add_child(skill_box)
-	var skill_row := HBoxContainer.new()
-	skill_row.add_theme_constant_override("separation", 17)
-	skill_box.add_child(skill_row)
-	skill_bar = SkillBarScript.new()
-	skill_bar.custom_minimum_size = Vector2(530, 112)
-	skill_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	skill_bar.battle = battle
-	skill_row.add_child(skill_bar)
-	var skill_copy := VBoxContainer.new()
-	skill_row.add_child(skill_copy)
-	skill_copy.add_child(_label("AUTO", 28, GOLD))
-	skill_copy.add_child(_label("4 SLOTS", 23, MUTED))
-	tutorial_text = _label("AUTO COMBAT  |  Enemies drop Gold + EXP. Upgrade below; stages advance on their own.", 24, Color("a9d6ad"))
-	tutorial_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	skill_box.add_child(tutorial_text)
+	upgrade_list_scroll = battle_lower_scroll
 	upgrade_panel = _panel()
 	upgrade_panel.name = "BattleUpgradesPanel"
+	upgrade_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	battle_lower_content.add_child(upgrade_panel)
 	var upgrade_box := VBoxContainer.new()
-	upgrade_box.add_theme_constant_override("separation", 8)
+	upgrade_box.add_theme_constant_override("separation", 6)
 	upgrade_panel.add_child(upgrade_box)
-	upgrade_box.add_child(_label("GOLD UPGRADES", 36, GOLD))
-	upgrade_list_scroll = ScrollContainer.new()
+	var upgrade_heading := HBoxContainer.new()
+	upgrade_box.add_child(upgrade_heading)
+	var heading_label := _label("BATTLE UPGRADES", 30, GOLD)
+	heading_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	upgrade_heading.add_child(heading_label)
+	upgrade_heading.add_child(_label("TAP TO ENHANCE", 18, MUTED))
 	upgrade_list_scroll.name = "BattleUpgradeList"
-	upgrade_list_scroll.custom_minimum_size.y = 300
-	upgrade_list_scroll.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	upgrade_list_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	upgrade_list_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	upgrade_box.add_child(upgrade_list_scroll)
 	var upgrade_rows := VBoxContainer.new()
 	upgrade_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	upgrade_rows.add_theme_constant_override("separation", 7)
-	upgrade_list_scroll.add_child(upgrade_rows)
+	upgrade_box.add_child(upgrade_rows)
 	for stat in GameData.UPGRADEABLE_STATS:
+		var card := PanelContainer.new()
+		card.name = "UpgradeCard_%s" % stat
+		card.custom_minimum_size.y = 150
+		var card_style := StyleBoxFlat.new()
+		card_style.bg_color = Color("25313a")
+		card_style.border_color = Color("817451")
+		card_style.set_border_width_all(2)
+		card_style.border_width_bottom = 4
+		card_style.set_corner_radius_all(7)
+		card_style.set_content_margin_all(7)
+		card.add_theme_stylebox_override("panel", card_style)
+		upgrade_rows.add_child(card)
+		var card_row := HBoxContainer.new()
+		card_row.add_theme_constant_override("separation", 9)
+		card.add_child(card_row)
+		var icon := TextureRect.new()
+		icon.custom_minimum_size = Vector2(84, 84)
+		icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		icon.texture = _upgrade_stat_icon(stat)
+		card_row.add_child(icon)
+		var details := VBoxContainer.new()
+		details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		details.alignment = BoxContainer.ALIGNMENT_CENTER
+		details.add_theme_constant_override("separation", 0)
+		card_row.add_child(details)
+		var name_label := _label(_upgrade_stat_label(stat), 35, PALE)
+		if stat == "crit_chance": name_label.text = "CRIT CHANCE"
+		details.add_child(name_label)
+		var rank_label := _label("LV 0", 27, GOLD)
+		details.add_child(rank_label)
+		var value_label := _label("0", 37, Color("d8dfd4"))
+		details.add_child(value_label)
 		var button := Button.new()
 		button.name = "Upgrade_%s" % stat.capitalize()
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.custom_minimum_size.y = 120
-		button.add_theme_font_size_override("font_size", 34)
+		button.custom_minimum_size = Vector2(270, 124)
 		button.pressed.connect(_buy_upgrade.bind(stat))
-		upgrade_rows.add_child(button)
+		button.add_theme_stylebox_override("normal", _enhance_button_style())
+		button.add_theme_stylebox_override("hover", _enhance_button_style(true))
+		button.add_theme_stylebox_override("pressed", _enhance_button_style(true))
+		button.add_theme_stylebox_override("disabled", _enhance_button_style(false, true))
+		card_row.add_child(button)
+		var button_content := VBoxContainer.new()
+		button_content.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		button_content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		button_content.alignment = BoxContainer.ALIGNMENT_CENTER
+		button_content.add_theme_constant_override("separation", 0)
+		button.add_child(button_content)
+		var action_label := _label("ENHANCE", 31, Color("e8e4d5"))
+		action_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		button_content.add_child(action_label)
+		upgrade_actions[stat] = action_label
+		var price_row := HBoxContainer.new()
+		price_row.alignment = BoxContainer.ALIGNMENT_CENTER
+		price_row.add_theme_constant_override("separation", 2)
+		button_content.add_child(price_row)
+		var coin := TextureRect.new()
+		coin.custom_minimum_size = Vector2(25, 25)
+		coin.texture = PixelUiIcons.gold_coin()
+		coin.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		price_row.add_child(coin)
+		var cost_label := _label("0", 29, GOLD)
+		price_row.add_child(cost_label)
 		upgrade_buttons[stat] = button
-
-	var hero_panel := _panel()
-	hero_panel.name = "BattleHeroInfoPanel"
-	battle_lower_content.add_child(hero_panel)
-	var hero_box := VBoxContainer.new()
-	hero_box.add_theme_constant_override("separation", 5)
-	hero_panel.add_child(hero_box)
-	var hero_heading := HBoxContainer.new()
-	hero_box.add_child(hero_heading)
-	battle_hero_portrait = HeroPortraitScript.new()
-	battle_hero_portrait.custom_minimum_size = Vector2(58, 70)
-	hero_heading.add_child(battle_hero_portrait)
-	hero_level_text = _label("", 31, PALE)
-	hero_level_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hero_heading.add_child(hero_level_text)
-	hero_hp_text = _label("", 29, Color("9ee5aa"))
-	hero_heading.add_child(hero_hp_text)
-	hero_stats_text = _label("", 27, MUTED)
-	hero_box.add_child(hero_stats_text)
-	exp_bar = ProgressBar.new()
-	exp_bar.custom_minimum_size.y = 13
-	exp_bar.show_percentage = false
-	hero_box.add_child(exp_bar)
-	message_text = _label("", 25, Color("a6dee2"))
-	message_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	hero_box.add_child(message_text)
-	action_button = Button.new()
-	action_button.text = "RETRY BOSS"
-	action_button.custom_minimum_size.y = 66
-	action_button.add_theme_font_size_override("font_size", 30)
-	action_button.pressed.connect(_on_action_pressed)
-	hero_box.add_child(action_button)
+		upgrade_ranks[stat] = rank_label
+		upgrade_values[stat] = value_label
+		upgrade_costs[stat] = cost_label
+		upgrade_coins[stat] = coin
 
 func _update_battlefield_height() -> void:
 	if battlefield_host == null:
 		return
 	var viewport_height := get_viewport_rect().size.y
-	battlefield_host.custom_minimum_size.y = maxf(1.0, viewport_height * 0.30)
+	battlefield_host.custom_minimum_size.y = maxf(1.0, viewport_height * 0.33)
 
 func _build_navigation(root: VBoxContainer) -> void:
 	var panel := _panel()
@@ -966,36 +1045,28 @@ func _refresh_ui() -> void:
 	boss_text.text = "00:%02d" % ceili(battle.boss_time)
 	boss_text.add_theme_color_override("font_color", Color("ff786c") if battle.boss_time <= 10.0 else Color("ffb38d"))
 	boss_text.add_theme_font_size_override("font_size", 39 if battle.boss_time <= 10.0 else 34)
-	var hp := battle.hero_hp if battle.active else float(stats["hp"])
-	var hero_id := profile.selected_hero_id
-	var hero_record: Dictionary = profile.heroes[hero_id]
-	if battle_hero_portrait != null:
-		battle_hero_portrait.hero_id = hero_id
-		battle_hero_portrait.evolution = int(hero_record.get("evolution", 0))
-		battle_hero_portrait.profile_frame = str(profile.equipped_cosmetics.get("Profile Frame", ""))
-		battle_hero_portrait.queue_redraw()
-	var rarity := int(HeroData.HEROES[hero_id]["rarity"])
-	hero_level_text.text = "◆ %s  |  LV %d" % [HeroData.title(hero_id, hero_record).to_upper(), profile.level]
-	hero_level_text.add_theme_color_override("font_color", EquipmentData.COLORS[rarity])
-	hero_hp_text.text = "HP %s/%s" % [NumberFormatScript.compact(ceili(hp)), NumberFormatScript.compact(ceili(float(stats["hp"])))]
-	hero_stats_text.text = "%s  •  %s  |  ATK %d    ARMOR %d    SPEED %.2f/s\nCRIT %d%%    CRIT DMG %d%%" % [EquipmentData.RARITIES[rarity].to_upper(), HeroData.element(hero_id, hero_record).to_upper(), roundi(float(stats["atk"])), roundi(float(stats["armor"])), float(stats["speed"]), roundi(float(stats["crit_chance"]) * 100), roundi(float(stats["crit_damage"]) * 100)]
-	exp_bar.max_value = GameData.exp_to_next(profile.level)
-	exp_bar.value = profile.exp
+	if battle_power_value != null:
+		battle_power_value.text = "POWER  %s" % NumberFormatScript.compact(profile.power())
 	if heroes_exp_text != null:
 		heroes_exp_text.text = "HERO EXP  %d / %d" % [profile.exp, GameData.exp_to_next(profile.level)]
 		heroes_exp_bar.max_value = GameData.exp_to_next(profile.level)
 		heroes_exp_bar.value = profile.exp
 		heroes_level_text.text = "LEVEL %d    POWER %d" % [profile.level, profile.power()]
 	action_button.visible = campaign and profile.stage == 20 and profile.boss_retry_required and not battle.active and not profile.campaign_complete
-	tutorial_text.visible = campaign and profile.region == 1 and profile.stage == 1 and not profile.campaign_complete
 	for stat in upgrade_buttons:
 		var rank := int(profile.upgrades.get(stat, 0))
 		var max_rank := GameData.upgrade_max_rank(stat)
 		var at_max_rank := rank >= max_rank
 		var cost := GameData.upgrade_cost(rank, stat)
 		var button: Button = upgrade_buttons[stat]
-		button.text = _upgrade_button_text(stat, stats, cost, rank >= max_rank)
+		upgrade_ranks[stat].text = "LV %d" % rank
+		upgrade_values[stat].text = _format_upgrade_stat(stat, float(stats.get(stat, 0.0)))
+		upgrade_costs[stat].text = "MAX" if at_max_rank else NumberFormatScript.compact(cost)
+		upgrade_coins[stat].visible = not at_max_rank
+		upgrade_actions[stat].text = "MAX LEVEL" if at_max_rank else "ENHANCE"
 		button.disabled = profile.gold < cost or at_max_rank
+		upgrade_actions[stat].add_theme_color_override("font_color", Color("99a39c") if button.disabled else Color("e8e4d5"))
+		upgrade_costs[stat].add_theme_color_override("font_color", Color("99a39c") if button.disabled else GOLD)
 	_maybe_show_upgrade_prompt()
 	skill_bar.queue_redraw()
 	battlefield.queue_redraw()
@@ -1007,17 +1078,26 @@ func _living_enemies() -> int:
 			count += 1
 	return count
 
-func _upgrade_button_text(stat: String, current_stats: Dictionary, cost: int, max_rank: bool = false) -> String:
-	if max_rank:
-		return "%s  •  MAX RANK" % _upgrade_stat_label(stat)
-	var next_upgrades: Dictionary = profile.upgrades.duplicate(true)
-	next_upgrades[stat] = int(next_upgrades.get(stat, 0)) + 1
-	var next_stats := HeroData.apply_stats(GameData.hero_stats(profile.level, next_upgrades, profile.combat_bonuses()), profile)
-	var combat_stat := "speed" if stat == "speed" else stat
-	var current_value := float(current_stats.get(combat_stat, 0.0))
-	var next_value := float(next_stats.get(combat_stat, current_value))
-	var increase := next_value - current_value
-	return "%s  %s  →  %s\n+%s  •  %s GOLD" % [_upgrade_stat_label(stat), _format_upgrade_stat(stat, current_value), _format_upgrade_stat(stat, next_value), _format_upgrade_increase(stat, increase), NumberFormatScript.compact(cost)]
+func _upgrade_stat_icon(stat: String) -> Texture2D:
+	match stat:
+		"atk": return PixelUiIcons.equipment("Weapon", 2)
+		"hp": return PixelUiIcons.artifact("dragon_heart")
+		"armor": return PixelUiIcons.equipment("Armor", 2)
+		"speed": return PixelUiIcons.skill("quick_slash")
+		"crit_chance": return PixelUiIcons.skill("piercing_strike")
+		"crit_damage": return PixelUiIcons.skill("power_strike")
+	return null
+
+func _enhance_button_style(highlighted := false, disabled := false) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("263d37") if not disabled else Color("252e31")
+	if highlighted and not disabled: style.bg_color = Color("36554a")
+	style.border_color = Color("a89057") if not disabled else Color("59605a")
+	style.set_border_width_all(2)
+	style.border_width_bottom = 5
+	style.set_corner_radius_all(6)
+	style.set_content_margin_all(5)
+	return style
 
 func _upgrade_stat_label(stat: String) -> String:
 	return str({"atk": "ATK", "hp": "HP", "armor": "ARMOR", "speed": "ATTACK SPEED", "crit_chance": "CRIT CHANCE", "crit_damage": "CRIT DAMAGE"}.get(stat, stat.to_upper()))
@@ -1042,7 +1122,10 @@ func _format_upgrade_increase(stat: String, value: float) -> String:
 
 func _show_message(value: String) -> void:
 	if message_text != null:
-		message_text.text = value
+		if value.contains(" | Wave "):
+			message_text.text = ""
+		else:
+			message_text.text = value
 
 func _select_tab(tab_name: String) -> void:
 	selected_tab = tab_name

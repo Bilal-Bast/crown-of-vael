@@ -33,6 +33,13 @@ func _run() -> void:
 	profile.exp = 0
 	profile.upgrades = {"atk": 0, "hp": 0, "armor": 0, "speed": 0, "crit_chance": 0, "crit_damage": 0}
 	profile.gold = 5000
+	profile.skills = {
+		"shield_bash": {"level": 1, "duplicates": 0, "rarity": 0},
+		"whirlwind_slash": {"level": 1, "duplicates": 0, "rarity": 2},
+		"iron_guard": {"level": 1, "duplicates": 0, "rarity": 1},
+		"healing_light": {"level": 1, "duplicates": 0, "rarity": 2},
+	}
+	profile.equipped_skill_slots = ["shield_bash", "whirlwind_slash", "iron_guard", "healing_light"]
 	upgrade_list = main.get("upgrade_list_scroll") as ScrollContainer
 	lower_scroll = main.get("battle_lower_scroll") as ScrollContainer
 	for popup in ["tutorial_popup", "offline_popup", "login_popup"]:
@@ -41,19 +48,16 @@ func _run() -> void:
 			node.hide()
 	main.call("_refresh_ui")
 	(main.get("battle") as BattleController).refresh_hero_stats()
+	(main.get("battle") as BattleController).skill_runtime.start(profile)
 	await _capture("battle_skills_above_upgrades_360x640", SMALL)
 	lower_scroll.scroll_vertical = 0
 	upgrade_list.scroll_vertical = 0
 	await _capture("battle_upgrade_list_top_360x640", SMALL)
 	var scroll_range := maxi(0, roundi(upgrade_list.get_v_scroll_bar().max_value - upgrade_list.get_v_scroll_bar().page))
-	upgrade_list.scroll_vertical = scroll_range / 2
-	await _capture("battle_upgrade_list_middle_360x640", SMALL)
-	upgrade_list.scroll_vertical = mini(scroll_range, 3 * 127)
-	await _capture("battle_attack_speed_row_360x640", SMALL)
-	upgrade_list.scroll_vertical = mini(scroll_range, 4 * 127)
-	await _capture("battle_crit_chance_row_360x640", SMALL)
-	upgrade_list.scroll_vertical = mini(scroll_range, 5 * 127)
-	await _capture("battle_crit_damage_row_360x640", SMALL)
+	upgrade_list.scroll_vertical = roundi(scroll_range * 0.35)
+	await _capture("battle_armor_attack_speed_cards_360x640", SMALL)
+	upgrade_list.scroll_vertical = roundi(scroll_range * 0.92)
+	await _capture("battle_crit_chance_crit_damage_cards_360x640", SMALL)
 	upgrade_list.scroll_vertical = scroll_range
 	await _capture("battle_upgrade_list_bottom_360x640", SMALL)
 	profile.gold = 0
@@ -68,7 +72,16 @@ func _run() -> void:
 	profile.upgrades["crit_damage"] = 50
 	main.call("_refresh_ui")
 	lower_scroll.scroll_vertical = roundi(lower_scroll.get_v_scroll_bar().max_value - lower_scroll.get_v_scroll_bar().page)
-	await _capture("battle_upgraded_hero_info_360x640", SMALL)
+	await _capture("battle_upgraded_stat_card_360x640", SMALL)
+	for stat in ["speed", "crit_chance", "crit_damage"]:
+		profile.upgrades[stat] = GameData.PREMIUM_UPGRADE_MAX_RANK
+	main.call("_refresh_ui")
+	lower_scroll.scroll_vertical = roundi(lower_scroll.get_v_scroll_bar().max_value - lower_scroll.get_v_scroll_bar().page)
+	await _capture("battle_upgrade_max_level_360x640", SMALL)
+	for stat in ["speed", "crit_chance", "crit_damage"]:
+		profile.upgrades[stat] = 0
+	main.call("_refresh_ui")
+	main.call("_show_message", "")
 	lower_scroll.scroll_vertical = 0
 	DisplayServer.window_set_size(LARGE)
 	for _i in 3:
