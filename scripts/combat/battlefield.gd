@@ -358,6 +358,7 @@ func _draw() -> void:
 	if battle != null:
 		for i in battle.enemies.size():
 			var enemy: Dictionary = battle.enemies[i]
+			var enemy_unit := _enemy_presentation_unit(unit)
 			if float(enemy["current_hp"]) <= 0.0:
 				var death_found := false
 				for death in deaths:
@@ -367,11 +368,11 @@ func _draw() -> void:
 						if PixelBattleArt.enemy_sheet(str(enemy.get("visual", enemy.get("kind", "")))) != null and PixelBattleArt.is_active(battle):
 							var enemy_kind := str(enemy.get("visual", enemy.get("kind", "")))
 							if enemy_kind in ["Goblin Warlord", "Ancient Treant", "Infernal Ogre", "Corrupted King", "Lord of Shadows", "Ancient Dragon", "Demon Lord"] and PixelBattleArt.animation_sheet(enemy_kind, "death") != null:
-								_update_pixel_enemy_sprite(i, _enemy_position(i) + shake, enemy, "death", unit)
+								_update_pixel_enemy_sprite(i, _enemy_position(i) + shake, enemy, "death", enemy_unit)
 							else:
-								_update_pixel_enemy_sprite(i, _enemy_position(i) + shake, enemy, "idle", unit, 1.0 - death_ratio, 1.0 - death_ratio * 0.45)
+								_update_pixel_enemy_sprite(i, _enemy_position(i) + shake, enemy, "idle", enemy_unit, 1.0 - death_ratio)
 						else:
-							_draw_defeated_enemy(_enemy_position(i) + shake, enemy, unit, death_ratio)
+							_draw_defeated_enemy(_enemy_position(i) + shake, enemy, enemy_unit, death_ratio)
 						break
 				if not death_found:
 					_sync_pixel_enemy_visibility(i, false)
@@ -384,8 +385,6 @@ func _draw() -> void:
 			if hit_time > 0.0:
 				var hit_duration := float(EnemyArtService.metadata(str(enemy.get("visual", enemy["kind"]))).get("hit_duration", 0.22))
 				pos.x += sin((1.0 - hit_time / hit_duration) * PI) * 16.0 * unit
-			var crowd_scale := 0.40 if PixelBattleArt.is_active(battle) and battle.region == 9 else (0.52 if PixelBattleArt.is_active(battle) and battle.region == 10 else 0.64)
-			var enemy_unit := unit * (crowd_scale if battle.enemies.size() > 3 and battle.stage != 20 else 1.0)
 			_draw_enemy(pos, enemy, enemy_unit, float(flashes.get(i, 0.0)) > 0.0, i)
 			_update_pixel_enemy_sprite(i, pos, enemy, enemy_visual_state(i), enemy_unit)
 		for i in range(battle.enemies.size(), pixel_enemy_sprites.size()):
@@ -685,7 +684,17 @@ func _update_pixel_hero_sprite(pos: Vector2, unit: float, allow_visible: bool = 
 	pixel_hero_sprite.modulate = Color.WHITE
 	pixel_hero_sprite.visible = true
 
-func _update_pixel_enemy_sprite(index: int, pos: Vector2, enemy: Dictionary, state: String, unit: float, opacity: float = 1.0, shrink: float = 1.0) -> void:
+func _enemy_presentation_unit(unit: float) -> float:
+	if battle == null or battle.stage == 20 or battle.enemies.size() <= 3:
+		return unit
+	var crowd_scale := 0.64
+	if PixelBattleArt.is_active(battle) and battle.region == 9:
+		crowd_scale = 0.40
+	elif PixelBattleArt.is_active(battle) and battle.region == 10:
+		crowd_scale = 0.52
+	return unit * crowd_scale
+
+func _update_pixel_enemy_sprite(index: int, pos: Vector2, enemy: Dictionary, state: String, unit: float, opacity: float = 1.0) -> void:
 	var kind := str(enemy.get("visual", enemy.get("kind", "")))
 	var sheet: Texture2D = PixelBattleArt.enemy_sheet(kind) if PixelBattleArt.is_active(battle) else null
 	if sheet == null:
@@ -704,7 +713,7 @@ func _update_pixel_enemy_sprite(index: int, pos: Vector2, enemy: Dictionary, sta
 	var enemy_id := kind
 	var boss_scale := 1.65 if str(enemy.get("archetype", "")) == "BOSS" else 1.0
 	var elite_scale := 1.2 if str(enemy.get("archetype", "")) == "ELITE" else 1.0
-	var actor_scale := unit * boss_scale * elite_scale * shrink
+	var actor_scale := unit * boss_scale * elite_scale
 	var body: Dictionary = PixelBattleArt.BODY_PLACEMENT.get(kind, {})
 	if state == "entry":
 		var frame_count := PixelBattleArt.enemy_entry_frame_count(kind)
@@ -919,19 +928,25 @@ func _draw_defeated_enemy(pos: Vector2, enemy: Dictionary, unit: float, ratio: f
 	var kind := str(enemy.get("visual", enemy.get("kind", "")))
 	var pixel_sheet: Texture2D = PixelBattleArt.enemy_sheet(kind) if PixelBattleArt.is_active(battle) else null
 	if pixel_sheet != null:
-		var pixel_height := 300.0 * (1.0 - ratio * 0.45)
-		var fallen_scale := unit * (1.0 - ratio * 0.45)
-		draw_set_transform(pos - Vector2(0.0, 24.0 * fallen_scale), 0.0, Vector2.ONE * fallen_scale)
-		draw_texture_rect_region(pixel_sheet, Rect2(Vector2(-pixel_height * 0.5, 24.0 - pixel_height), Vector2(pixel_height, pixel_height)), PixelBattleArt.frame_region(pixel_sheet, "idle"), Color(1, 1, 1, 1.0 - ratio))
+		draw_set_transform(pos - Vector2(0.0, 24.0 * unit), 0.0, Vector2.ONE * unit)
+		draw_texture_rect_region(pixel_sheet, Rect2(Vector2(-150.0, -276.0), Vector2(300.0, 300.0)), PixelBattleArt.frame_region(pixel_sheet, "idle"), Color(1, 1, 1, 1.0 - ratio))
 		draw_set_transform(Vector2.ZERO)
 		return
 	var texture := EnemyArtService.presentation_texture_for(kind, "idle", int(enemy.get("region", battle.region)))
 	if texture == null:
 		return
 	var meta := EnemyArtService.metadata(kind)
-	var actor_scale := unit * float(meta.get("scale", 0.82)) * (1.65 if str(enemy.get("archetype", "")) == "BOSS" else 1.0) * (1.0 - ratio * 0.45)
-	var height := 240.0 * float(meta.get("scale", 0.82)) * (1.0 - ratio * 0.45)
+	var boss := str(enemy.get("archetype", "")) == "BOSS" or kind == "Goblin Warlord"
+	var elite_scale := 1.2 if str(enemy.get("archetype", "")) == "ELITE" else 1.0
+	var boss_scale := (1.35 if PixelBattleArt.is_active(battle) else 1.65) if boss else 1.0
+	var actor_scale := unit * elite_scale * boss_scale
+	var height := 240.0 * float(meta.get("scale", 0.82))
 	var width := height * float(texture.get_width()) / float(texture.get_height())
+	var width_cap := 500.0 if boss else (320.0 if elite_scale > 1.0 else 280.0)
+	if width > width_cap:
+		var cap_scale := width_cap / width
+		width *= cap_scale
+		height *= cap_scale
 	var flip_scale := -actor_scale if bool(meta.get("flip_h", false)) else actor_scale
 	draw_set_transform(pos, 0.0, Vector2(flip_scale, actor_scale))
 	draw_texture_rect(texture, Rect2(Vector2(-width * 0.5, 24.0 - height), Vector2(width, height)), false, Color(1, 1, 1, 1.0 - ratio))

@@ -95,6 +95,41 @@ func _run() -> void:
  for index in battle.enemies.size():
   field._update_pixel_enemy_sprite(index, field._enemy_position(index), battle.enemies[index], field.enemy_visual_state(index), 0.32)
  _check(field.pixel_enemy_sprites.size()>=3, "each active enemy owns an independent sprite node")
+
+ battle.region=1
+ battle.stage=1
+ _check(is_equal_approx(field._enemy_presentation_unit(0.32),0.32*0.64), "crowded normal wave presentation scale is shared with death rendering")
+ field._update_pixel_enemy_sprite(0,field._enemy_position(0),battle.enemies[0],"idle",field._enemy_presentation_unit(0.32))
+ var live_scale: Vector2=field.pixel_enemy_sprites[0].scale
+ var live_position: Vector2=field.pixel_enemy_sprites[0].position
+ field.deaths=[{"pos":field._enemy_position(0),"index":0,"age":0.2,"life":0.62}]
+ field._update_pixel_enemy_sprite(0,field._enemy_position(0),battle.enemies[0],"idle",field._enemy_presentation_unit(0.32),0.7)
+ _check(field.pixel_enemy_sprites[0].scale.is_equal_approx(live_scale), "normal enemy retains exact actor scale throughout death fade")
+ _check(field.pixel_enemy_sprites[0].position.is_equal_approx(live_position), "normal enemy retains contact-point position throughout death fade")
+ battle.region=9
+ _check(is_equal_approx(field._enemy_presentation_unit(0.32),0.32*0.40), "Dragon Peaks crowd scale is retained during death")
+ battle.region=10
+ _check(is_equal_approx(field._enemy_presentation_unit(0.32),0.32*0.52), "Demon Realm crowd scale is retained during death")
+ battle.stage=20
+ _check(is_equal_approx(field._enemy_presentation_unit(0.32),0.32), "boss stage keeps configured base scale")
+ var warlord: Dictionary=CampaignData.enemy_stats("Goblin Warlord",0,1,20,1)
+ warlord["current_hp"]=0.0
+ field.deaths=[{"pos":field._enemy_position(0),"index":0,"age":0.2,"life":0.62}]
+ field._update_pixel_enemy_sprite(0,field._enemy_position(0),warlord,"idle",field._enemy_presentation_unit(0.32))
+ var boss_live_scale: Vector2=field.pixel_enemy_sprites[0].scale
+ field._update_pixel_enemy_sprite(0,field._enemy_position(0),warlord,"death",field._enemy_presentation_unit(0.32))
+ _check(field.pixel_enemy_sprites[0].scale.is_equal_approx(boss_live_scale), "Goblin Warlord authored death frames retain configured boss scale")
+ _check(field._enemy_presentation_unit(0.32)==0.32, "boss scale is not reduced by normal-wave crowd sizing")
+ for boss_sample in [{"region":2,"kind":"Ancient Treant"},{"region":9,"kind":"Ancient Dragon"},{"region":10,"kind":"Demon Lord"}]:
+  battle.region=int(boss_sample.region)
+  battle.stage=20
+  var boss_enemy: Dictionary=CampaignData.enemy_stats(str(boss_sample.kind),0,int(boss_sample.region),20,1)
+  boss_enemy["current_hp"]=0.0
+  _check(PixelBattleArt.animation_sheet(str(boss_sample.kind),"death")!=null, "%s death animation is available" % boss_sample.kind)
+  field._update_pixel_enemy_sprite(0,field._enemy_position(0),boss_enemy,"idle",0.32)
+  var configured_boss_scale: Vector2=field.pixel_enemy_sprites[0].scale
+  field._update_pixel_enemy_sprite(0,field._enemy_position(0),boss_enemy,"death",0.32)
+  _check(field.pixel_enemy_sprites[0].scale.is_equal_approx(configured_boss_scale), "%s retains boss scale during death" % boss_sample.kind)
  battle.active=false
  field.queue_free()
  battle.queue_free()
