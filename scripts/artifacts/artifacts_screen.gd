@@ -41,6 +41,10 @@ func refresh() -> void:
 		if index == 2 and profile.artifact_slot_limit() < 3:
 			short_name = "FLOOR 20"
 		var button := _button("%d\n%s" % [index + 1, short_name])
+		if id != "":
+			button.icon = PixelUiIcons.artifact(id)
+			button.expand_icon = true
+			button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		button.custom_minimum_size.y = 107
 		button.disabled = index >= profile.artifact_slot_limit()
 		button.pressed.connect(_slot_pressed.bind(index))
@@ -69,7 +73,16 @@ func refresh() -> void:
 		add_child(panel)
 		var box := VBoxContainer.new()
 		panel.add_child(box)
-		box.add_child(_label("%s  %s  •  %s" % [data["icon"], data["name"], EquipmentData.RARITIES[rarity] if owned else "LOCKED"], 31, EquipmentData.COLORS[rarity] if owned else Color("aebdb4")))
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 12)
+		box.add_child(row)
+		var item_texture := TextureRect.new()
+		item_texture.custom_minimum_size = Vector2(72, 72)
+		item_texture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		item_texture.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		item_texture.texture = PixelUiIcons.artifact(id)
+		row.add_child(item_texture)
+		row.add_child(_label("%s  |  %s" % [data["name"], EquipmentData.RARITIES[rarity] if owned else "LOCKED"], 31, EquipmentData.COLORS[rarity] if owned else Color("aebdb4")))
 		if owned:
 			box.add_child(_label("Level %d  •  Duplicates %d  •  %s" % [record["level"], record["duplicates"], "DRAGON RELICS" if data.has("set") else "NO SET"], 27, Color("e9e8d7")))
 			box.add_child(_label("OWNED: %s  •  EQUIPPED: %s" % [ArtifactData.owned_text(id, record), data["effect_text"]], 27, Color("a9d6ad")))
@@ -88,6 +101,12 @@ func _build_detail() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 7)
 	panel.add_child(box)
+	var relic_icon := TextureRect.new()
+	relic_icon.custom_minimum_size = Vector2(96, 96)
+	relic_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	relic_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	relic_icon.texture = PixelUiIcons.artifact(selected_id)
+	box.add_child(relic_icon)
 	box.add_child(_label("SELECTED: %s" % data["name"], 32, Color("e9c87d")))
 	box.add_child(_label("OWNED BONUS  •  %s" % ArtifactData.owned_text(selected_id, record), 28, Color("a9d6ad")))
 	box.add_child(_label("EQUIPPED EFFECT  •  %s  (power %.2f)" % [data["effect_text"], ArtifactData.effect_value(selected_id, record)], 28, Color("e9e8d7")))
