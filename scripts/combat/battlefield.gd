@@ -3,6 +3,10 @@ extends Control
 
 const SKY := Color("b9d5c5")
 const GROUND := Color("738e65")
+## Shared contact line for the foreground battle lane across campaign backdrops.
+const GROUND_LINE_RATIO := 0.78
+## Pixel animation frames are packed into a 256px cell with 16px transparent padding.
+const PIXEL_FRAME_GROUND_Y := 240.0
 const PixelBattleImpactScript = preload("res://scripts/combat/pixel_battle_impact.gd")
 var vfx := CombatVfxService.new()
 
@@ -383,7 +387,8 @@ func _draw_companions(unit: float) -> void:
 			continue
 		var record: Dictionary = battle.profile.companions[id]
 		var data: Dictionary = CompanionData.COMPANIONS[id]
-		var pos := Vector2(size.x * (0.09 + slot * 0.105), size.y * (0.66 if slot % 2 == 0 else 0.76))
+		var visual := str(data["visual"])
+		var pos := _companion_anchor_position(slot, visual, unit)
 		var lunge := float(companion_lunges.get(slot, 0.0))
 		if lunge > 0.0:
 			pos.x += sin((1.0 - lunge / 0.24) * PI) * 42.0 * unit
@@ -394,7 +399,7 @@ func _draw_companions(unit: float) -> void:
 				2: color = Color("725189")
 				3: color = Color("9ce9e8")
 		draw_set_transform(pos, 0.0, Vector2.ONE * unit * 1.20)
-		match str(data["visual"]):
+		match visual:
 			"fairy":
 				draw_circle(Vector2(-19, -38), 27, Color(color, 0.55))
 				draw_circle(Vector2(19, -38), 27, Color(color, 0.55))
@@ -504,39 +509,51 @@ func _draw_region_landscape(w: float, h: float) -> void:
 func _hero_position() -> Vector2:
 	var run_progress := 1.0 - hero_run_time / hero_run_duration if hero_run_time > 0.0 else 0.0
 	var hero_x := lerpf(0.24, 0.78, run_progress) if hero_run_time > 0.0 else 0.24
-	var run_bob := sin(float(Time.get_ticks_msec()) * 0.025) * 4.0 * run_progress if hero_run_time > 0.0 else 0.0
-	return Vector2(size.x * hero_x, size.y * 0.72 + run_bob)
+	return Vector2(size.x * hero_x, _ground_line_y())
+
+func _ground_line_y() -> float:
+	return size.y * GROUND_LINE_RATIO
+
+func _companion_anchor_position(slot: int, visual: String, unit: float) -> Vector2:
+	var local_contact_y := -6.0 if visual == "humanoid" else (-5.0 if visual == "beast" else -11.0)
+	var hover_height := 0.0 if visual in ["humanoid", "beast"] else 20.0
+	var scale_factor := unit * 1.20
+	return Vector2(size.x * (0.09 + slot * 0.105), _ground_line_y() - local_contact_y * scale_factor - hover_height * scale_factor)
+
+func _enemy_lane_ground_y(index: int, foreground: bool) -> float:
+	# Two shallow perspective rows keep crowded waves legible while sharing one ground plane.
+	return _ground_line_y() + size.y * (0.035 if foreground else -0.035)
 
 func _enemy_position(index: int) -> Vector2:
 	if PixelBattleArt.is_active(battle) and battle.region == 9 and battle.enemies.size() > 3:
-		var dragon_positions := [Vector2(0.40, 0.52), Vector2(0.57, 0.52), Vector2(0.74, 0.52), Vector2(0.91, 0.52), Vector2(0.42, 0.75), Vector2(0.63, 0.75), Vector2(0.84, 0.75)]
+		var dragon_positions := [Vector2(0.40, 0.0), Vector2(0.57, 0.0), Vector2(0.74, 0.0), Vector2(0.91, 0.0), Vector2(0.42, 1.0), Vector2(0.63, 1.0), Vector2(0.84, 1.0)]
 		var dragon_target: Vector2 = dragon_positions[index % dragon_positions.size()]
-		var position := Vector2(size.x * dragon_target.x, size.y * dragon_target.y)
+		var position := Vector2(size.x * dragon_target.x, _enemy_lane_ground_y(index, dragon_target.y > 0.5))
 		if index < battle.enemies.size() and bool(battle.enemies[index].get("spawned", false)):
 			var entry_progress := 1.0 - clampf(float(battle.enemies[index].get("entry_time", 0.0)) / GameData.ENEMY_ENTRY_DURATION, 0.0, 1.0)
 			position.x = lerpf(size.x * 1.14, position.x, entry_progress)
 		return position
 	if PixelBattleArt.is_active(battle) and battle.region == 10 and battle.enemies.size() > 3:
-		var demon_positions := [Vector2(0.40, 0.39), Vector2(0.56, 0.39), Vector2(0.72, 0.39), Vector2(0.88, 0.39), Vector2(0.40, 0.68), Vector2(0.60, 0.68), Vector2(0.80, 0.68)]
+		var demon_positions := [Vector2(0.40, 0.0), Vector2(0.56, 0.0), Vector2(0.72, 0.0), Vector2(0.88, 0.0), Vector2(0.40, 1.0), Vector2(0.60, 1.0), Vector2(0.80, 1.0)]
 		var demon_target: Vector2 = demon_positions[index % demon_positions.size()]
-		var demon_position := Vector2(size.x * demon_target.x, size.y * demon_target.y)
+		var demon_position := Vector2(size.x * demon_target.x, _enemy_lane_ground_y(index, demon_target.y > 0.5))
 		if index < battle.enemies.size() and bool(battle.enemies[index].get("spawned", false)):
 			var demon_entry_progress := 1.0 - clampf(float(battle.enemies[index].get("entry_time", 0.0)) / GameData.ENEMY_ENTRY_DURATION, 0.0, 1.0)
 			demon_position.x = lerpf(size.x * 1.14, demon_position.x, demon_entry_progress)
 		return demon_position
+	if battle != null and (str(battle.mode_config.get("mode", "campaign")) == "boss_rush" or str(battle.mode_config.get("mode", "campaign")) == "campaign" and battle.stage == 20):
+		return Vector2(size.x * 0.75, _ground_line_y())
 	if PixelBattleArt.is_active(battle) and battle.enemies.size() <= 3:
 		var x_positions := [0.70] if battle.enemies.size() == 1 else ([0.62, 0.84] if battle.enemies.size() == 2 else [0.52, 0.73, 0.92])
-		var target_y := 0.63 if PixelBattleArt.is_active(battle) and battle.region == 10 else 0.73
-		var target := Vector2(size.x * float(x_positions[index]), size.y * target_y)
+		var target := Vector2(size.x * float(x_positions[index]), _ground_line_y())
 		if index < battle.enemies.size() and PixelBattleArt.enemy_entry_frame(str(battle.enemies[index].get("visual", battle.enemies[index].get("kind", ""))), 0) != null:
 			if bool(battle.enemies[index].get("spawned", false)) and float(battle.enemies[index].get("entry_time", 0.0)) > 0.0:
 				var entry_progress := 1.0 - clampf(float(battle.enemies[index]["entry_time"]) / GameData.ENEMY_ENTRY_DURATION, 0.0, 1.0)
 				target.x = lerpf(size.x * 1.14, target.x, entry_progress)
 		return target
-	if battle != null and (str(battle.mode_config.get("mode", "campaign")) == "boss_rush" or str(battle.mode_config.get("mode", "campaign")) == "campaign" and battle.stage == 20):
-		return Vector2(size.x * 0.75, size.y * (0.92 if PixelBattleArt.is_active(battle) else 0.71))
-	var positions := [Vector2(0.42, 0.52), Vector2(0.58, 0.52), Vector2(0.74, 0.52), Vector2(0.90, 0.52), Vector2(0.50, 0.91), Vector2(0.68, 0.91), Vector2(0.86, 0.91)]
-	var target := Vector2(size.x * positions[index % positions.size()].x, size.y * positions[index % positions.size()].y)
+	var positions := [Vector2(0.42, 0.0), Vector2(0.58, 0.0), Vector2(0.74, 0.0), Vector2(0.90, 0.0), Vector2(0.50, 1.0), Vector2(0.68, 1.0), Vector2(0.86, 1.0)]
+	var lane: Vector2 = positions[index % positions.size()]
+	var target := Vector2(size.x * lane.x, _enemy_lane_ground_y(index, lane.y > 0.5))
 	if battle != null and index < battle.enemies.size() and bool(battle.enemies[index].get("spawned", false)):
 		var entry_progress := 1.0 - clampf(float(battle.enemies[index].get("entry_time", 0.0)) / GameData.ENEMY_ENTRY_DURATION, 0.0, 1.0)
 		target.x = lerpf(size.x * 1.14, target.x, entry_progress)
@@ -549,7 +566,9 @@ func _draw_hero(pos: Vector2, unit: float, flash: bool) -> void:
 	var metadata := HeroArtService.metadata(form)
 	if hero_visual_state == "idle":
 		pos.y += sin(float(Time.get_ticks_msec()) * 0.002) * 1.5 * unit
-	draw_set_transform(pos + metadata.get("offset", Vector2.ZERO) * unit, 0.0, Vector2.ONE * unit * float(metadata.get("scale", 1.0)))
+	var hero_scale := unit * float(metadata.get("scale", 1.0))
+	var hero_contact_y := 38.0 if hero_id == "knight" else 36.0
+	draw_set_transform(pos + metadata.get("offset", Vector2.ZERO) * unit - Vector2(0.0, hero_contact_y * hero_scale), 0.0, Vector2.ONE * hero_scale)
 	if hero_id != "knight":
 		_draw_other_hero(hero_id, flash)
 		draw_set_transform(Vector2.ZERO)
@@ -639,9 +658,9 @@ func _update_pixel_hero_sprite(pos: Vector2, unit: float, allow_visible: bool = 
 		pixel_hero_sprite.texture = PixelBattleArt.animation_frame("Squire", "idle", idle_frame)
 		if pixel_hero_sprite.texture == null:
 			pixel_hero_sprite.texture = PixelBattleArt.frame_texture(PixelBattleArt.hero_sheet(), "idle", "squire")
-	pixel_hero_sprite.position = pos + Vector2(0.0, -158.0 * unit)
 	var form_scale := float(HeroArtService.metadata(0).get("scale", 1.0))
 	pixel_hero_sprite.scale = Vector2(370.0 / 256.0, 392.0 / 256.0) * unit * form_scale
+	pixel_hero_sprite.position = pos + Vector2(0.0, -(PIXEL_FRAME_GROUND_Y - 128.0) * pixel_hero_sprite.scale.y)
 	pixel_hero_sprite.rotation = sin(float(Time.get_ticks_msec()) * 0.035) * 0.06 if hero_run_time > 0.0 else 0.0
 	pixel_hero_sprite.modulate = Color.WHITE
 	pixel_hero_sprite.visible = true
@@ -660,6 +679,8 @@ func _update_pixel_enemy_sprite(index: int, pos: Vector2, enemy: Dictionary, sta
 		add_child(sprite)
 		pixel_enemy_sprites.append(sprite)
 	var sprite := pixel_enemy_sprites[index]
+	var hero_ground_y := _ground_line_y()
+	sprite.z_index = 0 if pos.y < hero_ground_y - size.y * 0.015 else 2
 	var enemy_id := kind
 	var boss_scale := 1.65 if str(enemy.get("archetype", "")) == "BOSS" else 1.0
 	var elite_scale := 1.2 if str(enemy.get("archetype", "")) == "ELITE" else 1.0
@@ -690,8 +711,10 @@ func _update_pixel_enemy_sprite(index: int, pos: Vector2, enemy: Dictionary, sta
 		sprite.texture = PixelBattleArt.animation_frame(enemy_id, "idle", idle_frame)
 		if sprite.texture == null:
 			sprite.texture = PixelBattleArt.enemy_fallback_frame(kind, "idle")
-	sprite.position = pos + Vector2(size.x * float(body.get("offset_x", 0.0)), -151.0 * actor_scale * float(body.get("offset_y", 1.0)))
 	sprite.scale = Vector2(float(body.get("width", 1.0)), float(body.get("height", 1.0))) * (350.0 / 256.0) * actor_scale * (1.35 / 1.65 if str(enemy.get("archetype", "")) == "BOSS" and PixelBattleArt.is_active(battle) else 1.0)
+	var hover_height := float(PixelBattleArt.HOVER_PLACEMENT.get(kind, 0.0))
+	var contact_y := float(body.get("contact_y", PIXEL_FRAME_GROUND_Y))
+	sprite.position = pos + Vector2(size.x * float(body.get("offset_x", 0.0)), -(contact_y - 128.0 + hover_height) * sprite.scale.y)
 	sprite.modulate = Color(1.25, 1.28, 1.35, opacity) if battle != null and battle.region == 8 else Color(1.0, 1.0, 1.0, opacity)
 	if battle != null and battle.region == 9:
 		sprite.modulate = Color(1.45, 1.4, 1.35, opacity)
@@ -801,11 +824,12 @@ func _draw_enemy(pos: Vector2, enemy: Dictionary, unit: float, flash: bool, enem
 	var actor_scale := unit * elite_scale * boss_scale
 	var art_region := int(enemy.get("region", battle.region if battle != null and str(battle.mode_config.get("mode", "campaign")) == "campaign" else 0))
 	var pixel_sheet: Texture2D = PixelBattleArt.enemy_sheet(kind) if PixelBattleArt.is_active(battle) else null
-	draw_set_transform(pos, 0.0, Vector2.ONE * actor_scale)
+	if pixel_sheet == null:
+		draw_set_transform(pos, 0.0, Vector2.ONE * actor_scale)
+		draw_ellipse_placeholder(Vector2(0, 15), Vector2(39, 10), Color("314d37", 0.33))
+	draw_set_transform(pos - Vector2(0.0, 24.0 * actor_scale) if pixel_sheet == null else pos, 0.0, Vector2.ONE * actor_scale)
 	if int(enemy.get("difficulty", 0)) >= 3 and pixel_sheet == null:
 		draw_arc(Vector2(0, -70), 65, 0, TAU, 24, Color("e3548b", 0.28 + 0.12 * (int(enemy["difficulty"]) - 3)), 7)
-	if pixel_sheet == null:
-		draw_ellipse_placeholder(Vector2(0, 15), Vector2(39, 10), Color("314d37", 0.33))
 	var enemy_texture := EnemyArtService.presentation_texture_for(kind, enemy_state, art_region) if pixel_sheet == null else null
 	var art_size := Vector2.ZERO
 	if pixel_sheet != null:
@@ -878,7 +902,8 @@ func _draw_defeated_enemy(pos: Vector2, enemy: Dictionary, unit: float, ratio: f
 	var pixel_sheet: Texture2D = PixelBattleArt.enemy_sheet(kind) if PixelBattleArt.is_active(battle) else null
 	if pixel_sheet != null:
 		var pixel_height := 300.0 * (1.0 - ratio * 0.45)
-		draw_set_transform(pos, 0.0, Vector2.ONE * unit * (1.0 - ratio * 0.45))
+		var fallen_scale := unit * (1.0 - ratio * 0.45)
+		draw_set_transform(pos - Vector2(0.0, 24.0 * fallen_scale), 0.0, Vector2.ONE * fallen_scale)
 		draw_texture_rect_region(pixel_sheet, Rect2(Vector2(-pixel_height * 0.5, 24.0 - pixel_height), Vector2(pixel_height, pixel_height)), PixelBattleArt.frame_region(pixel_sheet, "idle"), Color(1, 1, 1, 1.0 - ratio))
 		draw_set_transform(Vector2.ZERO)
 		return

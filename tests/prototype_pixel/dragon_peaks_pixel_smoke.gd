@@ -67,7 +67,7 @@ func _run() -> void:
 			_check(PixelBattleArt.animation_frame_count(id, "entrance") == 4 and PixelBattleArt.animation_frame(id, "entrance", 3) != null, "Ancient Dragon entrance has four frames")
 			_check(PixelBattleArt.animation_frame_count(id, "death") == 6 and PixelBattleArt.animation_frame(id, "death", 5) != null, "Ancient Dragon death has six frames")
 			_check(is_equal_approx(PixelBattleArt.animation_fps(id, "entrance"), 8.0) and is_equal_approx(PixelBattleArt.animation_fps(id, "death"), 8.0), "Ancient Dragon entrance and death play at 8 FPS")
-	_check(PixelBattleArt.BODY_PLACEMENT["Drake"].width > PixelBattleArt.BODY_PLACEMENT["Drake"].height and PixelBattleArt.BODY_PLACEMENT["Drake"].offset_y > 0.5, "Drake uses low wide reptile placement")
+	_check(PixelBattleArt.BODY_PLACEMENT["Drake"].width > PixelBattleArt.BODY_PLACEMENT["Drake"].height, "Drake uses low wide reptile placement")
 	_check(PixelBattleArt.BODY_PLACEMENT["Flame Drake"].width > PixelBattleArt.BODY_PLACEMENT["Flame Drake"].height, "Flame Drake uses low wide reptile placement")
 	_check(PixelBattleArt.BODY_PLACEMENT["Storm Drake"].width > PixelBattleArt.BODY_PLACEMENT["Storm Drake"].height, "Storm Drake uses low agile reptile placement")
 	_check(PixelBattleArt.BODY_PLACEMENT["Wyvern"].height > 1.0 and PixelBattleArt.BODY_PLACEMENT["Elder Wyvern"].width > PixelBattleArt.BODY_PLACEMENT["Wyvern"].width, "Wyvern flight and elder scale are represented in placement")

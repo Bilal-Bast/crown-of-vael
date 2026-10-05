@@ -44,7 +44,7 @@ func _run() -> void:
 			_check(PixelBattleArt.animation_frame_count(id, "entrance") == 4 and PixelBattleArt.animation_frame(id, "entrance", 3) != null, "Corrupted King entrance loads four frames")
 			_check(PixelBattleArt.animation_frame_count(id, "death") == 6 and PixelBattleArt.animation_frame(id, "death", 5) != null, "Corrupted King death loads six frames")
 			_check(is_equal_approx(PixelBattleArt.animation_fps(id, "death"), 8.0), "Corrupted King death FPS is 8")
-	_check(PixelBattleArt.BODY_PLACEMENT["Armored Ghoul"].offset_y > 0.35, "Armored Ghoul uses low hunched placement")
+	_check(PixelBattleArt.BODY_PLACEMENT["Armored Ghoul"].height < 1.0, "Armored Ghoul keeps its compact grounded silhouette")
 	_check(PixelBattleArt.BODY_PLACEMENT["War Beast"].width > PixelBattleArt.BODY_PLACEMENT["War Beast"].height, "War Beast uses low wide quadruped placement")
 	_check(PixelBattleArt.BODY_PLACEMENT["Royal Executioner"].width > 1.0 and PixelBattleArt.BODY_PLACEMENT["Fallen Champion"].width > 1.0, "elite metadata scales larger than normals")
 	_check(PixelBattleArt.BODY_PLACEMENT["Corrupted King"].height > 1.0, "Corrupted King uses large boss placement")

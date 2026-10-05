@@ -41,7 +41,7 @@ func _run():
  _check(PixelBattleArt.enemy_fallback_frame("Ash Goblin","death")!=null,"missing non-boss state falls back to Ash Goblin idle art")
  _check(PixelBattleArt.animation_frame("Unmapped Ash Enemy","idle",0)==null,"unknown enemy resolves to existing fallback")
  _check(PixelBattleArt.BODY_PLACEMENT["Magma Hound"].height<0.8 and EnemyArtService.metadata("Magma Hound").scale<0.7,"Magma Hound retains low quadruped body metadata")
- _check(PixelBattleArt.BODY_PLACEMENT["Fire Imp"].offset_y<0.5,"Fire Imp uses small floating placement metadata")
+ _check(PixelBattleArt.BODY_PLACEMENT["Fire Imp"].width<1.0 and PixelBattleArt.HOVER_PLACEMENT["Fire Imp"]>0.0,"Fire Imp uses explicit, compact hover placement")
  _check(PixelBattleArt.BODY_PLACEMENT["Flame Brute"].height>1.0 and PixelBattleArt.BODY_PLACEMENT["Ash Knight"].height>1.0,"elite scale metadata is distinct from normals")
  var field:=Battlefield.new(); root.add_child(field); field.size=Vector2(360,192); field.set_battle(battle)
  var a:=CampaignData.enemy_stats("Ash Goblin",0,3,1,1); a.current_hp=a.hp; a.spawned=true

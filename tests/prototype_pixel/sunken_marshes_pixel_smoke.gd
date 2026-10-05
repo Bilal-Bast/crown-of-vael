@@ -37,10 +37,10 @@ func _run():
 			_check(is_equal_approx(PixelBattleArt.animation_fps(id,"death"),8.0),"Marsh Hydra death keeps established FPS")
 	_check(PixelBattleArt.enemy_fallback_frame("Swamp Goblin","death")!=null,"normal death fallback resolves to idle art")
 	_check(PixelBattleArt.BODY_PLACEMENT["Plague Rat"].height<1.0 and PixelBattleArt.BODY_PLACEMENT["Poison Slime"].height<1.0,"low-body enemies retain compact metadata")
-	_check(PixelBattleArt.BODY_PLACEMENT["Swamp Beast"].offset_y>0.5,"Swamp Beast retains natural low-body placement")
-	_check(PixelBattleArt.BODY_PLACEMENT["Bog Horror"].offset_y>0.5,"Bog Horror clears the battlefield's lower edge")
+	_check(PixelBattleArt.BODY_PLACEMENT["Swamp Beast"].width==PixelBattleArt.BODY_PLACEMENT["Swamp Beast"].height,"Swamp Beast uses the shared ground contact rule")
+	_check(PixelBattleArt.BODY_PLACEMENT["Bog Horror"].width>1.0,"Bog Horror retains its large silhouette on the shared ground line")
 	var boss_body:Dictionary=PixelBattleArt.BODY_PLACEMENT["Marsh Hydra"]
-	_check(boss_body.width==boss_body.height and boss_body.width>1.0 and boss_body.offset_y>=0.5,"Marsh Hydra uses larger uniform metadata scale with lower-lane clearance")
+	_check(boss_body.width==boss_body.height and boss_body.width>1.0,"Marsh Hydra uses larger uniform metadata scale on the shared ground line")
 	var warnings:Array[String]=PixelBattleArt.validation_report()
 	for warning in warnings: push_error(warning)
 	_check(warnings.is_empty(),"Region 5 sheets and background pass load validation")
