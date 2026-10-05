@@ -1,3 +1,3 @@
-# Squire art (integrated)
+# Squire art
 
-This folder contains the existing production art: `squire_idle.png`, `squire_attack.png`, `squire_guard.png`, and `squire_portrait.png`. These established filenames are intentionally preserved. Newer evolution folders use the shorter `idle.png`, `attack.png`, `guard.png`, and `portrait.png` names. See `../ART_PIPELINE.md` for export guidance and optional slots.
+Squire's four-frame state sheets retain their legacy names: `squire_idle.png`, `squire_run.png`, `squire_attack.png`, `squire_guard.png`, and `squire_hit.png`. Portrait art is `squire_portrait.png`. See `../ART_PIPELINE.md` for atlas layout, baseline, import, and runtime frame details.
