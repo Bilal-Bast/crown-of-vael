@@ -92,4 +92,5 @@ static func apply_stats(stats: Dictionary, profile: SaveData) -> Dictionary:
 			result["hp"] = float(result["hp"]) * (1.0 + bonus)
 		else:
 			result[stat] = float(result.get(stat, 0.0)) + bonus
+	result["crit_chance"] = clampf(float(result.get("crit_chance", 0.0)), 0.0, 1.0)
 	return result

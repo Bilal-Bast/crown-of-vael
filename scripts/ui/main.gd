@@ -487,7 +487,7 @@ func _build_battle_area() -> void:
 	upgrade_box.add_child(_label("GOLD UPGRADES", 36, GOLD))
 	upgrade_list_scroll = ScrollContainer.new()
 	upgrade_list_scroll.name = "BattleUpgradeList"
-	upgrade_list_scroll.custom_minimum_size.y = 225
+	upgrade_list_scroll.custom_minimum_size.y = 300
 	upgrade_list_scroll.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	upgrade_list_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	upgrade_list_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -496,12 +496,12 @@ func _build_battle_area() -> void:
 	upgrade_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	upgrade_rows.add_theme_constant_override("separation", 7)
 	upgrade_list_scroll.add_child(upgrade_rows)
-	for stat in ["atk", "hp", "armor"]:
+	for stat in GameData.UPGRADEABLE_STATS:
 		var button := Button.new()
 		button.name = "Upgrade_%s" % stat.capitalize()
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.custom_minimum_size.y = 112
-		button.add_theme_font_size_override("font_size", 38)
+		button.custom_minimum_size.y = 120
+		button.add_theme_font_size_override("font_size", 34)
 		button.pressed.connect(_buy_upgrade.bind(stat))
 		upgrade_rows.add_child(button)
 		upgrade_buttons[stat] = button
@@ -989,11 +989,13 @@ func _refresh_ui() -> void:
 	action_button.visible = campaign and profile.stage == 20 and profile.boss_retry_required and not battle.active and not profile.campaign_complete
 	tutorial_text.visible = campaign and profile.region == 1 and profile.stage == 1 and not profile.campaign_complete
 	for stat in upgrade_buttons:
-		var rank := int(profile.upgrades[stat])
-		var cost := GameData.upgrade_cost(rank)
+		var rank := int(profile.upgrades.get(stat, 0))
+		var max_rank := GameData.upgrade_max_rank(stat)
+		var at_max_rank := rank >= max_rank
+		var cost := GameData.upgrade_cost(rank, stat)
 		var button: Button = upgrade_buttons[stat]
-		button.text = _upgrade_button_text(stat, stats, cost)
-		button.disabled = profile.gold < cost
+		button.text = _upgrade_button_text(stat, stats, cost, rank >= max_rank)
+		button.disabled = profile.gold < cost or at_max_rank
 	_maybe_show_upgrade_prompt()
 	skill_bar.queue_redraw()
 	battlefield.queue_redraw()
@@ -1005,20 +1007,38 @@ func _living_enemies() -> int:
 			count += 1
 	return count
 
-func _upgrade_button_text(stat: String, current_stats: Dictionary, cost: int) -> String:
+func _upgrade_button_text(stat: String, current_stats: Dictionary, cost: int, max_rank: bool = false) -> String:
+	if max_rank:
+		return "%s  •  MAX RANK" % _upgrade_stat_label(stat)
 	var next_upgrades: Dictionary = profile.upgrades.duplicate(true)
 	next_upgrades[stat] = int(next_upgrades.get(stat, 0)) + 1
 	var next_stats := HeroData.apply_stats(GameData.hero_stats(profile.level, next_upgrades, profile.combat_bonuses()), profile)
-	var current_value := float(current_stats.get(stat, 0.0))
-	var next_value := float(next_stats.get(stat, current_value))
-	var labels := {"atk": "ATK", "hp": "HP", "armor": "ARMOR"}
+	var combat_stat := "speed" if stat == "speed" else stat
+	var current_value := float(current_stats.get(combat_stat, 0.0))
+	var next_value := float(next_stats.get(combat_stat, current_value))
 	var increase := next_value - current_value
-	return "%s   %s  →  %s\n+%s    •    %s GOLD" % [str(labels.get(stat, stat.to_upper())), _format_upgrade_stat(current_value), _format_upgrade_stat(next_value), _format_upgrade_stat(increase), NumberFormatScript.compact(cost)]
+	return "%s  %s  →  %s\n+%s  •  %s GOLD" % [_upgrade_stat_label(stat), _format_upgrade_stat(stat, current_value), _format_upgrade_stat(stat, next_value), _format_upgrade_increase(stat, increase), NumberFormatScript.compact(cost)]
 
-func _format_upgrade_stat(value: float) -> String:
+func _upgrade_stat_label(stat: String) -> String:
+	return str({"atk": "ATK", "hp": "HP", "armor": "ARMOR", "speed": "ATTACK SPEED", "crit_chance": "CRIT CHANCE", "crit_damage": "CRIT DAMAGE"}.get(stat, stat.to_upper()))
+
+func _format_upgrade_stat(stat: String, value: float) -> String:
+	if stat == "speed":
+		return "%.2f/s" % value
+	if stat in ["crit_chance", "crit_damage"]:
+		return ("%.2f%%" % (value * 100.0)) if stat == "crit_chance" else ("%.0f%%" % (value * 100.0))
 	if absf(value - roundf(value)) < 0.05:
 		return NumberFormatScript.compact(roundi(value))
 	return "%.1f" % value
+
+func _format_upgrade_increase(stat: String, value: float) -> String:
+	if stat == "speed":
+		return "%.2f/s" % value
+	if stat == "crit_chance":
+		return "%.2f%%" % (value * 100.0)
+	if stat == "crit_damage":
+		return "%.0f%%" % (value * 100.0)
+	return _format_upgrade_stat(stat, value)
 
 func _show_message(value: String) -> void:
 	if message_text != null:

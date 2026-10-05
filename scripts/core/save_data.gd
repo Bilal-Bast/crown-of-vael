@@ -17,7 +17,7 @@ var gold := 0
 var gems := 0
 var exp := 0
 var level := 1
-var upgrades := {"hp": 0, "atk": 0, "armor": 0}
+var upgrades := {"hp": 0, "atk": 0, "armor": 0, "speed": 0, "crit_chance": 0, "crit_damage": 0}
 var boss_retry_required := false
 var campaign_complete := false
 var enhancement_stones := 0
@@ -291,7 +291,7 @@ static func load_from(path: String) -> SaveData:
 	var saved_upgrades: Variant = data.get("upgrades", {})
 	if saved_upgrades is Dictionary:
 		for key in profile.upgrades:
-			profile.upgrades[key] = clampi(int(saved_upgrades.get(key, 0)), 0, 999)
+			profile.upgrades[key] = clampi(int(saved_upgrades.get(key, 0)), 0, GameData.upgrade_max_rank(str(key)))
 	var saved_banners: Variant = data.get("banners", {})
 	if saved_banners is Dictionary:
 		for banner in SummonData.BANNERS:
@@ -789,9 +789,14 @@ func add_rewards(reward_gold: int, reward_exp: int, combat_gold: bool = true) ->
 	return leveled_up
 
 func buy_upgrade(stat: String) -> bool:
+	if GameData.UPGRADEABLE_STATS.has(stat) and not upgrades.has(stat):
+		upgrades[stat] = 0
 	if not upgrades.has(stat):
 		return false
-	var cost := GameData.upgrade_cost(int(upgrades[stat]))
+	var rank := int(upgrades[stat])
+	if rank >= GameData.upgrade_max_rank(stat):
+		return false
+	var cost := GameData.upgrade_cost(rank, stat)
 	if gold < cost:
 		return false
 	gold -= cost

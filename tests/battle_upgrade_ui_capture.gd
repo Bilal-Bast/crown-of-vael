@@ -29,6 +29,9 @@ func _run() -> void:
 	profile.save_path = "res://.godot/battle_upgrade_ui_capture.save"
 	profile.tutorial_state.completed = true
 	profile.tutorial_state.skipped = true
+	profile.level = 1
+	profile.exp = 0
+	profile.upgrades = {"atk": 0, "hp": 0, "armor": 0, "speed": 0, "crit_chance": 0, "crit_damage": 0}
 	profile.gold = 5000
 	upgrade_list = main.get("upgrade_list_scroll") as ScrollContainer
 	lower_scroll = main.get("battle_lower_scroll") as ScrollContainer
@@ -37,6 +40,7 @@ func _run() -> void:
 		if node is Window or node is Control:
 			node.hide()
 	main.call("_refresh_ui")
+	(main.get("battle") as BattleController).refresh_hero_stats()
 	await _capture("battle_skills_above_upgrades_360x640", SMALL)
 	lower_scroll.scroll_vertical = 0
 	upgrade_list.scroll_vertical = 0
@@ -44,6 +48,12 @@ func _run() -> void:
 	var scroll_range := maxi(0, roundi(upgrade_list.get_v_scroll_bar().max_value - upgrade_list.get_v_scroll_bar().page))
 	upgrade_list.scroll_vertical = scroll_range / 2
 	await _capture("battle_upgrade_list_middle_360x640", SMALL)
+	upgrade_list.scroll_vertical = mini(scroll_range, 3 * 127)
+	await _capture("battle_attack_speed_row_360x640", SMALL)
+	upgrade_list.scroll_vertical = mini(scroll_range, 4 * 127)
+	await _capture("battle_crit_chance_row_360x640", SMALL)
+	upgrade_list.scroll_vertical = mini(scroll_range, 5 * 127)
+	await _capture("battle_crit_damage_row_360x640", SMALL)
 	upgrade_list.scroll_vertical = scroll_range
 	await _capture("battle_upgrade_list_bottom_360x640", SMALL)
 	profile.gold = 0
@@ -53,6 +63,13 @@ func _run() -> void:
 	profile.gold = 5000
 	main.call("_buy_upgrade", "atk")
 	await _capture("battle_upgrades_upgraded_stat_360x640", SMALL)
+	profile.upgrades["speed"] = 10
+	profile.upgrades["crit_chance"] = 25
+	profile.upgrades["crit_damage"] = 50
+	main.call("_refresh_ui")
+	lower_scroll.scroll_vertical = roundi(lower_scroll.get_v_scroll_bar().max_value - lower_scroll.get_v_scroll_bar().page)
+	await _capture("battle_upgraded_hero_info_360x640", SMALL)
+	lower_scroll.scroll_vertical = 0
 	DisplayServer.window_set_size(LARGE)
 	for _i in 3:
 		await process_frame

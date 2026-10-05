@@ -36,7 +36,72 @@ func _run() -> void:
 			print("  D%d bossHP %.0f armor %.1f requiredDPS %.0f actualDPS %.0f clearTime %.2fs outcome=%s bossHPleft=%.0f heroHP=%.0f/%.0f incoming=%.0f (%.0f/s) nominalPressure=%.0f/s companionDirect=%d timerLeft=%.1f" % [difficulty, boss["hp"], boss["armor"], required, dealt_dps, result["time"], "CLEAR" if result["won"] else ("SURVIVAL_LOSS" if result["died"] else "TIMER_LOSS"), result["boss_left"], result["hero_hp"], result["max_hp"], result["incoming"], float(result["incoming"]) / maxf(0.01, float(result["time"])), pressure, result["companion_damage"], result["timer_left"]])
 			if build["name"] == "STRONG-SUSTAIN" and difficulty == 5:
 				assert(result["won"], "strong sustain build should clear Demon Lord at difficulty index 5")
+	var early := _make_spotcheck_profile(1, 1, 0, 0)
+	early.stage = 1
+	_simulate_campaign_window("EARLY GREENVALE 1-1, rank 0", early, 1, 1, 0, 15.0)
+	early.stage = 20
+	var early_result := _simulate(early, 0, 1)
+	_print_spotcheck("EARLY R1 BOSS, rank 0", early, early_result, 1, 0)
+	var mid := _make_spotcheck_profile(45, 5, 10, 10)
+	mid.stage = 10
+	_simulate_campaign_window("MID ASHEN HIGHLANDS 5-10, premium ranks 10", mid, 5, 10, 0, 15.0)
+	mid.stage = 20
+	var mid_result := _simulate(mid, 0, 5)
+	_print_spotcheck("MID R5 BOSS, premium ranks 10", mid, mid_result, 5, 0)
+	var premium_strong := _make_profile(BUILDS[2])
+	var premium_cost := 0
+	for stat in ["speed", "crit_chance", "crit_damage"]:
+		for rank in GameData.PREMIUM_UPGRADE_MAX_RANK:
+			premium_cost += GameData.upgrade_cost(rank, stat)
+		premium_strong.upgrades[stat] = GameData.PREMIUM_UPGRADE_MAX_RANK
+	var premium_stats := premium_strong.hero_stats()
+	print("STRONG ENDGAME + MAX GOLD RANKS: ATK %.0f speed %.2f/s crit %.1f%% x%.2f; cumulative premium Gold cost %d" % [premium_stats["atk"], premium_stats["speed"], premium_stats["crit_chance"] * 100.0, premium_stats["crit_damage"], premium_cost])
+	for difficulty in [3, 4, 5]:
+		var premium_result := _simulate(premium_strong, difficulty)
+		_print_spotcheck("STRONG R10 DEMON LORD D%d, premium ranks 100" % difficulty, premium_strong, premium_result, 10, difficulty)
 	quit()
+
+func _make_spotcheck_profile(level: int, region: int, basic_rank: int, premium_rank: int) -> SaveData:
+	var profile := SaveData.new()
+	profile.save_path = "res://.godot/phase14_upgrade_progression_spotcheck.save"
+	profile.level = level
+	profile.region = region
+	profile.stage = 20
+	profile.campaign_difficulty = 0
+	profile.upgrades = {"atk": basic_rank, "hp": basic_rank, "armor": basic_rank, "speed": premium_rank, "crit_chance": premium_rank, "crit_damage": premium_rank}
+	profile._grant_starters()
+	for item in profile.inventory:
+		profile.equipped[str(EquipmentData.ITEMS[str(item["kind"])]["slot"])] = str(item["id"])
+	return profile
+
+func _print_spotcheck(label: String, profile: SaveData, result: Dictionary, boss_region: int, difficulty: int) -> void:
+	var boss := CampaignData.enemy_stats(str(CampaignData.REGIONS[boss_region - 1]["boss"]), difficulty, boss_region, 20, 1)
+	var stats := profile.hero_stats()
+	var dps := float(result["dealt"]) / maxf(0.01, float(result["time"]))
+	print("UPGRADE REGRESSION %s: ATK %.0f speed %.2f/s crit %.1f%% x%.2f bossHP %.0f requiredDPS %.0f actualDPS %.0f time %.2f outcome=%s heroHP %.0f/%.0f" % [label, stats["atk"], stats["speed"], stats["crit_chance"] * 100.0, stats["crit_damage"], boss["hp"], float(boss["hp"])/30.0, dps, result["time"], "CLEAR" if result["won"] else ("SURVIVAL" if result["died"] else "TIMER"), result["hero_hp"], result["max_hp"]])
+
+func _simulate_campaign_window(label: String, profile: SaveData, region: int, stage: int, difficulty: int, duration: float) -> void:
+	profile.region = region
+	profile.stage = stage
+	profile.campaign_difficulty = difficulty
+	var battle := BattleController.new()
+	incoming = 0.0
+	outgoing = 0.0
+	battle.damage_popup.connect(func(target: int, amount: int, _critical: bool, _bash: bool):
+		if target < 0:
+			incoming += amount
+		else:
+			outgoing += amount
+	)
+	battle.start(profile)
+	while battle.active and battle.run_time < duration:
+		battle._process(1.0 / 60.0)
+	var alive := 0
+	for enemy in battle.enemies:
+		if float(enemy.get("current_hp", 0.0)) > 0.0:
+			alive += 1
+	print("UPGRADE REGRESSION %s: ATK %.0f speed %.2f/s crit %.1f%% x%.2f; window %.1fs outgoing %.0f (%.0f DPS), incoming %.0f, enemies alive %d/%d" % [label, profile.hero_stats()["atk"], profile.hero_stats()["speed"], profile.hero_stats()["crit_chance"] * 100.0, profile.hero_stats()["crit_damage"], battle.run_time, outgoing, outgoing / maxf(0.01, battle.run_time), incoming, alive, battle.enemies.size()])
+	battle.free()
 
 func _make_profile(build: Dictionary) -> SaveData:
 	var profile := SaveData.new()
@@ -97,8 +162,9 @@ func _gear_kind(family: String, slot: String) -> String:
 	var suffix: String = {"Weapon":"sword","Helmet":"helm","Armor":"plate","Gloves":"gauntlets","Boots":"boots","Necklace":"amulet","Ring":"ring"}[slot]
 	return "%s_%s" % [family, suffix]
 
-func _simulate(profile: SaveData, difficulty: int) -> Dictionary:
+func _simulate(profile: SaveData, difficulty: int, boss_region: int = 10) -> Dictionary:
 	profile.campaign_difficulty = difficulty
+	profile.region = boss_region
 	var battle := BattleController.new()
 	incoming = 0.0
 	outgoing = 0.0
