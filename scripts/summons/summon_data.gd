@@ -2,7 +2,7 @@ class_name SummonData
 extends RefCounted
 
 const BANNERS := ["equipment", "skills", "companions", "artifacts"]
-const COSTS := {1: 100, 10: 900, 50: 4250}
+const COSTS := {1: 100, 10: 900, 30: 2640, 50: 4250}
 const PITY_LIMIT := 100
 const AD_DAILY_LIMIT := 3
 const MAX_LEVEL := 10
