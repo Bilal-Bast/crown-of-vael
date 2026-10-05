@@ -8,8 +8,8 @@ func _run():
  var profile:=SaveData.new(); profile.region=3; profile.stage=1; profile.selected_hero_id="knight"
  var battle:=BattleController.new(); root.add_child(battle); battle.start(profile)
  _check(PixelBattleArt.is_active(battle),"Region 3 uses the shared pixel battle renderer")
- _check(battle.enemies.size()==7 and battle.spawned_enemy_count==1 and is_equal_approx(battle.enemy_entry_timer,0.9),"seven-enemy wave begins with the 0.9 second entry cadence")
- battle.hero_attack_time=100.0; battle._process(0.9)
+ _check(battle.enemies.size()==7 and battle.spawned_enemy_count==1 and is_equal_approx(battle.enemy_entry_timer,GameData.ENEMY_ENTRY_INTERVAL),"seven-enemy wave begins with the centralized entry cadence")
+ battle.hero_attack_time=100.0; battle._process(GameData.ENEMY_ENTRY_INTERVAL)
  _check(battle.spawned_enemy_count==2 and float(battle.enemies[0].current_hp)>0 and float(battle.enemies[1].current_hp)>0,"living enemies coexist as later entries arrive")
  _check(battle.wave_transition_duration==1.5,"hero run transition remains 1.5 seconds")
  for enemy in battle.enemies: enemy.current_hp=0.0
@@ -56,7 +56,7 @@ func _run():
  _check(field.texture_filter==CanvasItem.TEXTURE_FILTER_NEAREST,"nearest-neighbor filtering remains active")
  var warnings:Array[String]=PixelBattleArt.validation_report(); for warning in warnings: push_error(warning)
  _check(warnings.is_empty(),"all Region 3 strips and background pass validation")
- _check(GameData.ENEMY_ENTRY_INTERVAL==0.9,"global enemy entry interval remains 0.9 seconds")
+ _check(is_equal_approx(GameData.ENEMY_ENTRY_INTERVAL,0.60),"normal campaign entry interval is 0.60 seconds")
  field.queue_free(); battle.queue_free()
  print("ASHEN HIGHLANDS PIXEL SMOKE: %s (%d failures)"%["PASS" if failures==0 else "FAIL",failures]); quit(1 if failures else 0)
 func _check(ok:bool,description:String):

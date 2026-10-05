@@ -73,7 +73,7 @@ func _run() -> void:
 	_check(PixelBattleArt.BODY_PLACEMENT["Wyvern"].height > 1.0 and PixelBattleArt.BODY_PLACEMENT["Elder Wyvern"].width > PixelBattleArt.BODY_PLACEMENT["Wyvern"].width, "Wyvern flight and elder scale are represented in placement")
 	_check(PixelBattleArt.BODY_PLACEMENT["Dragon Champion"].width > PixelBattleArt.BODY_PLACEMENT["Dragon Knight"].width, "Dragon Champion is larger than Dragon Knight")
 	_check(PixelBattleArt.BODY_PLACEMENT["Ancient Dragon"].width > 1.0 and PixelBattleArt.BODY_PLACEMENT["Ancient Dragon"].height > 0.8 and PixelBattleArt.BODY_PLACEMENT["Ancient Dragon"].height < 1.2, "Ancient Dragon has custom boss placement within battlefield bounds")
-	_check(GameData.ENEMIES_PER_WAVE == 7 and is_equal_approx(GameData.ENEMY_ENTRY_INTERVAL, 0.9), "seven-enemy waves retain the 0.9-second entry cadence")
+	_check(GameData.ENEMIES_PER_WAVE == 7 and is_equal_approx(GameData.ENEMY_ENTRY_INTERVAL, 0.60), "seven-enemy waves use the 0.60-second entry cadence")
 	_check(is_equal_approx(battle.wave_transition_duration, 1.5) and is_equal_approx(field.hero_run_duration, 1.5), "hero run between waves remains 1.5 seconds")
 	_check(absf(field.size.y - 190.0) < 0.01, "battlefield presentation area sizing remains unchanged")
 	var drake := CampaignData.enemy_stats("Drake", 0, 9, 1, 1)

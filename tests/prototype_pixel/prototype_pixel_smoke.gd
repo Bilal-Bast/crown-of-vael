@@ -104,18 +104,18 @@ func _run() -> void:
 	await _capture("squire_vs_corrupted_wolf_360x640", RESOLUTION_SMALL)
 	for kind in ENEMIES:
 		_set_enemies([kind], true)
-		battle.enemies[0]["entry_time"] = 0.15
+		battle.enemies[0]["entry_time"] = 0.25
 		_check(battlefield.enemy_visual_state(0) == "entry", "%s uses entry animation while moving" % kind)
 		var frame_count := PixelBattleArt.enemy_entry_frame_count(kind)
 		var fps := PixelBattleArt.enemy_entry_fps(kind)
-		var first_frame := int(floor((0.45 - float(battle.enemies[0]["entry_time"])) * fps)) % frame_count
+		var first_frame := int(floor((GameData.ENEMY_ENTRY_DURATION - float(battle.enemies[0]["entry_time"])) * fps)) % frame_count
 		battlefield._update_pixel_enemy_sprite(0, battlefield._enemy_position(0), battle.enemies[0], "entry", 1.0)
 		var first_texture := battlefield.pixel_enemy_sprites[0].texture
 		battle.enemies[0]["entry_time"] -= 0.10
-		var next_frame := int(floor((0.45 - float(battle.enemies[0]["entry_time"])) * fps)) % frame_count
+		var next_frame := int(floor((GameData.ENEMY_ENTRY_DURATION - float(battle.enemies[0]["entry_time"])) * fps)) % frame_count
 		battlefield._update_pixel_enemy_sprite(0, battlefield._enemy_position(0), battle.enemies[0], "entry", 1.0)
 		_check(first_texture == PixelBattleArt.enemy_entry_frame(kind, first_frame) and battlefield.pixel_enemy_sprites[0].texture == PixelBattleArt.enemy_entry_frame(kind, next_frame) and first_frame != next_frame, "%s entry frames advance at the configured playback speed" % kind)
-		battle.enemies[0]["entry_time"] = 0.15
+		battle.enemies[0]["entry_time"] = 0.25
 		await _capture("%s_entry_360x640" % str(kind).to_lower().replace(" ", "_"), RESOLUTION_SMALL)
 		battle.enemies[0]["entry_time"] = 0.0
 		_check(battlefield.enemy_visual_state(0) == "idle", "%s returns to idle after entry" % kind)
@@ -203,7 +203,8 @@ func _set_enemies(kinds: Array, entering: bool = false) -> void:
 		enemy["attack_time"] = 3.0
 		enemy["stun_time"] = 0.0
 		enemy["spawned"] = true
-		enemy["entry_time"] = 0.45 if entering else 0.0
+		enemy["entry_time"] = GameData.ENEMY_ENTRY_DURATION if entering else 0.0
+		enemy["combat_ready"] = not entering
 		battle.enemies.append(enemy)
 	battlefield.enemy_attack_times.clear()
 	battlefield.enemy_hit_times.clear()

@@ -61,7 +61,7 @@ func _run() -> void:
 	_check(not field.vfx.projectiles.is_empty() and field.vfx.projectiles[0].style == "pixel_arrow", "Dark Archer uses existing pixel arrow projectile")
 	_check(not field.vfx.projectiles.is_empty() and field.vfx.projectiles[0]["from"].x > field.vfx.projectiles[0]["to"].x, "Dark Archer arrow travels left toward the hero")
 	_check(is_equal_approx(float(battle.wave_transition_duration), 1.5) and is_equal_approx(float(field.hero_run_duration), 1.5), "wave transition and hero run remain 1.5 seconds")
-	_check(GameData.ENEMIES_PER_WAVE == 7 and is_equal_approx(GameData.ENEMY_ENTRY_INTERVAL, 0.9), "seven-enemy waves retain the 0.9-second entry cadence")
+	_check(GameData.ENEMIES_PER_WAVE == 7 and is_equal_approx(GameData.ENEMY_ENTRY_INTERVAL, 0.60), "seven-enemy waves use the 0.60-second entry cadence")
 	_check(battle.enemies.size() == 1, "Region 7 roster does not alter wave spawning")
 	var warnings := PixelBattleArt.validation_report()
 	for warning in warnings: push_error(warning)

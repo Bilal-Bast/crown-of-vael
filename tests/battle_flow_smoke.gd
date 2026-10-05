@@ -17,9 +17,10 @@ func _run() -> void:
 	battle.start(profile)
 	_check(GameData.ENEMIES_PER_WAVE == 7, "normal waves are configured for seven enemies")
 	_check(battle.enemies.size() == 7 and battle.spawned_enemy_count == 1, "wave starts with one entered enemy")
-	_check(bool(battle.enemies[0]["spawned"]) and float(battle.enemies[0]["current_hp"]) > 0.0, "first enemy enters immediately")
+	_check(bool(battle.enemies[0]["spawned"]) and float(battle.enemies[0]["current_hp"]) > 0.0 and not bool(battle.enemies[0]["combat_ready"]), "first enemy begins entry immediately but is not combat-ready")
+	_check(is_equal_approx(float(battle.enemies[0]["entry_time"]), GameData.ENEMY_ENTRY_DURATION), "entry travel uses the slower named duration")
 	_check(not bool(battle.enemies[1]["spawned"]) and float(battle.enemies[1]["current_hp"]) == 0.0, "remaining enemies wait to enter")
-	_check(is_equal_approx(battle.enemy_entry_timer, GameData.ENEMY_ENTRY_INTERVAL), "entry cadence uses the centralized interval")
+	_check(is_equal_approx(GameData.ENEMY_ENTRY_INTERVAL, 0.60) and is_equal_approx(battle.enemy_entry_timer, 0.60), "normal campaign entry cadence is centralized at 0.60 seconds")
 
 	var battlefield := Battlefield.new()
 	root.add_child(battlefield)
@@ -73,6 +74,7 @@ func _run() -> void:
 func _clear_current_wave(battle: BattleController) -> void:
 	for index in battle.enemies.size():
 		battle.enemies[index]["spawned"] = true
+		battle.enemies[index]["combat_ready"] = true
 		battle.enemies[index]["current_hp"] = 0.0
 		battle.enemies[index]["armor"] = 0.0
 	battle.spawned_enemy_count = battle.enemies.size()

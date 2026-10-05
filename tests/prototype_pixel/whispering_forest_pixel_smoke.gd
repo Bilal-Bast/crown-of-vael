@@ -16,10 +16,10 @@ func _run() -> void:
 	root.add_child(battle)
 	battle.start(profile)
 	_check(battle.enemies.size() == GameData.ENEMIES_PER_WAVE and battle.enemies.size() == 7, "Region 2 normal wave contains seven enemies")
-	_check(battle.spawned_enemy_count == 1 and is_equal_approx(battle.enemy_entry_timer, 0.9), "first enemy enters immediately, next slot is paced at 0.9 seconds")
+	_check(battle.spawned_enemy_count == 1 and is_equal_approx(battle.enemy_entry_timer, GameData.ENEMY_ENTRY_INTERVAL), "first enemy begins immediately, next slot uses the centralized cadence")
 	battle.hero_attack_time = 100.0
-	battle._process(0.9)
-	_check(battle.spawned_enemy_count == 2 and float(battle.enemies[0]["current_hp"]) > 0.0 and float(battle.enemies[1]["current_hp"]) > 0.0, "multiple Region 2 enemies coexist after the 0.9 second entry interval")
+	battle._process(GameData.ENEMY_ENTRY_INTERVAL)
+	_check(battle.spawned_enemy_count == 2 and float(battle.enemies[0]["current_hp"]) > 0.0 and float(battle.enemies[1]["current_hp"]) > 0.0, "multiple Region 2 enemies coexist after the entry interval")
 	_check(battle.wave_transition_duration == 1.5, "inter-wave transition remains 1.5 seconds")
 	for enemy in battle.enemies:
 		enemy["current_hp"] = 0.0
@@ -51,7 +51,7 @@ func _run() -> void:
 	for warning in validation:
 		push_error(warning)
 	_check(validation.is_empty(), "Region 2 pixel sheets pass dimension and load validation")
-	_check(GameData.ENEMY_ENTRY_INTERVAL == 0.9, "normal wave entry interval remains 0.9 seconds")
+	_check(is_equal_approx(GameData.ENEMY_ENTRY_INTERVAL, 0.60), "normal wave entry interval is 0.60 seconds")
 	var field := Battlefield.new()
 	root.add_child(field)
 	field.size = Vector2(360, 192)

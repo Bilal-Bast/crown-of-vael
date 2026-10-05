@@ -66,7 +66,7 @@ func _run() -> void:
 	_check(PixelBattleArt.BODY_PLACEMENT["Demon Champion"].width > PixelBattleArt.BODY_PLACEMENT["Demon Knight"].width, "Demon Champion has large elite placement")
 	_check(PixelBattleArt.BODY_PLACEMENT["Infernal Reaper"].height > PixelBattleArt.BODY_PLACEMENT["Infernal Reaper"].width, "Infernal Reaper uses tall elite placement")
 	_check(PixelBattleArt.BODY_PLACEMENT["Demon Lord"].width > 1.0 and PixelBattleArt.BODY_PLACEMENT["Demon Lord"].height < 1.0, "Demon Lord has custom boss placement")
-	_check(GameData.ENEMIES_PER_WAVE == 7 and is_equal_approx(GameData.ENEMY_ENTRY_INTERVAL, 0.9), "seven-enemy waves retain the 0.9-second entry cadence")
+	_check(GameData.ENEMIES_PER_WAVE == 7 and is_equal_approx(GameData.ENEMY_ENTRY_INTERVAL, 0.60), "seven-enemy waves use the 0.60-second entry cadence")
 	_check(is_equal_approx(battle.wave_transition_duration, 1.5) and is_equal_approx(field.hero_run_duration, 1.5), "hero run between waves remains 1.5 seconds")
 	var mage := CampaignData.enemy_stats("Infernal Mage", 0, 10, 1, 1)
 	_check(str(mage.get("archetype", "")) == "MAGIC", "Infernal Mage preserves existing MAGIC behavior")
