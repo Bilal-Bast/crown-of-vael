@@ -98,6 +98,8 @@ var tutorial_text: Label
 var action_button: Button
 var upgrade_buttons: Dictionary = {}
 var nav_buttons: Dictionary = {}
+var menu_drawer: VBoxContainer
+var menu_toggle: Button
 var selected_tab := "Battle"
 var transition_id := 0
 var idle_rewards: IdleRewardService
@@ -341,7 +343,14 @@ func _build_top_bar(root: VBoxContainer) -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 7)
 	panel.add_child(box)
-	var title := _label("CROWN OF VAEL", 43, GOLD)
+	var frame := StyleBoxFlat.new()
+	frame.bg_color = Color("17212c")
+	frame.border_color = Color("766348")
+	frame.border_width_top = 3
+	frame.border_width_bottom = 3
+	frame.set_content_margin_all(13)
+	panel.add_theme_stylebox_override("panel", frame)
+	var title := _label("C R O W N   O F   V A E L", 32, GOLD)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title)
 	var metrics := HBoxContainer.new()
@@ -515,26 +524,51 @@ func _update_battlefield_height() -> void:
 func _build_navigation(root: VBoxContainer) -> void:
 	var panel := _panel()
 	root.add_child(panel)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("111c26")
+	style.border_color = Color("8e7950")
+	style.border_width_top = 3
+	style.set_content_margin_all(10)
+	panel.add_theme_stylebox_override("panel",style)
 	var rows := VBoxContainer.new()
 	panel.add_child(rows)
-	for tab_row in [["Battle", "Adventure", "Heroes", "Equipment"], ["Skills", "Summon", "Quests", "Login"], ["Pass", "Shop", "Account", "Social"], ["Settings"]]:
+	menu_drawer = VBoxContainer.new()
+	rows.add_child(menu_drawer)
+	menu_drawer.visible = false
+	for tab_row in [["Adventure","Skills","Quests","Login"],["Pass","Shop","Account","Social"],["Settings"]]:
 		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 6)
-		rows.add_child(row)
+		menu_drawer.add_child(row)
 		for tab_name in tab_row:
-			var button := Button.new()
-			button.text = tab_name
-			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			button.custom_minimum_size.y = 72
-			button.add_theme_font_size_override("font_size", 25)
-			button.pressed.connect(_select_tab.bind(tab_name))
-			button.pressed.connect(_play_audio.bind("button_click", "UI"))
-			row.add_child(button)
-			nav_buttons[tab_name] = button
+			_add_nav_button(row,tab_name)
+	var primary := HBoxContainer.new()
+	rows.add_child(primary)
+	for tab_name in ["Battle","Heroes","Equipment","Summon"]:
+		_add_nav_button(primary,tab_name)
+	menu_toggle = Button.new()
+	menu_toggle.text = "Menu +"
+	menu_toggle.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	menu_toggle.custom_minimum_size.y = 94
+	menu_toggle.add_theme_font_size_override("font_size",26)
+	menu_toggle.pressed.connect(func():
+		menu_drawer.visible = not menu_drawer.visible
+		menu_toggle.text = "Menu -" if menu_drawer.visible else "Menu +"
+	)
+	primary.add_child(menu_toggle)
 	login_popup = PopupPanel.new()
 	login_popup.name = "DailyLoginPopup"
 	add_child(login_popup)
 	_update_navigation()
+
+func _add_nav_button(parent: Container, tab_name: String) -> void:
+	var button := Button.new()
+	button.text = tab_name
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.custom_minimum_size.y = 94
+	button.add_theme_font_size_override("font_size",26)
+	button.pressed.connect(_select_tab.bind(tab_name))
+	button.pressed.connect(_play_audio.bind("button_click","UI"))
+	parent.add_child(button)
+	nav_buttons[tab_name] = button
 
 func _build_guidance_popups() -> void:
 	tutorial_popup = PopupPanel.new()
@@ -858,7 +892,10 @@ func _show_message(value: String) -> void:
 
 func _select_tab(tab_name: String) -> void:
 	selected_tab = tab_name
-	stage_panel.visible = tab_name not in ["Adventure", "Quests", "Login", "Pass", "Shop", "Account", "Social", "Settings"]
+	if menu_drawer != null:
+		menu_drawer.hide()
+		menu_toggle.text = "Menu +"
+	stage_panel.visible = tab_name == "Battle"
 	battle_area.visible = tab_name == "Battle"
 	heroes_area.visible = tab_name == "Heroes"
 	equipment_area.visible = tab_name == "Equipment"
@@ -1109,10 +1146,10 @@ func _build_equipment_screen() -> void:
 		box.add_theme_constant_override("separation", 7)
 		detail.add_child(box)
 		var item_icon := TextureRect.new()
-		item_icon.custom_minimum_size = Vector2(72, 72)
+		item_icon.custom_minimum_size = Vector2(112, 112)
 		item_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		item_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		item_icon.texture = PixelUiIcons.equipment(str(EquipmentData.ITEMS[selected["kind"]]["slot"]))
+		item_icon.texture = PixelUiIcons.item(str(selected["kind"]))
 		box.add_child(item_icon)
 		box.add_child(_label("%s  +%d" % [EquipmentData.title(selected), selected["level"]], 30, EquipmentData.COLORS[int(selected["rarity"])]))
 		box.add_child(_label(EquipmentData.stat_lines(selected), 31, PALE))
@@ -1141,7 +1178,7 @@ func _build_equipment_screen() -> void:
 		button.add_theme_font_size_override("font_size", 31)
 		button.text = "%s    %s" % [slot.to_upper(), "EMPTY" if item.is_empty() else "%s  +%d" % [EquipmentData.title(item), item["level"]]]
 		if not item.is_empty():
-			button.icon = PixelUiIcons.equipment(slot)
+			button.icon = PixelUiIcons.item(str(item["kind"]))
 			button.expand_icon = true
 			button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		if not item.is_empty():
@@ -1159,7 +1196,7 @@ func _build_equipment_screen() -> void:
 		button.custom_minimum_size = Vector2(485, 132)
 		button.add_theme_font_size_override("font_size", 30)
 		button.text = "%s\n+%d  %s" % [EquipmentData.ITEMS[item["kind"]]["name"], item["level"], EquipmentData.RARITIES[int(item["rarity"])]]
-		button.icon = PixelUiIcons.equipment(str(EquipmentData.ITEMS[item["kind"]]["slot"]))
+		button.icon = PixelUiIcons.item(str(item["kind"]))
 		button.expand_icon = true
 		button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		_style_rarity(button, int(item["rarity"]))
@@ -1285,11 +1322,16 @@ func _update_navigation() -> void:
 		var button: Button = nav_buttons[tab_name]
 		var selected: bool = tab_name == selected_tab
 		var style := StyleBoxFlat.new()
-		style.bg_color = Color("53624f") if selected else Color("1c2d30")
+		style.bg_color = Color("3b3740") if selected else Color("17242e")
 		style.border_color = GOLD if selected else Color("405153")
 		style.set_border_width_all(2)
-		style.set_corner_radius_all(8)
+		style.border_width_bottom = 5 if selected else 2
 		button.add_theme_stylebox_override("normal", style)
+		for state in ["hover", "pressed", "focus"]:
+			var feedback := style.duplicate() as StyleBoxFlat
+			feedback.border_color = GOLD
+			feedback.bg_color = Color("35414b")
+			button.add_theme_stylebox_override(state, feedback)
 		button.add_theme_color_override("font_color", GOLD if selected else MUTED)
 		button.add_theme_color_override("font_hover_color", PALE)
 		var badge := MonetizationService.new(profile).bp_badge() if tab_name == "Pass" else MonetizationService.new(profile).shop_badge() if tab_name == "Shop" else SocialService.new(profile).badge() if tab_name == "Social" else ProgressionService.new(profile).badge(tab_name)

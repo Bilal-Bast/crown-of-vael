@@ -4,14 +4,10 @@
 
 [node name="Main" type="Control" unique_id=1009503395]
 layout_mode = 3
-anchor_right = 1.8840001
-anchor_bottom = 1.01
-offset_left = 100.999985
-offset_top = -118.00003
-offset_right = -853.7201
-offset_bottom = -137.19995
-grow_horizontal = 2
-grow_vertical = 2
-rotation = 0.02028478
-scale = Vector2(0.99829245, 1.1296818)
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
 script = ExtResource("1_main")
