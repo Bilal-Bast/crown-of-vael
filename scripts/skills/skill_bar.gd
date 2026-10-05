@@ -23,6 +23,7 @@ func _draw() -> void:
 		return
 	var gap := 9.0
 	var width := (size.x - gap * 3.0) / 4.0
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	for slot in 4:
 		var rect := Rect2(slot * (width + gap), 0, width, size.y)
 		var id := battle.profile.equipped_skill_slots[slot]
@@ -35,7 +36,9 @@ func _draw() -> void:
 			draw_string(ThemeDB.fallback_font, rect.position + Vector2(20, 56), "+", HORIZONTAL_ALIGNMENT_LEFT, -1, 44, Color("81918b"))
 			continue
 		var data: Dictionary = SkillData.SKILLS[id]
-		draw_string(ThemeDB.fallback_font, rect.position + Vector2(17, 51), str(data["icon"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 36, border)
+		var icon := PixelUiIcons.skill(id)
+		if icon != null:
+			draw_texture_rect(icon, Rect2(rect.position + Vector2((width - 78.0) * 0.5, 1.0), Vector2(78, 78)), false)
 		var remaining := float(battle.skill_runtime.cooldowns.get(id, 0.0))
 		if not ready and remaining > 0.0:
 			var fraction := clampf(remaining / float(data["cooldown"]), 0.0, 1.0)

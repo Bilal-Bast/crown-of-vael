@@ -34,6 +34,10 @@ func refresh() -> void:
 		var id := profile.equipped_skill_slots[index]
 		var button := Button.new()
 		button.text = "%d\n%s" % [index + 1, "EMPTY" if id == "" else SkillData.SKILLS[id]["name"]]
+		if id != "":
+			button.icon = PixelUiIcons.skill(id)
+			button.expand_icon = true
+			button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		button.custom_minimum_size.y = 118
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.add_theme_font_size_override("font_size", 25)
@@ -52,7 +56,16 @@ func refresh() -> void:
 		add_child(card)
 		var box := VBoxContainer.new()
 		card.add_child(box)
-		box.add_child(_label("%s  %s  •  %s" % [data["icon"], data["name"], EquipmentData.RARITIES[rarity]], 31, EquipmentData.COLORS[rarity]))
+		var title_row := HBoxContainer.new()
+		title_row.add_theme_constant_override("separation", 12)
+		box.add_child(title_row)
+		var icon := TextureRect.new()
+		icon.texture = PixelUiIcons.skill(id)
+		icon.custom_minimum_size = Vector2(72, 72)
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		title_row.add_child(icon)
+		title_row.add_child(_label("%s  |  %s" % [data["name"], EquipmentData.RARITIES[rarity]], 31, EquipmentData.COLORS[rarity]))
 		box.add_child(_label("%s  •  %.0fs cooldown" % ["Level %d" % record["level"] if owned else "LOCKED", data["cooldown"]], 28, Color("e9e8d7")))
 		box.add_child(_label("%s  •  %s" % [data["description"], SkillData.effect_text(id, int(record.get("level", 1)))], 27, Color("aebdb4")))
 		if owned:
@@ -97,6 +110,7 @@ func _panel(border: Color = Color("7b7159")) -> PanelContainer:
 func _label(value: String, font_size: int, color: Color) -> Label:
 	var label := Label.new()
 	label.text = value
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	label.add_theme_font_size_override("font_size", font_size)
 	label.add_theme_color_override("font_color", color)
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
