@@ -52,9 +52,20 @@ func refresh() -> void:
 		var rarity := int(record.get("rarity", 0))
 		var card := _panel(EquipmentData.COLORS[rarity] if owned else Color("52605c"))
 		add_child(card)
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 12)
+		card.add_child(row)
+		var portrait := TextureRect.new()
+		portrait.custom_minimum_size = Vector2(88, 88)
+		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		portrait.texture = CompanionPixelArt.frame(id, int(record.get("evolution", 0)), "idle")
+		row.add_child(portrait)
 		var box := VBoxContainer.new()
-		card.add_child(box)
-		box.add_child(_label("%s  %s  •  %s" % [CompanionData.COMPANIONS[id]["icon"], CompanionData.display_name(id, record), EquipmentData.RARITIES[rarity] if owned else "LOCKED"], 31, EquipmentData.COLORS[rarity] if owned else Color("aebdb4")))
+		box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(box)
+		box.add_child(_label("%s  |  %s" % [CompanionData.display_name(id, record), EquipmentData.RARITIES[rarity] if owned else "LOCKED"], 31, EquipmentData.COLORS[rarity] if owned else Color("aebdb4")))
 		if owned:
 			box.add_child(_label("Level %d  •  %d stars  •  Evolution %d" % [record["level"], record["stars"], record["evolution"]], 28, Color("e9e8d7")))
 			box.add_child(_label("ATK %.1f  •  %.2f attacks/s  •  %s" % [CompanionData.attack(id, record), CompanionData.attack_speed(id, record), CompanionData.passive_text(id, record)], 27, Color("a9d6ad")))
@@ -72,6 +83,13 @@ func _build_detail() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 7)
 	panel.add_child(box)
+	var portrait := TextureRect.new()
+	portrait.custom_minimum_size = Vector2(144, 144)
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	portrait.texture = CompanionPixelArt.frame(selected_id, int(record.get("evolution", 0)), "idle")
+	box.add_child(portrait)
 	box.add_child(_label("SELECTED: %s" % CompanionData.display_name(selected_id, record), 32, Color("e9c87d")))
 	box.add_child(_label("Pieces %d  •  %d stars  •  %s" % [record["pieces"], record["stars"], CompanionData.passive_text(selected_id, record)], 28, Color("e9e8d7")))
 	var level_cost := CompanionData.level_cost(int(record["level"]))
