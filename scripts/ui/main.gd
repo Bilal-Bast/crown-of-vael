@@ -1108,7 +1108,13 @@ func _build_equipment_screen() -> void:
 		var box := VBoxContainer.new()
 		box.add_theme_constant_override("separation", 7)
 		detail.add_child(box)
-		box.add_child(_label("%s  %s  +%d" % [EquipmentData.ITEMS[selected["kind"]]["icon"], EquipmentData.title(selected), selected["level"]], 30, EquipmentData.COLORS[int(selected["rarity"])]))
+		var item_icon := TextureRect.new()
+		item_icon.custom_minimum_size = Vector2(72, 72)
+		item_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		item_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		item_icon.texture = PixelUiIcons.equipment(str(EquipmentData.ITEMS[selected["kind"]]["slot"]))
+		box.add_child(item_icon)
+		box.add_child(_label("%s  +%d" % [EquipmentData.title(selected), selected["level"]], 30, EquipmentData.COLORS[int(selected["rarity"])]))
 		box.add_child(_label(EquipmentData.stat_lines(selected), 31, PALE))
 		var slot: String = EquipmentData.ITEMS[selected["kind"]]["slot"]
 		var equipped_item := profile.get_item(str(profile.equipped.get(slot, "")))
@@ -1135,6 +1141,10 @@ func _build_equipment_screen() -> void:
 		button.add_theme_font_size_override("font_size", 31)
 		button.text = "%s    %s" % [slot.to_upper(), "EMPTY" if item.is_empty() else "%s  +%d" % [EquipmentData.title(item), item["level"]]]
 		if not item.is_empty():
+			button.icon = PixelUiIcons.equipment(slot)
+			button.expand_icon = true
+			button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		if not item.is_empty():
 			_style_rarity(button, int(item["rarity"]))
 			button.pressed.connect(_select_item.bind(str(item["id"])))
 		equipment_content.add_child(button)
@@ -1148,7 +1158,10 @@ func _build_equipment_screen() -> void:
 		var button := Button.new()
 		button.custom_minimum_size = Vector2(485, 132)
 		button.add_theme_font_size_override("font_size", 30)
-		button.text = "%s  %s\n+%d  %s" % [EquipmentData.ITEMS[item["kind"]]["icon"], EquipmentData.ITEMS[item["kind"]]["name"], item["level"], EquipmentData.RARITIES[int(item["rarity"])] ]
+		button.text = "%s\n+%d  %s" % [EquipmentData.ITEMS[item["kind"]]["name"], item["level"], EquipmentData.RARITIES[int(item["rarity"])]]
+		button.icon = PixelUiIcons.equipment(str(EquipmentData.ITEMS[item["kind"]]["slot"]))
+		button.expand_icon = true
+		button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		_style_rarity(button, int(item["rarity"]))
 		button.pressed.connect(_select_item.bind(str(item["id"])))
 		grid.add_child(button)

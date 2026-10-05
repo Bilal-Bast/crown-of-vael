@@ -38,6 +38,7 @@ var pixel_background_layer: TextureRect
 var pixel_impact_overlay
 var pixel_hero_sprite: Sprite2D
 var pixel_enemy_sprites: Array[Sprite2D] = []
+var pixel_companion_sprites: Array[Sprite2D] = []
 ## Compatibility aliases retained for the Phase 9/legacy smoke harness.
 var squire_idle_texture: Texture2D
 var squire_attack_texture: Texture2D
@@ -382,42 +383,35 @@ func _draw_companions(unit: float) -> void:
 	if battle == null or battle.profile == null:
 		return
 	for slot in 4:
+		while pixel_companion_sprites.size() <= slot:
+			var sprite := Sprite2D.new()
+			sprite.name = "PixelCompanionSprite%d" % pixel_companion_sprites.size()
+			sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			sprite.z_index = 2
+			pixel_companion_sprites.append(sprite)
+			add_child(sprite)
 		var id := battle.profile.equipped_companion_slots[slot]
 		if id == "" or not battle.profile.companions.has(id):
+			pixel_companion_sprites[slot].visible = false
 			continue
 		var record: Dictionary = battle.profile.companions[id]
-		var data: Dictionary = CompanionData.COMPANIONS[id]
-		var visual := str(data["visual"])
-		var pos := _companion_anchor_position(slot, visual, unit)
 		var lunge := float(companion_lunges.get(slot, 0.0))
+		var state := "attack" if lunge > 0.0 else "idle"
+		var texture := CompanionPixelArt.frame(id, int(record.get("evolution", 0)), state)
+		if texture == null:
+			pixel_companion_sprites[slot].visible = false
+			continue
+		var cell := Vector2(512.0, 384.0) if id in ["wolf", "dire_wolf", "shadow_wolf", "fenrir"] else Vector2(512.0, 256.0)
+		var draw_scale := unit * CompanionPixelArt.scale_for(id)
+		var contact_y := _ground_line_y() - CompanionPixelArt.hover_height(id) * draw_scale
+		var pos := Vector2(size.x * (0.075 + slot * 0.12), contact_y - (CompanionPixelArt.contact_y(id) - cell.y * 0.5) * draw_scale)
 		if lunge > 0.0:
 			pos.x += sin((1.0 - lunge / 0.24) * PI) * 42.0 * unit
-		var color: Color = EquipmentData.COLORS[int(record["rarity"])]
-		if id == "wolf":
-			match int(record["evolution"]):
-				1: color = Color("8195ae")
-				2: color = Color("725189")
-				3: color = Color("9ce9e8")
-		draw_set_transform(pos, 0.0, Vector2.ONE * unit * 1.20)
-		match visual:
-			"fairy":
-				draw_circle(Vector2(-19, -38), 27, Color(color, 0.55))
-				draw_circle(Vector2(19, -38), 27, Color(color, 0.55))
-				draw_circle(Vector2(0, -44), 20, color)
-			"humanoid":
-				draw_rect(Rect2(-18, -60, 36, 54), color.darkened(0.35))
-				draw_circle(Vector2(0, -73), 20, Color("d9b999"))
-			"dragon":
-				draw_colored_polygon(PackedVector2Array([Vector2(-47, -35), Vector2(-10, -88), Vector2(0, -40), Vector2(36, -84), Vector2(48, -25)]), color.darkened(0.25))
-				draw_circle(Vector2(0, -48), 24, color)
-			_:
-				draw_ellipse_placeholder(Vector2(0, -30), Vector2(38, 25), color)
-				draw_circle(Vector2(-24, -58), 21, color)
-				draw_colored_polygon(PackedVector2Array([Vector2(-37, -67), Vector2(-36, -94), Vector2(-18, -71)]), color)
-		if id == "wolf" and int(record["evolution"]) > 0:
-			draw_arc(Vector2(-12, -52), 30 + int(record["evolution"]) * 7, PI, TAU, 12, Color("b9a6eb"), 5)
-		draw_string(ThemeDB.fallback_font, Vector2(-20, 2), str(data["icon"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color.WHITE)
-		draw_set_transform(Vector2.ZERO)
+		var sprite := pixel_companion_sprites[slot]
+		sprite.texture = texture
+		sprite.scale = Vector2.ONE * draw_scale
+		sprite.position = pos
+		sprite.visible = true
 
 func _draw_artifact_indicators(unit: float) -> void:
 	if battle == null or battle.profile == null:
@@ -429,7 +423,8 @@ func _draw_artifact_indicators(unit: float) -> void:
 		var pos := Vector2(16 + slot * 68, 18)
 		draw_rect(Rect2(pos, Vector2(56, 50)), Color("253739"), true)
 		draw_rect(Rect2(pos, Vector2(56, 50)), EquipmentData.COLORS[int(battle.profile.artifacts[id]["rarity"])], false, 3.0)
-		draw_string(ThemeDB.fallback_font, pos + Vector2(13, 35), str(ArtifactData.ARTIFACTS[id]["icon"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 32, Color("efcf8e"))
+		var relic_icon := PixelUiIcons.artifact(id)
+		draw_texture_rect(relic_icon, Rect2(pos + Vector2(14, 9), Vector2(28, 32)), false, Color.WHITE, true)
 
 func _draw_landscape(w: float, h: float) -> void:
 	if battle != null and battle.profile != null and str(battle.mode_config.get("mode", "campaign")) == "campaign":
