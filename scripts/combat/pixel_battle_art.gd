@@ -14,6 +14,7 @@ const CRIMSON_DESERT_BACKGROUND := "res://assets/prototype_pixel/backgrounds/cri
 const RUINED_KINGDOM_BACKGROUND := "res://assets/prototype_pixel/backgrounds/ruined_kingdom/battle.png"
 const SHADOWLANDS_BACKGROUND := "res://assets/prototype_pixel/backgrounds/shadowlands/battle.png"
 const DRAGON_PEAKS_BACKGROUND := "res://assets/prototype_pixel/backgrounds/dragon_peaks/battle.png"
+const DEMON_REALM_BACKGROUND := "res://assets/prototype_pixel/backgrounds/demon_realm/battle.png"
 const ENEMY_SHEETS := {
 	"Goblin": "res://assets/prototype_pixel/enemies/greenvale/goblin/sheet.png",
 	"Skeleton": "res://assets/prototype_pixel/enemies/greenvale/skeleton/sheet.png",
@@ -65,6 +66,11 @@ const DRAGON_PEAKS_SHEETS := {
 	"Storm Drake": "storm_drake", "Dragon Knight": "dragon_knight", "Wyvern": "wyvern",
 	"Elder Wyvern": "elder_wyvern", "Dragon Champion": "dragon_champion", "Ancient Dragon": "ancient_dragon"
 }
+const DEMON_REALM_SHEETS := {
+	"Lesser Demon": "lesser_demon", "Demon Archer": "demon_archer", "Hellhound": "hellhound",
+	"Demon Knight": "demon_knight", "Infernal Mage": "infernal_mage", "Corrupted Giant": "corrupted_giant",
+	"Demon Champion": "demon_champion", "Infernal Reaper": "infernal_reaper", "Demon Lord": "demon_lord"
+}
 const BODY_PLACEMENT := {
 	"Giant Spider": {"width": 1.48, "height": 0.78, "offset_y": 0.50},
 	"Corrupted Boar": {"width": 1.30, "height": 0.82, "offset_y": 0.54},
@@ -113,7 +119,13 @@ const BODY_PLACEMENT := {
 	"Wyvern": {"width": 1.30, "height": 1.02, "offset_y": 0.48, "offset_x": -0.04},
 	"Elder Wyvern": {"width": 1.42, "height": 1.12, "offset_y": 0.44, "offset_x": -0.08},
 	"Dragon Champion": {"width": 1.30, "height": 1.34, "offset_y": 0.38},
-	"Ancient Dragon": {"width": 1.42, "height": 0.94, "offset_y": 0.56, "offset_x": -0.04}
+	"Ancient Dragon": {"width": 1.42, "height": 0.94, "offset_y": 0.56, "offset_x": -0.04},
+	"Hellhound": {"width": 1.42, "height": 0.72, "offset_y": 0.56},
+	"Corrupted Giant": {"width": 1.05, "height": 1.08, "offset_y": 0.30},
+	"Demon Knight": {"width": 1.08, "height": 1.10, "offset_y": 0.30},
+	"Demon Champion": {"width": 1.26, "height": 1.28, "offset_y": 0.38},
+	"Infernal Reaper": {"width": 1.10, "height": 1.30, "offset_y": 0.84},
+	"Demon Lord": {"width": 1.18, "height": 0.97, "offset_y": 0.40}
 }
 const ENEMY_ENTRY_ANIMATIONS := {
 	"Goblin": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin/entry.png", "frames": 4, "fps": 11.0},
@@ -185,7 +197,7 @@ static var _frame_cache: Dictionary = {}
 static func is_active(battle: BattleController) -> bool:
 	if not PROTOTYPE_ENABLED or battle == null or battle.profile == null:
 		return false
-	if str(battle.mode_config.get("mode", "campaign")) != "campaign" or battle.region not in [1, 2, 3, 4, 5, 6, 7, 8, 9]:
+	if str(battle.mode_config.get("mode", "campaign")) != "campaign" or battle.region not in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
 		return false
 	set_battle_region(battle.region)
 	return battle.profile.selected_hero_id == "knight" and int(battle.profile.heroes.get("knight", {}).get("evolution", 0)) == 0
@@ -210,6 +222,8 @@ static func hero_run_frame(frame: int) -> Texture2D:
 	return atlas
 
 static func enemy_sheet(enemy_id: String) -> Texture2D:
+	if DEMON_REALM_SHEETS.has(enemy_id):
+		return animation_sheet(enemy_id, "idle")
 	if FOREST_SHEETS.has(enemy_id):
 		return animation_sheet(enemy_id, "idle")
 	if ASHEN_SHEETS.has(enemy_id):
@@ -231,17 +245,17 @@ static func enemy_sheet(enemy_id: String) -> Texture2D:
 	return load(str(ENEMY_SHEETS[enemy_id])) as Texture2D
 
 static func enemy_entry_frame_count(enemy_id: String) -> int:
-	if FOREST_SHEETS.has(enemy_id) or ASHEN_SHEETS.has(enemy_id) or FROSTFANG_SHEETS.has(enemy_id) or SUNKEN_MARSHES_SHEETS.has(enemy_id) or CRIMSON_DESERT_SHEETS.has(enemy_id) or RUINED_KINGDOM_SHEETS.has(enemy_id) or SHADOWLANDS_SHEETS.has(enemy_id) or DRAGON_PEAKS_SHEETS.has(enemy_id):
+	if FOREST_SHEETS.has(enemy_id) or ASHEN_SHEETS.has(enemy_id) or FROSTFANG_SHEETS.has(enemy_id) or SUNKEN_MARSHES_SHEETS.has(enemy_id) or CRIMSON_DESERT_SHEETS.has(enemy_id) or RUINED_KINGDOM_SHEETS.has(enemy_id) or SHADOWLANDS_SHEETS.has(enemy_id) or DRAGON_PEAKS_SHEETS.has(enemy_id) or DEMON_REALM_SHEETS.has(enemy_id):
 		return animation_frame_count(enemy_id, "entry")
 	return int(ENEMY_ENTRY_ANIMATIONS.get(enemy_id, {}).get("frames", 0))
 
 static func enemy_entry_fps(enemy_id: String) -> float:
-	if FOREST_SHEETS.has(enemy_id) or ASHEN_SHEETS.has(enemy_id) or FROSTFANG_SHEETS.has(enemy_id) or SUNKEN_MARSHES_SHEETS.has(enemy_id) or CRIMSON_DESERT_SHEETS.has(enemy_id) or RUINED_KINGDOM_SHEETS.has(enemy_id) or SHADOWLANDS_SHEETS.has(enemy_id) or DRAGON_PEAKS_SHEETS.has(enemy_id):
+	if FOREST_SHEETS.has(enemy_id) or ASHEN_SHEETS.has(enemy_id) or FROSTFANG_SHEETS.has(enemy_id) or SUNKEN_MARSHES_SHEETS.has(enemy_id) or CRIMSON_DESERT_SHEETS.has(enemy_id) or RUINED_KINGDOM_SHEETS.has(enemy_id) or SHADOWLANDS_SHEETS.has(enemy_id) or DRAGON_PEAKS_SHEETS.has(enemy_id) or DEMON_REALM_SHEETS.has(enemy_id):
 		return animation_fps(enemy_id, "entry")
 	return float(ENEMY_ENTRY_ANIMATIONS.get(enemy_id, {}).get("fps", 0.0))
 
 static func enemy_entry_frame(enemy_id: String, frame: int) -> Texture2D:
-	if FOREST_SHEETS.has(enemy_id) or ASHEN_SHEETS.has(enemy_id) or FROSTFANG_SHEETS.has(enemy_id) or SUNKEN_MARSHES_SHEETS.has(enemy_id) or CRIMSON_DESERT_SHEETS.has(enemy_id) or RUINED_KINGDOM_SHEETS.has(enemy_id) or SHADOWLANDS_SHEETS.has(enemy_id) or DRAGON_PEAKS_SHEETS.has(enemy_id):
+	if FOREST_SHEETS.has(enemy_id) or ASHEN_SHEETS.has(enemy_id) or FROSTFANG_SHEETS.has(enemy_id) or SUNKEN_MARSHES_SHEETS.has(enemy_id) or CRIMSON_DESERT_SHEETS.has(enemy_id) or RUINED_KINGDOM_SHEETS.has(enemy_id) or SHADOWLANDS_SHEETS.has(enemy_id) or DRAGON_PEAKS_SHEETS.has(enemy_id) or DEMON_REALM_SHEETS.has(enemy_id):
 		return animation_frame(enemy_id, "entry", frame)
 	var config: Dictionary = ENEMY_ENTRY_ANIMATIONS.get(enemy_id, {})
 	if config.is_empty() or not ResourceLoader.exists(str(config["path"]), "Texture2D"):
@@ -261,6 +275,8 @@ static func enemy_entry_frame(enemy_id: String, frame: int) -> Texture2D:
 	return atlas
 
 static func animation_frame_count(character_id: String, state: String) -> int:
+	if DEMON_REALM_SHEETS.has(character_id):
+		return int(_demon_realm_config(character_id, state).get("frames", 0))
 	if FOREST_SHEETS.has(character_id):
 		return int(_forest_config(character_id, state).get("frames", 0))
 	if ASHEN_SHEETS.has(character_id):
@@ -280,6 +296,8 @@ static func animation_frame_count(character_id: String, state: String) -> int:
 	return int(CHARACTER_ANIMATIONS.get(character_id, {}).get(state, {}).get("frames", 0))
 
 static func animation_fps(character_id: String, state: String) -> float:
+	if DEMON_REALM_SHEETS.has(character_id):
+		return float(_demon_realm_config(character_id, state).get("fps", 0.0))
 	if FOREST_SHEETS.has(character_id):
 		return float(_forest_config(character_id, state).get("fps", 0.0))
 	if ASHEN_SHEETS.has(character_id):
@@ -299,6 +317,14 @@ static func animation_fps(character_id: String, state: String) -> float:
 	return float(CHARACTER_ANIMATIONS.get(character_id, {}).get(state, {}).get("fps", 0.0))
 
 static func animation_sheet(character_id: String, state: String) -> Texture2D:
+	if DEMON_REALM_SHEETS.has(character_id):
+		var demon_config := _demon_realm_config(character_id, state)
+		if demon_config.is_empty(): return null
+		var demon_path := str(demon_config["path"])
+		if not ResourceLoader.exists(demon_path, "Texture2D"): return null
+		var demon_sheet := load(demon_path) as Texture2D
+		if demon_sheet == null or demon_sheet.get_width() != int(demon_config["frames"]) * 256 or demon_sheet.get_height() != 256: return null
+		return demon_sheet
 	if FOREST_SHEETS.has(character_id):
 		var forest_config := _forest_config(character_id, state)
 		if forest_config.is_empty():
@@ -402,6 +428,8 @@ static func enemy_fallback_frame(enemy_id: String, state: String) -> Texture2D:
 	return frame_texture(legacy, state, "enemy-fallback:%s" % enemy_id) if legacy != null and legacy.get_width() % 3 == 0 else null
 
 static func background_texture() -> Texture2D:
+	if _active_region == 10:
+		return load(DEMON_REALM_BACKGROUND) as Texture2D
 	if _active_region == 8:
 		return load(SHADOWLANDS_BACKGROUND) as Texture2D
 	if _active_region == 9:
@@ -471,6 +499,22 @@ static func _dragon_peaks_config(character_id: String, state: String) -> Diction
 	var anim := "entrance" if boss and state in ["entry", "entrance"] else state
 	var fps := 7.0 if state == "idle" else (8.0 if boss and state in ["entry", "entrance", "death"] else 11.0)
 	return {"path": "res://assets/prototype_pixel/enemies/dragon_peaks/%s/%s.png" % [DRAGON_PEAKS_SHEETS[character_id], anim], "frames": frames, "fps": fps}
+
+static func _demon_realm_config(character_id: String, state: String) -> Dictionary:
+	if not DEMON_REALM_SHEETS.has(character_id): return {}
+	var boss := character_id == "Demon Lord"
+	var elite := character_id in ["Demon Champion", "Infernal Reaper"]
+	if state == "entrance" and not boss: return {}
+	var frames := 4
+	if state == "attack": frames = 6 if boss else 5
+	elif state == "hit": frames = 4 if elite or boss else 3
+	elif state == "death":
+		if not boss: return {}
+		frames = 6
+	elif state not in (["idle", "entry", "entrance"] if boss else ["idle", "entry"]): return {}
+	var anim := "entrance" if boss and state in ["entry", "entrance"] else state
+	var fps := 7.0 if state == "idle" else (8.0 if boss and state in ["entry", "entrance", "death"] else 11.0)
+	return {"path": "res://assets/prototype_pixel/enemies/demon_realm/%s/%s.png" % [DEMON_REALM_SHEETS[character_id], anim], "frames": frames, "fps": fps}
 
 static func _ashen_config(character_id: String, state: String) -> Dictionary:
 	if not ASHEN_SHEETS.has(character_id): return {}
@@ -549,6 +593,7 @@ static func validation_report() -> Array[String]:
 		7: active_background = RUINED_KINGDOM_BACKGROUND
 		8: active_background = SHADOWLANDS_BACKGROUND
 		9: active_background = DRAGON_PEAKS_BACKGROUND
+		10: active_background = DEMON_REALM_BACKGROUND
 	var paths: Array[String] = [HERO_SHEET, active_background, HERO_RUN_SHEET]
 	for path in ENEMY_SHEETS.values():
 		paths.append(str(path))
@@ -598,6 +643,11 @@ static func validation_report() -> Array[String]:
 			for state in ["idle", "entry", "entrance", "attack", "hit", "death"]:
 				var config := _dragon_peaks_config(character_id, state)
 				if not config.is_empty(): paths.append(str(config["path"]))
+	if _active_region == 10:
+		for character_id in DEMON_REALM_SHEETS:
+			for state in ["idle", "entry", "entrance", "attack", "hit", "death"]:
+				var config := _demon_realm_config(character_id, state)
+				if not config.is_empty(): paths.append(str(config["path"]))
 	for path in paths:
 		if not ResourceLoader.exists(path, "Texture2D") or load(path) == null:
 			warnings.append("Unable to load prototype texture: %s" % path)
@@ -608,7 +658,7 @@ static func validation_report() -> Array[String]:
 				if str(config["path"]) == path:
 					animation_config = config
 					break
-		if not animation_config.is_empty() or path.contains("/enemies/whispering_forest/") or path.contains("/enemies/ashen_highlands/") or path.contains("/enemies/frostfang_mountains/") or path.contains("/enemies/sunken_marshes/") or path.contains("/enemies/crimson_desert/") or path.contains("/enemies/ruined_kingdom/") or path.contains("/enemies/shadowlands/") or path.contains("/enemies/dragon_peaks/"):
+		if not animation_config.is_empty() or path.contains("/enemies/whispering_forest/") or path.contains("/enemies/ashen_highlands/") or path.contains("/enemies/frostfang_mountains/") or path.contains("/enemies/sunken_marshes/") or path.contains("/enemies/crimson_desert/") or path.contains("/enemies/ruined_kingdom/") or path.contains("/enemies/shadowlands/") or path.contains("/enemies/dragon_peaks/") or path.contains("/enemies/demon_realm/"):
 			var animation_texture := load(path) as Texture2D
 			var expected_frames := int(animation_config.get("frames", 0))
 			for character_id in FOREST_SHEETS:
@@ -651,6 +701,11 @@ static func validation_report() -> Array[String]:
 					var config := _dragon_peaks_config(character_id, state)
 					if not config.is_empty() and str(config["path"]) == path:
 						expected_frames = int(config["frames"])
+			for character_id in DEMON_REALM_SHEETS:
+				for state in ["idle", "entry", "entrance", "attack", "hit", "death"]:
+					var config := _demon_realm_config(character_id, state)
+					if not config.is_empty() and str(config["path"]) == path:
+						expected_frames = int(config["frames"])
 			if animation_texture.get_width() != expected_frames * 256 or animation_texture.get_height() != 256:
 				warnings.append("Invalid combat animation sheet: %s" % path)
 			continue
@@ -667,7 +722,7 @@ static func validation_report() -> Array[String]:
 			var entry_texture := load(path) as Texture2D
 			if entry_texture.get_width() != int(entry_config["frames"]) * 256 or entry_texture.get_height() != 256:
 				warnings.append("Invalid enemy entry sheet: %s" % path)
-		elif path not in [BACKGROUND, FOREST_BACKGROUND, ASHEN_BACKGROUND, FROSTFANG_BACKGROUND, SUNKEN_MARSHES_BACKGROUND, CRIMSON_DESERT_BACKGROUND, RUINED_KINGDOM_BACKGROUND, SHADOWLANDS_BACKGROUND, DRAGON_PEAKS_BACKGROUND]:
+		elif path not in [BACKGROUND, FOREST_BACKGROUND, ASHEN_BACKGROUND, FROSTFANG_BACKGROUND, SUNKEN_MARSHES_BACKGROUND, CRIMSON_DESERT_BACKGROUND, RUINED_KINGDOM_BACKGROUND, SHADOWLANDS_BACKGROUND, DRAGON_PEAKS_BACKGROUND, DEMON_REALM_BACKGROUND]:
 			var texture := load(path) as Texture2D
 			if texture.get_width() % 3 != 0 or texture.get_height() <= 0:
 				warnings.append("Invalid three-frame sprite sheet: %s" % path)

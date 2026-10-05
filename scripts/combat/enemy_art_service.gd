@@ -61,7 +61,6 @@ const FLIP_H_ENEMIES := [
 	"Corrupted Boar", "Poison Wolf", "Magma Hound", "Fire Archer",
 	"Frost Wolf", "Swamp Beast", "Plague Rat", "Sand Scorpion",
 	"Sand Wolf", "Tomb Archer", "Ancient Sand Wyrm",
-	"Hellhound", "Demon Archer", "Lesser Demon",
 ]
 static var _resolved_paths: Dictionary = {}
 static var _texture_cache: Dictionary = {}
