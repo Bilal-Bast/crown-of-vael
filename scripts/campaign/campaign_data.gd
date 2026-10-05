@@ -114,7 +114,7 @@ static func enemy_stats(kind: String, difficulty: int, region: int, stage: int, 
 		base_atk = 24.0
 	var reward_scale := 1.0 + (region - 1) * 0.28 + (stage - 1) * 0.025 + difficulty * 0.5
 	var reward_bonus := 3.0 if role == "TREASURE" else (4.0 if boss else (1.7 if elite else 1.0))
-	return {"kind":kind,"visual":kind,"family":family(kind),"archetype":role,"element":element(kind, region),"hp":base_hp,"atk":base_atk,"armor":float(modifier["armor"]) * rank * HP_MULTIPLIERS[difficulty],"speed":float(modifier["speed"]),"gold":maxi(1,roundi(4.0 * reward_scale * reward_bonus)),"exp":maxi(1,roundi(3.0 * reward_scale * reward_bonus)),"color":Color(str(info["accent"])),"difficulty":difficulty,"region":region}
+	return {"kind":kind,"visual":kind,"family":family(kind),"archetype":role,"element":element(kind, region),"hp":base_hp,"atk":base_atk,"armor":float(modifier["armor"]) * rank,"speed":float(modifier["speed"]),"gold":maxi(1,roundi(4.0 * reward_scale * reward_bonus)),"exp":maxi(1,roundi(3.0 * reward_scale * reward_bonus)),"color":Color(str(info["accent"])),"difficulty":difficulty,"region":region}
 
 static func region_reward(difficulty: int, region: int) -> Dictionary:
 	return {"gems":3 + difficulty * 2 + region / 3,"gold":100 * region * (difficulty + 1),"crests":1 + difficulty / 2,"stones":2 + difficulty,"essence":1 + difficulty,"dust":1 + difficulty}
