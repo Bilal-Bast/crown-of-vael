@@ -1,9 +1,9 @@
 class_name QuestsScreen
 extends VBoxContainer
 
-const GOLD := Color("e9c87d")
-const PALE := Color("e9e8d7")
-const MUTED := Color("aebdb4")
+const GOLD := Color("ffd166")
+const PALE := Color("f3f7ff")
+const MUTED := Color("b8cbe2")
 var profile: SaveData
 var service: ProgressionService
 var tab := "daily"

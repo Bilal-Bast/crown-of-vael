@@ -17,10 +17,10 @@ func refresh() -> void:
 	for child in get_children():
 		remove_child(child)
 		child.queue_free()
-	add_child(_label("LOGIN REWARDS", 42, Color("e9c87d")))
-	add_child(_label("Claim once per local day. Missed days do not break your sequence.", 26, Color("aebdb4")))
+	add_child(_label("LOGIN REWARDS", 42, Color("ffd166")))
+	add_child(_label("Claim once per local day. Missed days do not break your sequence.", 26, Color("b8cbe2")))
 	if notice != "":
-		var glow := _label("✦ " + notice, 28, Color("e9c87d"))
+		var glow := _label("✦ " + notice, 28, Color("ffd166"))
 		add_child(glow)
 		glow.modulate.a = 0.2
 		create_tween().tween_property(glow, "modulate:a", 1.0, 0.28)
@@ -34,7 +34,7 @@ func refresh() -> void:
 	bonus.disabled = profile.daily_bonus_ad_claim == today
 	bonus.pressed.connect(_claim_bonus)
 	add_child(bonus)
-	add_child(_label("28-DAY LOGIN CALENDAR", 34, Color("e9c87d")))
+	add_child(_label("28-DAY LOGIN CALENDAR", 34, Color("ffd166")))
 	var grid := GridContainer.new()
 	grid.columns = 4
 	add_child(grid)
