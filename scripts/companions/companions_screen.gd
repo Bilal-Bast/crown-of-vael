@@ -43,6 +43,7 @@ func refresh() -> void:
 		var id := profile.equipped_companion_slots[index]
 		var button := _button("%d\n%s" % [index + 1, "EMPTY" if id == "" else CompanionData.display_name(id, profile.companions[id])])
 		button.custom_minimum_size.y = 110
+		CrownUI.style_tab(button, id != "", Color("79c78b"))
 		button.pressed.connect(_slot_pressed.bind(index))
 		slots.add_child(button)
 	if selected_id != "" and profile.companions.has(selected_id):
