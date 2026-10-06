@@ -8,8 +8,7 @@ func _initialize() -> void:
 
 func _run() -> void:
 	var main := (load("res://scenes/main.tscn") as PackedScene).instantiate() as Control
-	main.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
-	main.size = Vector2(360, 640)
+	main.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.add_child(main)
 	await process_frame
 	await process_frame
@@ -24,25 +23,35 @@ func _run() -> void:
 	profile.upgrades = {"atk": 0, "hp": 0, "armor": 0, "speed": 0, "crit_chance": 0, "crit_damage": 0}
 	battle.start(profile)
 	await process_frame
-	var battle_area: VBoxContainer = main.get("battle_area")
+	var battle_area: Control = main.get("battle_area")
+	var battlefield_host: Control = main.get("battlefield_host")
+	var skill_panel := main.find_child("BattleSkillPanel", true, false) as Control
 	var upgrades_panel: Control = main.get("upgrade_panel")
 	var upgrade_scroll: ScrollContainer = main.get("upgrade_list_scroll")
 	var upgrade_buttons: Dictionary = main.get("upgrade_buttons")
 	var nav_buttons: Dictionary = main.get("nav_buttons")
 	var skill_bar: SkillBar = main.get("skill_bar")
-	var nav_top_before := (nav_buttons["Battle"] as Control).get_global_rect().position.y
-	_check(battle_area.get_child_count() == 3, "battle area has field, skills, and scrolling upgrades")
-	_check(battle_area.get_child(0).name == "BattlefieldHost", "battlefield remains first in Battle layout")
-	_check(battle_area.get_child(1).name == "BattleSkillPanel", "skill strip sits directly below battlefield")
-	_check(battle_area.get_child(2).name == "BattleLowerControlsScroll", "scrolling upgrades follow skills without the Power divider")
-	_check(upgrades_panel.get_global_rect().position.y > battle_area.get_child(1).get_global_rect().position.y, "upgrade cards follow the skill row")
+	var nav_top_before := (nav_buttons["Heroes"] as Control).get_global_rect().position.y
+	_check(battle_area.get_child_count() == 1 and battle_area.get_child(0) == battlefield_host, "battlefield fills the top battle section")
+	_check(absf(battlefield_host.get_global_rect().position.y - main.get_global_rect().position.y) <= 1.0, "battlefield begins at the top edge")
+	_check(skill_panel.get_parent() == battlefield_host, "skill strip overlays the bottom of the battlefield")
+	_check(upgrade_scroll.get_parent() == main.get("feature_screens"), "scrolling upgrades begin in the lower feature section")
+	var upgrade_guide_y := main.size.y * 0.33
+	_check(absf(upgrades_panel.get_global_rect().position.y - upgrade_guide_y) <= 24.0, "upgrade panel begins at the marked one-third screen guide")
+	_check(skill_panel.get_global_rect().end.y <= battle_area.get_global_rect().end.y + 1.0, "skill controls stay above the upgrade boundary")
 	_check(main.get("battle_power_divider") == null, "Power divider is removed from the Battle flow")
 	_check(PixelUiIcons.gold_coin() != null and PixelUiIcons.gems() != null, "top currencies use pixel-art icons")
 	var top_panel := main.find_child("TopCurrencyPanel", true, false) as Control
 	var top_box := top_panel.get_child(0) as VBoxContainer
-	_check(top_box.get_child_count() == 1 and (top_box.get_child(0) as HBoxContainer).get_child_count() == 3, "top bar keeps only Gold, Gems, and Power with no title or mystery button")
+	_check(top_box.get_child_count() == 2 and (top_box.get_child(0) as HBoxContainer).get_child_count() == 3, "top overlay keeps three compact currency capsules and the hero status row")
+	for capsule in (top_box.get_child(0) as HBoxContainer).get_children():
+		_check((capsule as PanelContainer).get_child(0).get_child_count() == 2, "currency capsule shows an icon and value on one line")
 	_check((main.get("upgrade_mode_buttons") as Dictionary).size() == 3, "x1, x10, and MAX purchase modes are available")
 	_check((main.get("skill_auto_button") as Button).get_global_rect().position.x < skill_bar.get_global_rect().position.x, "skill Auto control sits at left of skill row")
+	var left_shortcuts := main.find_child("FloatingShortcutsLeft", true, false) as Control
+	var right_shortcuts := main.find_child("FloatingShortcutsRight", true, false) as Control
+	_check(skill_bar.get_global_rect().position.x >= left_shortcuts.get_global_rect().end.x, "skill touch area stays clear of the left shortcut rail")
+	_check(skill_bar.get_global_rect().end.x <= right_shortcuts.get_global_rect().position.x, "skill touch area stays clear of the right shortcut rail")
 	_check((main.get("skill_auto_button") as Button).text.contains("ON"), "skill Auto starts enabled")
 	_check(CompanionPixelArt.formation_x("archer_companion", 0) < CompanionPixelArt.formation_x("wolf", 0), "ranged companions are positioned behind melee companions")
 	_check(CompanionPixelArt.formation_x("archer_companion", 3) < 0.24 and CompanionPixelArt.formation_x("wolf", 0) > 0.24, "ranged companions group behind hero while melee companions flank beside it")
@@ -60,7 +69,7 @@ func _run() -> void:
 	upgrade_scroll.scroll_vertical = scroll_max
 	await process_frame
 	_check(upgrade_scroll.scroll_vertical > 0, "upgrade list can scroll to later rows")
-	_check(is_equal_approx((nav_buttons["Battle"] as Control).get_global_rect().position.y, nav_top_before), "bottom navigation stays fixed while upgrades scroll")
+	_check(is_equal_approx((nav_buttons["Heroes"] as Control).get_global_rect().position.y, nav_top_before), "bottom navigation stays fixed while upgrades scroll")
 	var run_time_before_scroll := battle.run_time
 	await create_timer(0.35).timeout
 	_check(battle.run_time > run_time_before_scroll and battle.active, "combat and automatic skill runtime continue while the upgrade list scrolls")
@@ -163,7 +172,7 @@ func _run() -> void:
 	(main.get("upgrade_buttons")["atk"] as Button).pressed.emit()
 	_check(int(profile.upgrades["atk"]) == GameData.upgrade_max_rank("atk"), "MAX stops at the stat rank cap")
 	main.call("_select_tab", "Heroes")
-	_check((main.get("heroes_area") as Control).visible and not (main.get("battle_area") as Control).visible, "navigation remains available while battle controls are shown")
+	_check((main.get("heroes_area") as Control).visible and (main.get("battle_area") as Control).visible, "battlefield remains visible behind the selected feature screen")
 	main.queue_free()
 	print("BATTLE UPGRADE UI SMOKE: %s (%d failures)" % ["FAIL" if failures else "PASS", failures])
 	quit(1 if failures else 0)
