@@ -1158,8 +1158,8 @@ func _update_stage_overlay_size() -> void:
 	if stage_panel == null:
 		return
 	var retry_visible := action_button != null and action_button.visible
-	stage_panel.anchor_left = 0.06
-	stage_panel.anchor_right = 0.52 if not retry_visible else 0.94
+	stage_panel.anchor_left = 0.28 if not retry_visible else 0.06
+	stage_panel.anchor_right = 0.72 if not retry_visible else 0.94
 	stage_panel.offset_bottom = 154.0 if not retry_visible else 190.0
 
 func _select_tab(tab_name: String) -> void:
