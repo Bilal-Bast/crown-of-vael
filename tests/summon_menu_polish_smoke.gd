@@ -128,17 +128,16 @@ func _test_menu_navigation() -> void:
 	root.add_child(main)
 	await process_frame
 	main.call("_select_tab","Equipment")
-	_check((main.get("equipment_area") as Control).visible and not (main.get("battle_area") as Control).visible, "equipment navigation opens its screen")
+	_check((main.get("equipment_area") as Control).visible and (main.get("battle_area") as Control).visible, "equipment navigation opens over the visible battlefield")
 	_check(not (main.get("stage_panel") as Control).visible, "campaign HUD is hidden outside battle")
-	var drawer := main.get("menu_drawer") as Control
-	var toggle := main.get("menu_toggle") as Button
-	toggle.pressed.emit()
-	await process_frame
-	_check(drawer.visible and toggle.text == "Menu -", "menu drawer opens")
 	var nav_buttons: Dictionary = main.get("nav_buttons")
-	for destination in ["Adventure","Skills","Quests","Login","Pass","Shop","Account","Social","Settings"]:
-		_check(nav_buttons.has(destination), "drawer keeps %s navigation" % destination)
-	toggle.pressed.emit()
+	var dock := main.find_child("BottomNavigationDock", true, false) as Control
+	_check(dock != null, "bottom navigation dock exists")
+	for destination in ["Heroes", "Companions", "Equipment", "Skills", "Summon", "Adventure", "Quests", "Login", "Pass", "Shop", "Account", "Social", "Settings"]:
+		_check(nav_buttons.has(destination), "navigation keeps %s shortcut" % destination)
+		var button: Button = nav_buttons.get(destination)
+		if destination in ["Adventure", "Quests", "Login", "Pass", "Shop", "Account", "Social", "Settings"]:
+			_check(bool(button.get_meta("crown_floating_nav", false)), "%s stays a floating shortcut" % destination)
 	main.queue_free()
 
 func _grid_card_count(node: Node) -> int:
