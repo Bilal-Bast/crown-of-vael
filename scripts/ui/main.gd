@@ -1,5 +1,34 @@
 extends Control
 
+class CampaignRouteTrack extends Control:
+	var current_stage := 1
+
+	func set_stage(value: int) -> void:
+		current_stage = clampi(value, 1, 20)
+		queue_redraw()
+
+	func _draw() -> void:
+		if size.x <= 20.0:
+			return
+		var left := 8.0
+		var right := size.x - 8.0
+		var center_y := size.y * 0.5
+		var active_x := lerpf(left, right, float(current_stage - 1) / 19.0)
+		draw_line(Vector2(left, center_y), Vector2(right, center_y), Color("76817b", 0.68), 3.0, true)
+		draw_line(Vector2(left, center_y), Vector2(active_x, center_y), Color("d7ad5c", 0.92), 4.0, true)
+		for index in 20:
+			var x := lerpf(left, right, float(index) / 19.0)
+			var milestone := (index + 1) % 5 == 0
+			var boss := index == 19
+			var radius := 11.0 if milestone else 3.0
+			var color := Color("c86e62") if boss else (Color("edcb79") if index + 1 <= current_stage else Color("59645f"))
+			if index + 1 == current_stage:
+				draw_circle(Vector2(x, center_y), radius + 4.0, Color("a9deeb", 0.36))
+				draw_circle(Vector2(x, center_y), radius + 1.5, Color("dcebef"))
+			draw_circle(Vector2(x, center_y), radius, color)
+			if milestone and not boss:
+				draw_circle(Vector2(x, center_y), radius * 0.48, Color("b9873e"))
+
 const BattleScript = preload("res://scripts/combat/battle_controller.gd")
 const BattlefieldScript = preload("res://scripts/combat/battlefield.gd")
 const SkillBarScript = preload("res://scripts/skills/skill_bar.gd")
@@ -78,7 +107,7 @@ var login_popup: PopupPanel
 var adventure_screen: AdventureScreen
 var pve_service: PveService
 var current_run := {}
-var road_track: HBoxContainer
+var road_track: CampaignRouteTrack
 var stage_panel: PanelContainer
 var currency_panel: PanelContainer
 var stage_status_row: HBoxContainer
@@ -103,7 +132,6 @@ var power_text: Label
 var battle_hero_level_text: Label
 var battle_hero_hp_text: Label
 var battle_hero_hp_bar: ProgressBar
-var stage_markers: Array[ColorRect] = []
 var hero_level_text: Label
 var hero_hp_text: Label
 var battle_hero_portrait: HeroPortrait
@@ -495,7 +523,17 @@ func _build_stage_card() -> void:
 	box.add_theme_constant_override("separation", 0)
 	panel.add_child(box)
 	var heading := HBoxContainer.new()
+	heading.add_theme_constant_override("separation", 7)
 	box.add_child(heading)
+	var stage_emblem := TextureRect.new()
+	stage_emblem.name = "CampaignStageEmblem"
+	stage_emblem.custom_minimum_size = Vector2(38, 38)
+	stage_emblem.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	stage_emblem.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	stage_emblem.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	stage_emblem.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	stage_emblem.texture = PixelUiIcons.gold_coin()
+	heading.add_child(stage_emblem)
 	stage_text = _label("", 36, PALE)
 	stage_text.add_theme_font_size_override("font_size", 28)
 	stage_text.clip_text = true
@@ -517,16 +555,10 @@ func _build_stage_card() -> void:
 	wave_text.add_theme_font_size_override("font_size", 22)
 	wave_text.clip_text = true
 	context.add_child(wave_text)
-	road_track = HBoxContainer.new()
-	road_track.add_theme_constant_override("separation", 3)
+	road_track = CampaignRouteTrack.new()
+	road_track.name = "CampaignRouteTrack"
+	road_track.custom_minimum_size.y = 24
 	box.add_child(road_track)
-	for i in 20:
-		var marker := ColorRect.new()
-		marker.color = Color("52605c")
-		marker.custom_minimum_size.y = 7
-		marker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		road_track.add_child(marker)
-		stage_markers.append(marker)
 	stage_status_row = HBoxContainer.new()
 	stage_status_row.add_theme_constant_override("separation", 6)
 	stage_status_row.visible = false
@@ -1108,15 +1140,18 @@ func _refresh_ui() -> void:
 		battle_hero_hp_text.text = "HP %s / %s" % [NumberFormatScript.compact(roundi(current_hp)), NumberFormatScript.compact(roundi(max_hp))]
 		battle_hero_hp_text.add_theme_color_override("font_color", Color("e08a73") if hp_ratio <= 0.30 else Color("9fd49f"))
 	var campaign := str(battle.mode_config.get("mode", "campaign")) == "campaign"
-	stage_text.text = CampaignData.label(profile.campaign_difficulty, profile.region, profile.stage).to_upper() if campaign else PveData.mode_label(battle.mode_config)
+	if campaign:
+		var difficulty_name := str(CampaignData.DIFFICULTIES[profile.campaign_difficulty]).to_lower().capitalize()
+		stage_text.text = "%s %d-%d" % [difficulty_name, profile.region, profile.stage]
+	else:
+		stage_text.text = str(PveData.mode_label(battle.mode_config)).to_lower().capitalize()
 	var boss_stage := campaign and profile.stage == 20
 	var stage_style := stage_panel.get_theme_stylebox("panel") as StyleBoxFlat
 	if stage_style != null:
 		stage_style.border_color = Color("d6aa66", 0.88) if boss_stage else Color("c3a773", 0.65)
 	region_text.text = CampaignData.REGIONS[profile.region - 1]["name"] if campaign else battle.mode_detail()
 	road_track.visible = campaign
-	for i in stage_markers.size():
-		stage_markers[i].color = (Color("d48463") if i == 19 else (Color("bf9bcf") if (i + 1) in [5, 10, 15] else GOLD)) if i < profile.stage else Color("52605c")
+	road_track.set_stage(profile.stage)
 	if not campaign:
 		wave_text.text = "%d enemies remaining" % _living_enemies()
 	elif profile.campaign_complete:
