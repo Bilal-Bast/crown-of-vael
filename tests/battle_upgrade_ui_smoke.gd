@@ -50,6 +50,8 @@ func _run() -> void:
 	_check((main.get("skill_auto_button") as Button).get_global_rect().position.x < skill_bar.get_global_rect().position.x, "skill Auto control sits at left of skill row")
 	var left_shortcuts := main.find_child("FloatingShortcutsLeft", true, false) as Control
 	var right_shortcuts := main.find_child("FloatingShortcutsRight", true, false) as Control
+	_check(left_shortcuts.get_global_rect().end.y <= skill_panel.get_global_rect().position.y + 1.0, "left shortcut rail ends above the skill strip")
+	_check(right_shortcuts.get_global_rect().end.y <= skill_panel.get_global_rect().position.y + 1.0, "right shortcut rail ends above the skill strip")
 	_check(skill_bar.get_global_rect().position.x >= left_shortcuts.get_global_rect().end.x, "skill touch area stays clear of the left shortcut rail")
 	_check(skill_bar.get_global_rect().end.x <= right_shortcuts.get_global_rect().position.x, "skill touch area stays clear of the right shortcut rail")
 	_check((main.get("skill_auto_button") as Button).text.contains("ON"), "skill Auto starts enabled")
