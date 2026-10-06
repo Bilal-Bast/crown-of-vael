@@ -45,36 +45,46 @@ func refresh() -> void:
 		slots.add_child(button)
 	if selected_id != "" and profile.companions.has(selected_id):
 		_build_detail()
-	add_child(_label("COMPANION ROSTER", 32, Color("e9c87d")))
+	add_child(_label("COMPANION COLLECTION  •  %d / %d" % [profile.companions.size(), CompanionData.COMPANIONS.size()], 32, Color("e9c87d")))
 	for id in CompanionData.COMPANIONS:
 		var owned := profile.companions.has(id)
 		var record: Dictionary = profile.companions.get(id, {})
 		var rarity := int(record.get("rarity", 0))
-		var card := _panel(EquipmentData.COLORS[rarity] if owned else Color("52605c"))
-		add_child(card)
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 12)
-		card.add_child(row)
+		var grid := get_node_or_null("CompanionCollection") as GridContainer
+		if grid == null:
+			grid = GridContainer.new()
+			grid.name = "CompanionCollection"
+			grid.columns = 2
+			grid.add_theme_constant_override("h_separation", 10)
+			grid.add_theme_constant_override("v_separation", 10)
+			add_child(grid)
+		var card := Button.new()
+		card.custom_minimum_size = Vector2(480, 310)
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_style_card(card, EquipmentData.COLORS[rarity] if owned else Color("52605c"), selected_id == id)
+		var contents := VBoxContainer.new()
+		contents.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		contents.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		contents.alignment = BoxContainer.ALIGNMENT_CENTER
+		contents.add_theme_constant_override("separation", 1)
+		card.add_child(contents)
 		var portrait := TextureRect.new()
-		portrait.custom_minimum_size = Vector2(88, 88)
+		portrait.custom_minimum_size = Vector2(0, 210)
+		portrait.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		portrait.texture = CompanionPixelArt.frame(id, int(record.get("evolution", 0)), "idle")
-		row.add_child(portrait)
-		var box := VBoxContainer.new()
-		box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(box)
-		box.add_child(_label("%s  |  %s" % [CompanionData.display_name(id, record), EquipmentData.RARITIES[rarity] if owned else "LOCKED"], 31, EquipmentData.COLORS[rarity] if owned else Color("aebdb4")))
-		if owned:
-			box.add_child(_label("Level %d  •  %d stars  •  Evolution %d" % [record["level"], record["stars"], record["evolution"]], 28, Color("e9e8d7")))
-			box.add_child(_label("ATK %.1f  •  %.2f attacks/s  •  %s" % [CompanionData.attack(id, record), CompanionData.attack_speed(id, record), CompanionData.passive_text(id, record)], 27, Color("a9d6ad")))
-			var select := _button("SELECT" if selected_id != id else "SELECTED")
-			select.disabled = selected_id == id
-			select.pressed.connect(_select.bind(id))
-			box.add_child(select)
-		else:
-			box.add_child(_label("Summon a copy to unlock. Evolution path locked." if id != "wolf" else "Summon a copy to unlock the Wolf evolution line.", 27, Color("aebdb4")))
+		contents.add_child(portrait)
+		var name_label := _label(CompanionData.display_name(id, record), 23, EquipmentData.COLORS[rarity] if owned else Color("aebdb4"))
+		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name_label.clip_text = true
+		contents.add_child(name_label)
+		var level_label := _label(("LV %d  •  ★ %d" % [record["level"], record["stars"]]) if owned else "LOCKED", 19, Color("c2c9bd"))
+		level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		contents.add_child(level_label)
+		card.pressed.connect(_select.bind(id))
+		grid.add_child(card)
 
 func _build_detail() -> void:
 	var record: Dictionary = profile.companions[selected_id]
@@ -170,3 +180,13 @@ func _button(value: String) -> Button:
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.add_theme_font_size_override("font_size", 27)
 	return button
+
+func _style_card(button: Button, border: Color, selected: bool) -> void:
+	for state in ["normal", "hover", "pressed", "focus"]:
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color("26353a") if not selected else Color("374640")
+		style.border_color = Color("e9c87d") if selected else border
+		style.set_border_width_all(3 if selected else 2)
+		style.set_corner_radius_all(10)
+		style.set_content_margin_all(9)
+		button.add_theme_stylebox_override(state, style)

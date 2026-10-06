@@ -33,3 +33,14 @@ static func contact_y(id: String) -> float:
 ## The wolf atlas artwork faces left, so only this battle presentation is flipped.
 static func battle_flip_h(id: String) -> bool:
 	return id in ["wolf", "dire_wolf", "shadow_wolf", "fenrir"]
+
+static func is_ranged(id: String) -> bool:
+	return id in ["fairy", "young_dragon", "archer_companion", "cleric_companion", "apprentice_mage"]
+
+static func formation_x(id: String, group_index: int) -> float:
+	return clampf(0.02 + group_index * 0.072, 0.02, 0.236) if is_ranged(id) else clampf(0.32 + group_index * 0.08, 0.30, 0.56)
+
+static func formation_scale(id: String, group_count: int) -> float:
+	if not is_ranged(id):
+		return 0.82 if group_count >= 4 else (0.88 if group_count == 3 else (0.94 if group_count == 2 else 1.0))
+	return 0.66 if group_count >= 4 else (0.72 if group_count == 3 else (0.84 if group_count == 2 else 1.0))
