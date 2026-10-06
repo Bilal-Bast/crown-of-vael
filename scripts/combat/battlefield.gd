@@ -54,6 +54,7 @@ var squire_attack_texture: Texture2D
 var squire_guard_texture: Texture2D
 var shake_time := 0.0
 var hero_visual_state := "idle"
+var ambient_time := 0.0
 
 func _init() -> void:
 	floaters = vfx.labels
@@ -113,6 +114,7 @@ func _update_texture_filter() -> void:
 		impact_layer.add_child(pixel_impact_overlay)
 
 func _process(delta: float) -> void:
+	ambient_time = fposmod(ambient_time + delta, 3600.0)
 	hero_lunge = maxf(0.0, hero_lunge - delta)
 	hero_attack_art_time = maxf(0.0, hero_attack_art_time - delta)
 	hero_guard_art_time = maxf(0.0, hero_guard_art_time - delta)
@@ -348,6 +350,7 @@ func _draw() -> void:
 	var h := size.y
 	var unit := minf(w / 1000.0, h / (560.0 if PixelBattleArt.is_active(battle) else 650.0))
 	_draw_landscape(w, h)
+	_draw_region_atmosphere(w, h, unit)
 	var shake := Vector2(randf_range(-1, 1), randf_range(-1, 1)) * unit * vfx.shake_strength * (vfx.shake_time / 0.20) if vfx.shake_time > 0.0 else Vector2.ZERO
 	var hero_pos := _hero_position() + shake
 	if hero_lunge > 0.0:
@@ -394,6 +397,26 @@ func _draw() -> void:
 		for i in pixel_enemy_sprites.size():
 			_sync_pixel_enemy_visibility(i, false)
 	_draw_artifact_indicators(unit)
+
+func _draw_region_atmosphere(w: float, h: float, unit: float) -> void:
+	if battle == null or not battle.active or battle.profile != null and battle.profile.reduced_effects:
+		return
+	var region := clampi(battle.region, 1, CampaignData.REGIONS.size())
+	var accent := Color(str(CampaignData.REGIONS[region - 1].get("accent", "c6c1a0")))
+	var is_snow := region == 4
+	var is_ember := region in [3, 6, 8, 10]
+	var particle_color := Color("d9f1fa", 0.32) if is_snow else (Color("ffc178", 0.24) if is_ember else Color(accent, 0.25))
+	for index in 9:
+		var speed := 0.018 + float(index % 4) * 0.006
+		var phase := fposmod(ambient_time * speed + float(index) * 0.137, 1.0)
+		var x_phase := fposmod(float(index) * 0.271 + phase * (0.26 if is_snow else 0.10), 1.0)
+		var y_phase := fposmod(phase + float(index) * 0.113, 1.0)
+		var x := w * (0.08 + x_phase * 0.84)
+		var y := h * (0.12 + y_phase * 0.43)
+		var radius := (1.6 + float(index % 3) * 0.7) * unit
+		var drift := Vector2(1.4 if is_snow else -0.8, -2.0 if is_ember else -0.6) * unit
+		var twinkle := 0.72 + 0.28 * sin(ambient_time * 1.8 + float(index) * 1.7)
+		draw_circle(Vector2(x, y) + drift, radius, Color(particle_color, particle_color.a * twinkle))
 
 func _draw_companions(unit: float) -> void:
 	if battle == null or battle.profile == null:

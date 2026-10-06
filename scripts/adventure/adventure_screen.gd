@@ -1,6 +1,8 @@
 class_name AdventureScreen
 extends VBoxContainer
 
+const CrownUI = preload("res://scripts/ui/crown_ui.gd")
+
 signal tutorial_feature_opened(feature_name: String)
 
 var profile: SaveData
@@ -249,14 +251,7 @@ func _heading(title: String, subtitle: String) -> void:
 
 func _card(title: String, detail: String, reward: String, action: String, callback: Callable, disabled: bool = false) -> void:
 	var panel := PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color("182630") if disabled else Color("202f39")
-	style.border_color = Color("786947") if not disabled else Color("4a5554")
-	style.set_border_width_all(2)
-	style.border_width_bottom = 4
-	style.set_corner_radius_all(5)
-	style.set_content_margin_all(16)
-	panel.add_theme_stylebox_override("panel", style)
+	CrownUI.style_panel(panel, Color("4a5554") if disabled else Color("786947"), disabled)
 	add_child(panel)
 	var box := VBoxContainer.new()
 	panel.add_child(box)
@@ -281,4 +276,5 @@ func _button(value: String) -> Button:
 	button.text = value
 	button.custom_minimum_size.y = 78
 	button.add_theme_font_size_override("font_size", 28)
+	CrownUI.set_button_role(button)
 	return button

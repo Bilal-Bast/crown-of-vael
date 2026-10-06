@@ -1,6 +1,8 @@
 class_name SummonScreen
 extends VBoxContainer
 
+const CrownUI = preload("res://scripts/ui/crown_ui.gd")
+
 var profile: SaveData
 var service: SummonService
 var on_change: Callable
@@ -295,31 +297,16 @@ func _close_results() -> void:
 func _button(caption: String, color := Color("897a60")) -> Button:
 	var button := Button.new()
 	button.text = caption
-	button.custom_minimum_size.y = 84
+	button.custom_minimum_size.y = 88
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.add_theme_font_size_override("font_size",28)
-	for state in ["normal","hover","pressed","disabled","focus"]:
-		var style := StyleBoxFlat.new()
-		style.bg_color = Color("2c3545") if state == "hover" else Color("192630")
-		style.border_color = color.darkened(0.55) if state == "disabled" else color
-		style.set_border_width_all(2)
-		style.border_width_bottom = 5
-		style.set_content_margin_all(10)
-		button.add_theme_stylebox_override(state,style)
+	CrownUI.set_button_role(button)
 	button.add_theme_color_override("font_color",Color("e6dfcb"))
-	button.add_theme_color_override("font_disabled_color",Color("91a0a7"))
 	return button
 
 func _panel(color: Color) -> PanelContainer:
 	var panel := PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color("202f39")
-	style.border_color = color.darkened(0.25)
-	style.set_border_width_all(2)
-	style.border_width_bottom = 4
-	style.set_corner_radius_all(5)
-	style.set_content_margin_all(16)
-	panel.add_theme_stylebox_override("panel",style)
+	CrownUI.style_panel(panel, color.darkened(0.25))
 	return panel
 
 func _label(value: String, font_size: int, color: Color) -> Label:

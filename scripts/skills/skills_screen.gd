@@ -1,6 +1,8 @@
 class_name SkillsScreen
 extends VBoxContainer
 
+const CrownUI = preload("res://scripts/ui/crown_ui.gd")
+
 var profile: SaveData
 var battle: BattleController
 var on_change: Callable
@@ -116,14 +118,7 @@ func _build_selected_detail() -> void:
 		detail.add_child(_label("Summon a copy to unlock this skill.", 24, Color("d8a399")))
 
 func _style_card(button: Button, border: Color, selected: bool, owned: bool) -> void:
-	for state in ["normal", "hover", "pressed", "focus"]:
-		var style := StyleBoxFlat.new()
-		style.bg_color = Color("26353a") if owned else Color("1a262b")
-		style.border_color = Color("e9c87d") if selected else border
-		style.set_border_width_all(3 if selected else 2)
-		style.set_corner_radius_all(10)
-		style.set_content_margin_all(8)
-		button.add_theme_stylebox_override(state, style)
+	CrownUI.style_card(button, border, selected, not owned)
 
 func _select(id: String) -> void:
 	selected_id = id
@@ -142,14 +137,7 @@ func _slot_pressed(index: int) -> void:
 
 func _panel(border: Color = Color("7b7159")) -> PanelContainer:
 	var panel := PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color("202f39")
-	style.border_color = border
-	style.set_border_width_all(2)
-	style.border_width_bottom = 4
-	style.set_corner_radius_all(5)
-	style.set_content_margin_all(14)
-	panel.add_theme_stylebox_override("panel", style)
+	CrownUI.style_panel(panel, border)
 	return panel
 
 func _label(value: String, font_size: int, color: Color) -> Label:

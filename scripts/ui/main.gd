@@ -20,6 +20,8 @@ const SettingsScreenScript = preload("res://scripts/ui/settings_screen.gd")
 const IdleRewardServiceScript = preload("res://scripts/progression/idle_reward_service.gd")
 const TutorialServiceScript = preload("res://scripts/progression/tutorial_service.gd")
 const NumberFormatScript = preload("res://scripts/core/number_format.gd")
+const CrownUITheme = preload("res://resources/ui/crown_theme.tres")
+const CrownUI = preload("res://scripts/ui/crown_ui.gd")
 
 const INK := Color("172425")
 const PANEL := Color("253739")
@@ -88,6 +90,9 @@ var boss_text: Label
 var gold_text: Label
 var gems_text: Label
 var power_text: Label
+var battle_hero_level_text: Label
+var battle_hero_hp_text: Label
+var battle_hero_hp_bar: ProgressBar
 var road_text: Label
 var stage_markers: Array[ColorRect] = []
 var hero_level_text: Label
@@ -112,6 +117,7 @@ var menu_drawer: VBoxContainer
 var menu_toggle: Button
 var selected_tab := "Battle"
 var transition_id := 0
+var tab_transition: Tween
 var idle_rewards: IdleRewardService
 var tutorials: TutorialService
 var tutorial_popup: PopupPanel
@@ -154,6 +160,7 @@ func _ready() -> void:
 	battle.skill_cast.connect(_on_skill_cast)
 	battle.companion_attack.connect(_on_companion_attack)
 	_build_ui()
+	CrownUI.apply_screen_scale(self, profile.reduced_effects)
 	cloud_sync_timer = Timer.new()
 	cloud_sync_timer.one_shot = true
 	cloud_sync_timer.wait_time = 4.0
@@ -169,8 +176,11 @@ func _ready() -> void:
 		battle.start(profile)
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_RESIZED and battlefield_host != null:
-		_update_battlefield_height()
+	if what == NOTIFICATION_RESIZED:
+		if battlefield_host != null:
+			_update_battlefield_height()
+		if is_node_ready():
+			CrownUI.apply_screen_scale(self, profile.reduced_effects)
 	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
 		_handle_back_request()
 		return
@@ -368,6 +378,20 @@ func _build_top_bar(root: VBoxContainer) -> void:
 	gold_text = _metric(metrics, "GOLD", GOLD)
 	gems_text = _metric(metrics, "GEMS", Color("a5dded"))
 	power_text = _metric(metrics, "POWER", Color("d9e9ca"))
+	var hero_status := HBoxContainer.new()
+	hero_status.add_theme_constant_override("separation", 12)
+	box.add_child(hero_status)
+	battle_hero_level_text = _label("KNIGHT  •  LEVEL 1", 22, PALE)
+	hero_status.add_child(battle_hero_level_text)
+	battle_hero_hp_bar = ProgressBar.new()
+	battle_hero_hp_bar.custom_minimum_size = Vector2(0, 18)
+	battle_hero_hp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	battle_hero_hp_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	battle_hero_hp_bar.show_percentage = false
+	hero_status.add_child(battle_hero_hp_bar)
+	battle_hero_hp_text = _label("HP 0 / 0", 22, Color("9fd49f"))
+	battle_hero_hp_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	hero_status.add_child(battle_hero_hp_text)
 
 func _metric(parent: HBoxContainer, heading: String, value_color: Color) -> Label:
 	var metric_panel := PanelContainer.new()
@@ -407,6 +431,7 @@ func _metric(parent: HBoxContainer, heading: String, value_color: Color) -> Labe
 
 func _build_stage_card(root: VBoxContainer) -> void:
 	var panel := _panel()
+	panel.name = "BattleStagePanel"
 	stage_panel = panel
 	root.add_child(panel)
 	var box := VBoxContainer.new()
@@ -453,6 +478,7 @@ func _build_stage_card(root: VBoxContainer) -> void:
 	action_button.text = "RETRY BOSS"
 	action_button.custom_minimum_size = Vector2(150, 42)
 	action_button.add_theme_font_size_override("font_size", 21)
+	CrownUI.set_button_role(action_button, &"DangerActionButton")
 	action_button.pressed.connect(_on_action_pressed)
 	status_row.add_child(action_button)
 
@@ -957,65 +983,14 @@ func _on_feature_ack() -> void:
 	tutorial_skip.visible = true
 
 func _apply_ui_theme() -> void:
-	var shared := Theme.new()
-	shared.set_color("font_color", "Label", PALE)
-	shared.set_color("font_hover_color", "Button", Color("fff0c8"))
-	shared.set_color("font_pressed_color", "Button", GOLD)
-	shared.set_color("font_disabled_color", "Button", Color("7e8b89"))
-	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
-		shared.set_stylebox(state, "Button", _button_style(Color("86744f"), false, state))
-	var panel_frame := StyleBoxFlat.new()
-	panel_frame.bg_color = Color("202f39")
-	panel_frame.border_color = Color("75694f")
-	panel_frame.set_border_width_all(2)
-	panel_frame.border_width_bottom = 3
-	panel_frame.set_corner_radius_all(5)
-	panel_frame.set_content_margin_all(16)
-	panel_frame.shadow_color = Color(0.02, 0.03, 0.04, 0.38)
-	panel_frame.shadow_size = 3
-	panel_frame.shadow_offset = Vector2(0, 2)
-	shared.set_stylebox("panel", "PanelContainer", panel_frame)
-	var progress_bg := StyleBoxFlat.new()
-	progress_bg.bg_color = Color("14212a")
-	progress_bg.border_color = Color("56605d")
-	progress_bg.set_border_width_all(1)
-	shared.set_stylebox("background", "ProgressBar", progress_bg)
-	var progress_fill := StyleBoxFlat.new()
-	progress_fill.bg_color = Color("bd9a5f")
-	shared.set_stylebox("fill", "ProgressBar", progress_fill)
-	theme = shared
+	theme = CrownUITheme
 
 func _button_style(accent: Color, selected: bool, state := "normal") -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color("2c3740") if selected else Color("182630")
-	if state == "hover" or state == "focus": style.bg_color = Color("35434b")
-	if state == "pressed": style.bg_color = Color("111c25")
-	if state == "disabled": style.bg_color = Color("1b252c")
-	style.border_color = accent if selected else Color("52606a")
-	if state == "hover" or state == "focus": style.border_color = Color("e4c87f")
-	if state == "disabled": style.border_color = Color("39464a")
-	style.set_border_width_all(1)
-	style.border_width_bottom = 4 if selected else 3
-	style.set_corner_radius_all(3)
-	style.set_content_margin_all(9)
-	return style
+	return CrownUI.navigation_style(accent, selected, state)
 
 func _panel() -> PanelContainer:
 	var panel := PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color("202f39")
-	style.border_color = Color("82714d")
-	style.set_border_width_all(2)
-	style.border_width_bottom = 3
-	style.set_corner_radius_all(5)
-	style.content_margin_left = 17
-	style.content_margin_right = 17
-	style.content_margin_top = 14
-	style.content_margin_bottom = 14
-	style.shadow_color = Color(0.02, 0.03, 0.04, 0.32)
-	style.shadow_size = 3
-	style.shadow_offset = Vector2(0, 2)
-	panel.add_theme_stylebox_override("panel", style)
+	CrownUI.style_panel(panel)
 	return panel
 
 func _label(value: String, font_size: int, color: Color) -> Label:
@@ -1032,8 +1007,20 @@ func _refresh_ui() -> void:
 	gold_text.text = NumberFormatScript.compact(profile.gold)
 	gems_text.text = NumberFormatScript.compact(profile.gems)
 	power_text.text = NumberFormatScript.compact(profile.power())
+	if battle_hero_hp_bar != null and not battle.hero.is_empty():
+		var max_hp := maxf(1.0, float(battle.hero.get("hp", 1.0)))
+		var current_hp := clampf(float(battle.hero_hp), 0.0, max_hp)
+		var hp_ratio := current_hp / max_hp
+		battle_hero_level_text.text = "%s  •  LEVEL %d" % [HeroData.title(profile.selected_hero_id, profile.heroes[profile.selected_hero_id]).to_upper(), profile.level]
+		battle_hero_hp_bar.max_value = max_hp
+		battle_hero_hp_bar.value = current_hp
+		battle_hero_hp_bar.add_theme_stylebox_override("fill", CrownUI.health_fill_style(hp_ratio <= 0.30))
+		battle_hero_hp_text.text = "HP %s / %s" % [NumberFormatScript.compact(roundi(current_hp)), NumberFormatScript.compact(roundi(max_hp))]
+		battle_hero_hp_text.add_theme_color_override("font_color", Color("e08a73") if hp_ratio <= 0.30 else Color("9fd49f"))
 	var campaign := str(battle.mode_config.get("mode", "campaign")) == "campaign"
 	stage_text.text = CampaignData.label(profile.campaign_difficulty, profile.region, profile.stage).to_upper() if campaign else PveData.mode_label(battle.mode_config)
+	var boss_stage := campaign and profile.stage == 20
+	CrownUI.style_panel(stage_panel, Color("c59a54") if boss_stage else Color("75694f"), false, boss_stage)
 	region_text.text = CampaignData.REGIONS[profile.region - 1]["name"] if campaign else battle.mode_detail()
 	road_row.visible = campaign
 	road_track.visible = campaign
@@ -1156,6 +1143,21 @@ func _select_tab(tab_name: String) -> void:
 	account_area.visible = tab_name == "Account"
 	social_area.visible = tab_name == "Social"
 	settings_area.visible = tab_name == "Settings"
+	var active_screen: Control = {
+		"Battle": battle_area, "Heroes": heroes_area, "Equipment": equipment_area,
+		"Skills": skills_area, "Summon": summon_area, "Companions": companions_area,
+		"Artifacts": artifacts_area, "Adventure": adventure_area, "Quests": quests_area,
+		"Login": login_area, "Pass": battle_pass_area, "Shop": shop_area,
+		"Account": account_area, "Social": social_area, "Settings": settings_area
+	}.get(tab_name)
+	if active_screen != null:
+		active_screen.modulate.a = 1.0
+		if tab_transition != null and tab_transition.is_running():
+			tab_transition.kill()
+		if not profile.reduced_effects:
+			active_screen.modulate.a = 0.0
+			tab_transition = create_tween()
+			tab_transition.tween_property(active_screen, "modulate:a", 1.0, 0.16).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	placeholder_area.visible = false
 	placeholder_title.text = tab_name.to_upper()
 	if tab_name in ["Heroes", "Equipment"]:
@@ -1182,6 +1184,7 @@ func _select_tab(tab_name: String) -> void:
 		account_screen.refresh()
 	elif tab_name == "Social":
 		social_screen.refresh()
+	CrownUI.apply_screen_scale(self, profile.reduced_effects)
 	_update_navigation()
 	_show_feature_for_tab(tab_name)
 
@@ -1489,6 +1492,7 @@ func _action(parent: Container, caption: String, callback: Callable) -> Button:
 	button.custom_minimum_size.y = 126
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.add_theme_font_size_override("font_size", 30)
+	CrownUI.set_button_role(button)
 	button.pressed.connect(callback)
 	parent.add_child(button)
 	return button
@@ -1578,6 +1582,7 @@ func _on_companion_attack(_slot: int, _target: int, amount: int) -> void:
 	ProgressionService.new(profile).report("companion_damage", amount)
 
 func _on_settings_changed() -> void:
+	CrownUI.apply_screen_scale(self, profile.reduced_effects)
 	if battlefield != null:
 		battlefield.vfx.reduced = profile.reduced_effects
 

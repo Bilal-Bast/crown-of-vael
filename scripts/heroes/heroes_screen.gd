@@ -1,6 +1,8 @@
 class_name HeroesScreen
 extends VBoxContainer
 
+const CrownUI = preload("res://scripts/ui/crown_ui.gd")
+
 var profile: SaveData
 var battle: BattleController
 var progress: HeroProgress
@@ -280,14 +282,7 @@ func _changed() -> void:
 
 func _panel(border: Color) -> PanelContainer:
 	var panel := PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color("202f39")
-	style.border_color = border
-	style.set_border_width_all(2)
-	style.border_width_bottom = 4
-	style.set_corner_radius_all(5)
-	style.set_content_margin_all(14)
-	panel.add_theme_stylebox_override("panel", style)
+	CrownUI.style_panel(panel, border)
 	return panel
 
 func _label(value: String, size: int, color: Color) -> Label:
@@ -303,4 +298,5 @@ func _button(value: String) -> Button:
 	button.text = value
 	button.custom_minimum_size.y = 80
 	button.add_theme_font_size_override("font_size", 27)
+	CrownUI.set_button_role(button)
 	return button
