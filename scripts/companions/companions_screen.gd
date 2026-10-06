@@ -27,16 +27,16 @@ func refresh() -> void:
 	add_child(heading)
 	var head := VBoxContainer.new()
 	heading.add_child(head)
-	head.add_child(_label("COMPANION HALL", 38, Color("e9c87d")))
-	head.add_child(_label("Essence %d  •  Crests %d  •  Gold %d" % [profile.companion_essence, profile.companion_crests, profile.gold], 29, Color("e9e8d7")))
-	head.add_child(_label("Summons grant Essence; Legendary+ pulls grant Crests.", 27, Color("a9d6ad")))
-	head.add_child(_label("Select an ally, then tap a slot. Tap it again to unequip.", 27, Color("aebdb4")))
+	head.add_child(_label("COMPANION HALL", 38, Color("ffd166")))
+	head.add_child(_label("Essence %d  •  Crests %d  •  Gold %d" % [profile.companion_essence, profile.companion_crests, profile.gold], 29, Color("f3f7ff")))
+	head.add_child(_label("Summons grant Essence; Legendary+ pulls grant Crests.", 27, Color("68e69a")))
+	head.add_child(_label("Select an ally, then tap a slot. Tap it again to unequip.", 27, Color("b8cbe2")))
 	var back := _button("BACK TO SUMMONS")
 	back.pressed.connect(on_back)
 	head.add_child(back)
-	add_child(_label("ACTIVE COMPANIONS  •  4 SLOTS", 32, Color("e9c87d")))
+	add_child(_label("ACTIVE COMPANIONS  •  4 SLOTS", 32, Color("ffd166")))
 	if profile.companions.is_empty():
-		add_child(_label("No companions unlocked yet. Summon companions to add an ally.", 29, Color("aebdb4")))
+		add_child(_label("No companions unlocked yet. Summon companions to add an ally.", 29, Color("b8cbe2")))
 	var slots := HBoxContainer.new()
 	slots.add_theme_constant_override("separation", 8)
 	add_child(slots)
@@ -49,7 +49,7 @@ func refresh() -> void:
 		slots.add_child(button)
 	if selected_id != "" and profile.companions.has(selected_id):
 		_build_detail()
-	add_child(_label("COMPANION COLLECTION  •  %d / %d" % [profile.companions.size(), CompanionData.COMPANIONS.size()], 32, Color("e9c87d")))
+	add_child(_label("COMPANION COLLECTION  •  %d / %d" % [profile.companions.size(), CompanionData.COMPANIONS.size()], 32, Color("ffd166")))
 	for id in CompanionData.COMPANIONS:
 		var owned := profile.companions.has(id)
 		var record: Dictionary = profile.companions.get(id, {})
@@ -80,7 +80,7 @@ func refresh() -> void:
 		portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		portrait.texture = CompanionPixelArt.frame(id, int(record.get("evolution", 0)), "idle")
 		contents.add_child(portrait)
-		var name_label := _label(CompanionData.display_name(id, record), 23, EquipmentData.COLORS[rarity] if owned else Color("aebdb4"))
+		var name_label := _label(CompanionData.display_name(id, record), 23, EquipmentData.COLORS[rarity] if owned else Color("b8cbe2"))
 		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		name_label.clip_text = true
 		contents.add_child(name_label)
@@ -104,8 +104,8 @@ func _build_detail() -> void:
 	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	portrait.texture = CompanionPixelArt.frame(selected_id, int(record.get("evolution", 0)), "idle")
 	box.add_child(portrait)
-	box.add_child(_label("SELECTED: %s" % CompanionData.display_name(selected_id, record), 32, Color("e9c87d")))
-	box.add_child(_label("Pieces %d  •  %d stars  •  %s" % [record["pieces"], record["stars"], CompanionData.passive_text(selected_id, record)], 28, Color("e9e8d7")))
+	box.add_child(_label("SELECTED: %s" % CompanionData.display_name(selected_id, record), 32, Color("ffd166")))
+	box.add_child(_label("Pieces %d  •  %d stars  •  %s" % [record["pieces"], record["stars"], CompanionData.passive_text(selected_id, record)], 28, Color("f3f7ff")))
 	var level_cost := CompanionData.level_cost(int(record["level"]))
 	var upgrade := _button("LEVEL UP  •  %d GOLD + %d ESSENCE" % [level_cost["gold"], level_cost["essence"]])
 	upgrade.disabled = profile.gold < int(level_cost["gold"]) or profile.companion_essence < int(level_cost["essence"]) or int(record["level"]) >= 99
@@ -124,7 +124,7 @@ func _build_detail() -> void:
 		evolve.pressed.connect(_evolve)
 		box.add_child(evolve)
 	elif selected_id != "wolf":
-		box.add_child(_label("Evolution path unlocks later.", 27, Color("aebdb4")))
+		box.add_child(_label("Evolution path unlocks later.", 27, Color("b8cbe2")))
 
 func _select(id: String) -> void:
 	selected_id = id
