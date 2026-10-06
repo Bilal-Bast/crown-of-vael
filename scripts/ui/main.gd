@@ -595,6 +595,10 @@ func _build_battle_area() -> void:
 	battle_lower_content = VBoxContainer.new()
 	battle_lower_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	battle_lower_scroll.add_child(battle_lower_content)
+	var upgrade_top_spacer := Control.new()
+	upgrade_top_spacer.name = "UpgradeTopBreathingRoom"
+	upgrade_top_spacer.custom_minimum_size.y = 8.0
+	battle_lower_content.add_child(upgrade_top_spacer)
 	upgrade_list_scroll = battle_lower_scroll
 	upgrade_panel = _panel()
 	upgrade_panel.name = "BattleUpgradesPanel"
@@ -707,7 +711,7 @@ func _update_battlefield_height() -> void:
 	if battle_area == null:
 		return
 	var viewport_height: float = size.y if size.y > 0.0 else get_viewport_rect().size.y
-	battle_area.custom_minimum_size.y = maxf(1.0, viewport_height * 0.33 - 8.0)
+	battle_area.custom_minimum_size.y = maxf(1.0, viewport_height * 0.33 - 2.0)
 
 func _build_navigation(root: VBoxContainer) -> void:
 	var panel := _panel()
