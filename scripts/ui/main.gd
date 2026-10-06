@@ -247,7 +247,7 @@ func _build_ui() -> void:
 	root.add_theme_constant_override("separation", 8)
 	add_child(root)
 	_build_top_bar(root)
-	_build_stage_card(root)
+	_build_stage_card()
 
 	battle_area = VBoxContainer.new()
 	battle_area.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
@@ -395,23 +395,28 @@ func _screen_content(scroll: ScrollContainer) -> VBoxContainer:
 	return content
 
 func _build_top_bar(root: VBoxContainer) -> void:
-	var panel := _panel()
+	var panel := PanelContainer.new()
 	panel.name = "TopCurrencyPanel"
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var top_style := StyleBoxFlat.new()
+	top_style.bg_color = Color(0.0, 0.0, 0.0, 0.0)
+	top_style.set_content_margin_all(0.0)
+	panel.add_theme_stylebox_override("panel", top_style)
 	root.add_child(panel)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 4)
+	box.add_theme_constant_override("separation", 2)
 	panel.add_child(box)
-	CrownUI.style_panel(panel, Color("6b5b43"), false)
 	var metrics := HBoxContainer.new()
-	metrics.add_theme_constant_override("separation", 8)
+	metrics.add_theme_constant_override("separation", 5)
 	box.add_child(metrics)
 	gold_text = _metric(metrics, "GOLD", GOLD)
 	gems_text = _metric(metrics, "GEMS", Color("a5dded"))
 	power_text = _metric(metrics, "POWER", Color("d9e9ca"))
 	var hero_status := HBoxContainer.new()
-	hero_status.add_theme_constant_override("separation", 12)
+	hero_status.add_theme_constant_override("separation", 8)
 	box.add_child(hero_status)
 	battle_hero_level_text = _label("KNIGHT  •  LEVEL 1", 22, PALE)
+	battle_hero_level_text.add_theme_font_size_override("font_size", 22)
 	hero_status.add_child(battle_hero_level_text)
 	battle_hero_hp_bar = ProgressBar.new()
 	battle_hero_hp_bar.custom_minimum_size = Vector2(0, 18)
@@ -420,18 +425,32 @@ func _build_top_bar(root: VBoxContainer) -> void:
 	battle_hero_hp_bar.show_percentage = false
 	hero_status.add_child(battle_hero_hp_bar)
 	battle_hero_hp_text = _label("HP 0 / 0", 22, Color("9fd49f"))
+	battle_hero_hp_text.add_theme_font_size_override("font_size", 22)
 	battle_hero_hp_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	hero_status.add_child(battle_hero_hp_text)
 
 func _metric(parent: HBoxContainer, heading: String, value_color: Color) -> Label:
 	var metric_panel := PanelContainer.new()
-	CrownUI.style_panel(metric_panel, value_color.darkened(0.25), true)
+	var capsule := StyleBoxFlat.new()
+	capsule.bg_color = Color("101820", 0.70)
+	var capsule_edge := value_color
+	capsule_edge.a = 0.78
+	capsule.border_color = capsule_edge
+	capsule.set_border_width_all(2)
+	capsule.set_corner_radius_all(14)
+	capsule.content_margin_left = 10
+	capsule.content_margin_right = 10
+	capsule.content_margin_top = 3
+	capsule.content_margin_bottom = 3
+	metric_panel.add_theme_stylebox_override("panel", capsule)
 	metric_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	metric_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(metric_panel)
 	var cell := VBoxContainer.new()
 	cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	metric_panel.add_child(cell)
-	var caption := _label(heading, 22, MUTED)
+	var caption := _label(heading, 20, Color("d3d5cb"))
+	caption.add_theme_font_size_override("font_size", 20)
 	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	cell.add_child(caption)
 	var value_row := HBoxContainer.new()
@@ -441,40 +460,56 @@ func _metric(parent: HBoxContainer, heading: String, value_color: Color) -> Labe
 	var currency_icon: Texture2D = PixelUiIcons.gold_coin() if heading == "GOLD" else (PixelUiIcons.gems() if heading == "GEMS" else null)
 	if currency_icon != null:
 		var icon := TextureRect.new()
-		icon.custom_minimum_size = Vector2(28, 28)
+		icon.custom_minimum_size = Vector2(36, 36)
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		icon.texture = currency_icon
 		icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		value_row.add_child(icon)
-	var value := _label("0", 34, value_color)
+	var value := _label("0", 26, value_color)
+	value.add_theme_font_size_override("font_size", 26)
 	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	value_row.add_child(value)
 	return value
 
-func _build_stage_card(root: VBoxContainer) -> void:
+func _build_stage_card() -> void:
 	var panel := _panel()
 	panel.name = "BattleStagePanel"
 	stage_panel = panel
-	root.add_child(panel)
+	stage_panel.mouse_filter = Control.MOUSE_FILTER_PASS
+	stage_panel.custom_minimum_size = Vector2(0, 122)
+	var stage_style := StyleBoxFlat.new()
+	stage_style.bg_color = Color("11161a", 0.64)
+	stage_style.border_color = Color("c3a773", 0.65)
+	stage_style.set_border_width_all(1)
+	stage_style.set_corner_radius_all(12)
+	stage_style.content_margin_left = 12
+	stage_style.content_margin_right = 12
+	stage_style.content_margin_top = 5
+	stage_style.content_margin_bottom = 5
+	stage_panel.add_theme_stylebox_override("panel", stage_style)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 3)
+	box.add_theme_constant_override("separation", 0)
 	panel.add_child(box)
 	var heading := HBoxContainer.new()
 	box.add_child(heading)
 	stage_text = _label("", 36, PALE)
+	stage_text.add_theme_font_size_override("font_size", 28)
 	stage_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	heading.add_child(stage_text)
 	boss_text = _label("", 30, Color("ff9f84"))
+	boss_text.add_theme_font_size_override("font_size", 24)
 	heading.add_child(boss_text)
 	var context := HBoxContainer.new()
 	context.add_theme_constant_override("separation", 10)
 	box.add_child(context)
-	region_text = _label(str(CampaignData.REGIONS[0]["name"]), 27, Color("a9d6ad"))
+	region_text = _label(str(CampaignData.REGIONS[0]["name"]), 24, Color("a9d6ad"))
+	region_text.add_theme_font_size_override("font_size", 24)
 	region_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	context.add_child(region_text)
-	wave_text = _label("", 24, MUTED)
+	wave_text = _label("", 22, MUTED)
+	wave_text.add_theme_font_size_override("font_size", 22)
 	context.add_child(wave_text)
 	road_row = HBoxContainer.new()
 	box.add_child(road_row)
@@ -527,6 +562,18 @@ func _build_battle_area() -> void:
 	battlefield.pixel_background_layer = pixel_battle_background
 	battlefield.set_battle(battle)
 	battlefield_host.add_child(battlefield)
+	var stage_overlay := Control.new()
+	stage_overlay.name = "BattleStageOverlay"
+	stage_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	stage_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	battlefield_host.add_child(stage_overlay)
+	stage_panel.anchor_left = 0.12
+	stage_panel.anchor_right = 0.88
+	stage_panel.anchor_top = 0.0
+	stage_panel.anchor_bottom = 0.0
+	stage_panel.offset_top = 8.0
+	stage_panel.offset_bottom = 190.0
+	stage_overlay.add_child(stage_panel)
 	var skill_panel := _panel()
 	skill_panel.name = "BattleSkillPanel"
 	battle_area.add_child(skill_panel)
@@ -678,7 +725,7 @@ func _update_battlefield_height() -> void:
 	if battlefield_host == null:
 		return
 	var viewport_height := get_viewport_rect().size.y
-	battlefield_host.custom_minimum_size.y = maxf(1.0, viewport_height * 0.36)
+	battlefield_host.custom_minimum_size.y = maxf(1.0, viewport_height * 0.43)
 
 func _build_navigation(root: VBoxContainer) -> void:
 	var panel := _panel()
@@ -724,12 +771,14 @@ func _build_navigation(root: VBoxContainer) -> void:
 func _add_nav_button(parent: Container, tab_name: String, floating: bool) -> void:
 	var button := Button.new()
 	button.name = "Nav_%s" % tab_name
+	button.set_meta("crown_floating_nav", floating)
 	button.text = ""
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.custom_minimum_size = Vector2(132, 132) if floating else Vector2(132, 142)
 	button.tooltip_text = tab_name
 	button.pressed.connect(_select_tab.bind(tab_name))
 	button.pressed.connect(_play_audio.bind("button_click","UI"))
+	button.set_meta("crown_base_minimum_size", button.custom_minimum_size)
 	var contents := VBoxContainer.new()
 	contents.name = "Contents"
 	contents.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -739,13 +788,22 @@ func _add_nav_button(parent: Container, tab_name: String, floating: bool) -> voi
 	button.add_child(contents)
 	var icon := TextureRect.new()
 	icon.name = "NavIcon"
+	var icon_slot := Control.new()
+	icon_slot.name = "IconSlot"
+	icon_slot.custom_minimum_size = Vector2(96, 96)
+	icon_slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	contents.add_child(icon_slot)
 	icon.custom_minimum_size = Vector2(84, 84) if floating else Vector2(96, 96)
-	icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	icon.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	icon.offset_left = -icon.custom_minimum_size.x * 0.5
+	icon.offset_right = icon.custom_minimum_size.x * 0.5
+	icon.offset_top = -icon.custom_minimum_size.y * 0.5
+	icon.offset_bottom = icon.custom_minimum_size.y * 0.5
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	icon.texture = load("res://assets/ui/navigation_icons/%s.png" % NAV_ICON_FILES[tab_name])
-	contents.add_child(icon)
+	icon_slot.add_child(icon)
 	parent.add_child(button)
 	nav_buttons[tab_name] = button
 
@@ -1016,7 +1074,9 @@ func _refresh_ui() -> void:
 	var campaign := str(battle.mode_config.get("mode", "campaign")) == "campaign"
 	stage_text.text = CampaignData.label(profile.campaign_difficulty, profile.region, profile.stage).to_upper() if campaign else PveData.mode_label(battle.mode_config)
 	var boss_stage := campaign and profile.stage == 20
-	CrownUI.style_panel(stage_panel, Color("c59a54") if boss_stage else Color("75694f"), false, boss_stage)
+	var stage_style := stage_panel.get_theme_stylebox("panel") as StyleBoxFlat
+	if stage_style != null:
+		stage_style.border_color = Color("d6aa66", 0.88) if boss_stage else Color("c3a773", 0.65)
 	region_text.text = CampaignData.REGIONS[profile.region - 1]["name"] if campaign else battle.mode_detail()
 	road_row.visible = campaign
 	road_track.visible = campaign
@@ -1034,7 +1094,7 @@ func _refresh_ui() -> void:
 	boss_text.visible = campaign and profile.stage == 20 and battle.active
 	boss_text.text = "00:%02d" % ceili(battle.boss_time)
 	boss_text.add_theme_color_override("font_color", Color("ff786c") if battle.boss_time <= 10.0 else Color("ffb38d"))
-	boss_text.add_theme_font_size_override("font_size", 39 if battle.boss_time <= 10.0 else 34)
+	boss_text.add_theme_font_size_override("font_size", 28 if battle.boss_time <= 10.0 else 24)
 	if skill_auto_button != null:
 		_update_skill_auto_button()
 	if heroes_exp_text != null:
@@ -1118,6 +1178,10 @@ func _show_message(value: String) -> void:
 			message_text.text = value
 
 func _select_tab(tab_name: String) -> void:
+	if tab_name != "Battle" and tab_name == selected_tab:
+		var selected_button: Button = nav_buttons.get(tab_name) as Button
+		if selected_button != null and not bool(selected_button.get_meta("crown_floating_nav", false)):
+			tab_name = "Battle"
 	selected_tab = tab_name
 	stage_panel.visible = true
 	battle_area.visible = true
@@ -1592,10 +1656,32 @@ func _update_navigation() -> void:
 		var button: Button = nav_buttons[tab_name]
 		var selected: bool = tab_name == selected_tab
 		CrownUI.style_tab(button, selected, GOLD)
+		var floating := bool(button.get_meta("crown_floating_nav", false))
+		if floating:
+			for state in ["normal", "hover", "pressed", "focus", "disabled"]:
+				button.add_theme_stylebox_override(state, _floating_nav_style(state, selected))
 		var badge := MonetizationService.new(profile).bp_badge() if tab_name == "Pass" else MonetizationService.new(profile).shop_badge() if tab_name == "Shop" else SocialService.new(profile).badge() if tab_name == "Social" else ProgressionService.new(profile).badge(tab_name)
-		var icon := button.get_node_or_null("Contents/NavIcon") as TextureRect
+		var icon := button.get_node_or_null("Contents/IconSlot/NavIcon") as TextureRect
 		if icon != null:
-			icon.modulate = Color("fff1cf") if selected else Color.WHITE
+			icon.modulate = Color("ffdc8a") if selected else Color.WHITE
+			var lift := -8.0 if selected and not floating else 0.0
+			var icon_size := icon.custom_minimum_size
+			var target_top := -icon_size.y * 0.5 + lift
+			var target_bottom := icon_size.y * 0.5 + lift
+			var target_scale := Vector2.ONE * (1.06 if selected and not floating else 1.0)
+			var visual_state := "%s:%s" % [selected, floating]
+			if str(icon.get_meta("crown_nav_visual_state", "")) != visual_state:
+				icon.set_meta("crown_nav_visual_state", visual_state)
+				if not profile.reduced_effects and icon.is_inside_tree():
+					var lift_tween := icon.create_tween()
+					lift_tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+					lift_tween.tween_property(icon, "offset_top", target_top, 0.12)
+					lift_tween.parallel().tween_property(icon, "offset_bottom", target_bottom, 0.12)
+					lift_tween.parallel().tween_property(icon, "scale", target_scale, 0.12)
+				else:
+					icon.offset_top = target_top
+					icon.offset_bottom = target_bottom
+					icon.scale = target_scale
 		var dot := button.get_node_or_null("BadgeDot") as ColorRect
 		if dot == null:
 			dot = ColorRect.new()
@@ -1610,6 +1696,17 @@ func _update_navigation() -> void:
 			dot.offset_bottom = 36
 			button.add_child(dot)
 		dot.visible = badge
+
+func _floating_nav_style(state: String, selected: bool) -> StyleBox:
+	if state == "normal" or state == "disabled":
+		return StyleBoxEmpty.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("e9c87d", 0.18 if state == "hover" or state == "focus" else 0.30)
+	style.border_color = Color("e9c87d", 0.55 if selected else 0.30)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(24)
+	style.set_content_margin_all(0.0)
+	return style
 
 func _buy_upgrade(stat: String) -> void:
 	var limit := 1 if upgrade_purchase_mode == "x1" else (10 if upgrade_purchase_mode == "x10" else -1)
