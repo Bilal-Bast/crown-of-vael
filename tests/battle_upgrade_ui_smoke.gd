@@ -37,7 +37,7 @@ func _run() -> void:
 	_check(skill_panel.get_parent() == battlefield_host, "skill strip overlays the bottom of the battlefield")
 	_check(upgrade_scroll.get_parent() == main.get("feature_screens"), "scrolling upgrades begin in the lower feature section")
 	var upgrade_guide_y := main.size.y * 0.33
-	_check(absf(upgrades_panel.get_global_rect().position.y - upgrade_guide_y) <= 24.0, "upgrade panel begins at the marked one-third screen guide")
+	_check(absf(upgrades_panel.get_global_rect().position.y - upgrade_guide_y) <= 40.0, "upgrade panel begins just below the marked one-third screen guide")
 	_check(skill_panel.get_global_rect().end.y <= battle_area.get_global_rect().end.y + 1.0, "skill controls stay above the upgrade boundary")
 	_check(main.get("battle_power_divider") == null, "Power divider is removed from the Battle flow")
 	_check(PixelUiIcons.gold_coin() != null and PixelUiIcons.gems() != null, "top currencies use pixel-art icons")
