@@ -21,6 +21,7 @@ func refresh() -> void:
 		remove_child(child)
 		child.queue_free()
 	var intro := _panel()
+	CrownUI.style_ornate_panel(intro)
 	add_child(intro)
 	var intro_box := VBoxContainer.new()
 	intro.add_child(intro_box)
