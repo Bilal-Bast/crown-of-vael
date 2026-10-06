@@ -4,6 +4,7 @@ extends VBoxContainer
 const CrownUI = preload("res://scripts/ui/crown_ui.gd")
 
 signal tutorial_feature_opened(feature_name: String)
+signal art_changed(screen_key: String)
 
 var profile: SaveData
 var service: PveService
@@ -43,6 +44,14 @@ func refresh() -> void:
 		"endless": _endless()
 		"result": _result()
 		_: _hub()
+	var art_key := str({
+		"hub": "adventure_hub", "campaign": "adventure_campaign", "map": "adventure_map",
+		"stages": "adventure_stages", "dungeons": "adventure_dungeons", "tiers": "adventure_tiers",
+		"tower": "adventure_tower", "boss_rush": "adventure_boss_rush", "endless": "adventure_endless",
+	}.get(view, ""))
+	if view == "result":
+		art_key = "victory" if bool(last_result.get("won", false)) else "defeat"
+	art_changed.emit(art_key)
 
 func show_result(run: Dictionary, result: Dictionary) -> void:
 	last_run = run.duplicate(true)
@@ -67,7 +76,7 @@ func _campaign_overview() -> void:
 	var reward := CampaignData.region_reward(profile.campaign_difficulty, profile.region)
 	_card("WORLD PROGRESS", "%d/10 regions complete • %d/200 stages" % [completed, _cleared_count(profile.campaign_difficulty)], "Next region reward: %d Gems • %d Gold • %d Crests" % [reward["gems"], reward["gold"], reward["crests"]], "WORLD MAP", _open.bind("map"))
 	var complete := bool(profile.difficulty_completions.get(str(profile.campaign_difficulty), false))
-	add_child(_label("%s: %s" % [CampaignData.DIFFICULTIES[profile.campaign_difficulty].to_upper(), "COMPLETE" if complete else "IN PROGRESS"], 30, Color("e9c87d")))
+	add_child(_label("%s: %s" % [CampaignData.DIFFICULTIES[profile.campaign_difficulty].to_upper(), "COMPLETE" if complete else "IN PROGRESS"], 30, Color("ffd166")))
 	var continue_button := _button("CONTINUE %s" % CampaignData.label(profile.campaign_difficulty, profile.region, profile.stage).to_upper())
 	continue_button.pressed.connect(on_campaign)
 	add_child(continue_button)
@@ -89,7 +98,7 @@ func _world_map() -> void:
 		var difficulty_button := _button(CampaignData.DIFFICULTIES[index].substr(0, 3).to_upper())
 		difficulty_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		difficulty_button.disabled = index > profile.highest_difficulty_unlocked
-		CrownUI.style_tab(difficulty_button, index == map_difficulty, Color("d9b66f"))
+		CrownUI.style_tab(difficulty_button, index == map_difficulty, Color("ffd166"))
 		difficulty_button.pressed.connect(_choose_difficulty.bind(index))
 		difficulty_row.add_child(difficulty_button)
 	for index in CampaignData.REGIONS.size():
@@ -139,7 +148,7 @@ func _stage_select() -> void:
 			button.disabled = state == "locked"
 			button.pressed.connect(_start_campaign_stage.bind(map_region, number))
 			buttons.add_child(button)
-	add_child(_label("Elite: 5, 10, 15  •  Region boss: 20", 27, Color("e9c87d")))
+	add_child(_label("Elite: 5, 10, 15  •  Region boss: 20", 27, Color("ffd166")))
 
 func _start_campaign_stage(region_number: int, stage_number: int) -> void:
 	if on_campaign_select.is_valid():
@@ -179,13 +188,13 @@ func _tower() -> void:
 	_card("NEXT: FLOOR %d" % next, "Elite every 5 floors • Boss every 10", "First-clear Gems, Gold, materials • %s" % slot_note, "FIGHT", _start.bind({"mode": "tower", "floor": next}))
 	for floor in range(maxi(1, profile.tower_highest - 3), profile.tower_highest + 1):
 		_card("REPLAY FLOOR %d" % floor, "Practice with no first-clear rewards", "Floor %d cleared" % floor, "REPLAY", _start.bind({"mode": "tower", "floor": floor}))
-	add_child(_label("MILESTONE CHESTS  •  Floors 10, 20, 30... grant bonus Gems and Evolution Crests.", 29, Color("e9c87d")))
+	add_child(_label("MILESTONE CHESTS  •  Floors 10, 20, 30... grant bonus Gems and Evolution Crests.", 29, Color("ffd166")))
 
 func _boss_rush() -> void:
 	_heading("BOSS RUSH", "Five bosses. HP carries forward; 10% heals between fights.")
 	_back()
 	for index in PveData.BOSS_RUSH.size():
-		add_child(_label("%d  •  %s" % [index + 1, PveData.BOSS_RUSH[index]], 31, Color("e9e8d7")))
+		add_child(_label("%d  •  %s" % [index + 1, PveData.BOSS_RUSH[index]], 31, Color("f3f7ff")))
 	_card("ATTEMPTS %d/2" % profile.boss_rush_state["remaining"], "Best boss %d/5 • Full clear %s" % [profile.boss_rush_state["best_boss"], "YES" if profile.boss_rush_state["full_clear"] else "NO"], "Gold • Gems • Essence • Dust", "START RUN", _start.bind({"mode": "boss_rush"}), not service.can_start({"mode": "boss_rush"}))
 
 func _endless() -> void:
@@ -197,7 +206,7 @@ func _endless() -> void:
 func _result() -> void:
 	var won := bool(last_result.get("won", false))
 	_heading("VICTORY" if won else "RUN ENDED", "%s • %s" % [PveData.mode_label(last_run), _run_detail(last_run)])
-	add_child(_label("Time %.1fs  •  Enemies %d  •  Damage %d" % [last_result.get("time", 0.0), last_result.get("kills", 0), last_result.get("damage", 0)], 29, Color("e9e8d7")))
+	add_child(_label("Time %.1fs  •  Enemies %d  •  Damage %d" % [last_result.get("time", 0.0), last_result.get("kills", 0), last_result.get("damage", 0)], 29, Color("f3f7ff")))
 	var reward: Dictionary = last_result.get("reward", {})
 	var lines: Array[String] = []
 	for key in reward:
@@ -207,9 +216,9 @@ func _result() -> void:
 			lines.append("%s +%d" % [str(key).replace("_", " ").capitalize(), int(reward[key])])
 	for item in last_result.get("equipment", []):
 		lines.append("GEAR: %s" % EquipmentData.title(item))
-	add_child(_label("REWARDS\n%s" % ("\n".join(lines) if not lines.is_empty() else "None"), 31, Color("e9c87d")))
+	add_child(_label("REWARDS\n%s" % ("\n".join(lines) if not lines.is_empty() else "None"), 31, Color("ffd166")))
 	if last_run.get("mode", "") == "tower" and last_result.get("first_clear", false):
-		add_child(_label("FIRST CLEAR • Milestone chest!" if int(last_run["floor"]) % 10 == 0 else "FIRST CLEAR", 31, Color("a9d6ad")))
+		add_child(_label("FIRST CLEAR • Milestone chest!" if int(last_run["floor"]) % 10 == 0 else "FIRST CLEAR", 31, Color("68e69a")))
 	var continue_button := _button("CONTINUE")
 	continue_button.pressed.connect(_open.bind("hub"))
 	add_child(continue_button)
@@ -253,8 +262,8 @@ func _heading(title: String, subtitle: String) -> void:
 	var copy := VBoxContainer.new()
 	copy.add_theme_constant_override("separation", 4)
 	panel.add_child(copy)
-	copy.add_child(_label(title, 40, Color("e9c87d")))
-	copy.add_child(_label(subtitle, 29, Color("aebdb4")))
+	copy.add_child(_label(title, 40, Color("ffd166")))
+	copy.add_child(_label(subtitle, 29, Color("b8cbe2")))
 
 func _card(title: String, detail: String, reward: String, action: String, callback: Callable, disabled: bool = false) -> void:
 	var panel := PanelContainer.new()
@@ -262,9 +271,9 @@ func _card(title: String, detail: String, reward: String, action: String, callba
 	add_child(panel)
 	var box := VBoxContainer.new()
 	panel.add_child(box)
-	box.add_child(_label(title, 34, Color("e9c87d") if not disabled else Color("aebdb4")))
-	box.add_child(_label(detail, 28, Color("73827d") if disabled else Color("e9e8d7")))
-	box.add_child(_label(reward, 27, Color("6a7774") if disabled else Color("a9d6ad")))
+	box.add_child(_label(title, 34, Color("ffd166") if not disabled else Color("b8cbe2")))
+	box.add_child(_label(detail, 28, Color("73827d") if disabled else Color("f3f7ff")))
+	box.add_child(_label(reward, 27, Color("6a7774") if disabled else Color("68e69a")))
 	var button := _button(action)
 	button.disabled = disabled
 	button.pressed.connect(callback)
