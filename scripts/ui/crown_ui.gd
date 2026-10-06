@@ -7,12 +7,10 @@ const MUTED := Color("aaa69c")
 const EDGE := Color("71603e")
 const SURFACE := Color("252329")
 const DEEP := Color("151419")
-const MENU_FRAME := preload("res://assets/ui/obsidian_menu_frame.png")
 
 static var _panel_styles: Dictionary = {}
 static var _card_styles: Dictionary = {}
 static var _health_styles: Dictionary = {}
-static var _ornate_panel_style: StyleBoxTexture
 
 static func build_theme() -> Theme:
 	var shared := Theme.new()
@@ -73,7 +71,7 @@ static func _button_box(accent: Color, state: String, quiet: bool) -> StyleBoxFl
 
 static func _panel_box(border: Color, inset: bool, reward := false) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("19181d") if inset else (Color("29252a") if reward else SURFACE)
+	style.bg_color = Color("19181d", 0.96) if inset else (Color("29252a") if reward else Color("252329", 0.92))
 	style.border_color = border
 	style.set_border_width_all(2 if reward else 1)
 	style.border_width_bottom = 2
@@ -106,28 +104,19 @@ static func style_panel(panel: PanelContainer, accent := EDGE, inset := false, r
 	if not _panel_styles.has(key):
 		_panel_styles[key] = _panel_box(accent, inset, reward)
 	panel.add_theme_stylebox_override("panel", _panel_styles[key])
-	if reward:
-		style_ornate_panel(panel)
 
 static func style_ornate_panel(panel: PanelContainer) -> void:
-	if _ornate_panel_style == null:
-		var style := StyleBoxTexture.new()
-		style.texture = MENU_FRAME
-		style.texture_margin_left = 112.0
-		style.texture_margin_right = 112.0
-		style.texture_margin_top = 112.0
-		style.texture_margin_bottom = 112.0
-		style.set_content_margin_all(24.0)
-		style.draw_center = true
-		_ornate_panel_style = style
-	panel.add_theme_stylebox_override("panel", _ornate_panel_style)
+	# The old nine-slice frame was designed for title plaques. Stretching it around
+	# variable-height content placed its ornament over labels on compact screens.
+	# Keep this compatibility helper while using the same clean panel treatment.
+	style_panel(panel, GOLD, false, true)
 
 static func style_card(button: Button, accent: Color, selected: bool, disabled := false) -> void:
 	for state in [&"normal", &"hover", &"pressed", &"focus", &"disabled"]:
 		var key := "%s:%s:%s:%s" % [accent.to_html(false), selected, disabled, state]
 		if not _card_styles.has(key):
 			var style := StyleBoxFlat.new()
-			style.bg_color = Color("29272d") if not disabled else Color("211f24")
+			style.bg_color = Color("29272d", 0.94) if not disabled else Color("211f24", 0.98)
 			if state == &"hover" or state == &"focus":
 				style.bg_color = Color("3b3737")
 			elif state == &"pressed":
