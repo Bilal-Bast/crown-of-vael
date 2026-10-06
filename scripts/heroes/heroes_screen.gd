@@ -3,6 +3,8 @@ extends VBoxContainer
 
 const CrownUI = preload("res://scripts/ui/crown_ui.gd")
 
+signal art_changed(screen_key: String)
+
 var profile: SaveData
 var battle: BattleController
 var progress: HeroProgress
@@ -26,6 +28,7 @@ func configure(value: SaveData, live_battle: BattleController, changed: Callable
 func refresh() -> void:
 	if profile == null:
 		return
+	art_changed.emit("evolution" if view == "evolution_result" else "heroes")
 	for child in get_children():
 		remove_child(child)
 		child.queue_free()
@@ -39,22 +42,22 @@ func refresh() -> void:
 		_build_roster()
 
 func _header() -> void:
-	var panel := _panel(Color("d9b66f"))
+	var panel := _panel(Color("ffd166"))
 	CrownUI.style_ornate_panel(panel)
 	add_child(panel)
 	var copy := VBoxContainer.new()
 	copy.add_theme_constant_override("separation", 4)
 	panel.add_child(copy)
-	copy.add_child(_label("HEROES  •  SHARED LEVEL %d" % profile.level, 37, Color("e9c87d")))
-	copy.add_child(_label("EXP %d/%d  •  Gold %d  •  Crests %d  •  Generic Pieces %d" % [profile.exp, GameData.exp_to_next(profile.level), profile.gold, profile.evolution_crests, profile.hero_pieces], 27, Color("e9e8d7")))
-	copy.add_child(_label("Gear, skills, companions, artifacts, and Gold upgrades are shared.", 27, Color("aebdb4")))
+	copy.add_child(_label("HEROES  •  SHARED LEVEL %d" % profile.level, 37, Color("ffd166")))
+	copy.add_child(_label("EXP %d/%d  •  Gold %d  •  Crests %d  •  Generic Pieces %d" % [profile.exp, GameData.exp_to_next(profile.level), profile.gold, profile.evolution_crests, profile.hero_pieces], 27, Color("f3f7ff")))
+	copy.add_child(_label("Gear, skills, companions, artifacts, and Gold upgrades are shared.", 27, Color("b8cbe2")))
 	if battle.active:
 		var retreat := _button("RETREAT TO SWITCH HERO  •  ENDS CURRENT FIGHT")
 		retreat.pressed.connect(on_retreat)
 		copy.add_child(retreat)
 
 func _build_roster() -> void:
-	add_child(_label("HERO ROSTER", 32, Color("e9c87d")))
+	add_child(_label("HERO ROSTER", 32, Color("ffd166")))
 	for id in HeroData.HEROES:
 		var data: Dictionary = HeroData.HEROES[id]
 		var record: Dictionary = profile.heroes[id]
@@ -72,15 +75,15 @@ func _build_roster() -> void:
 		portrait.custom_minimum_size = Vector2(92, 108)
 		box.add_child(portrait)
 		box.add_child(_label("%s  •  %s  •  %s" % [HeroData.title(id, record).to_upper(), EquipmentData.RARITIES[int(data["rarity"])], "SELECTED" if id == profile.selected_hero_id else ("OWNED" if owned else "LOCKED")], 31, EquipmentData.COLORS[int(data["rarity"])]))
-		box.add_child(_label("%s  •  %s" % [data["role"], HeroData.element(id, record)], 27, Color("e9e8d7")))
-		box.add_child(_label("Stars %d/5  •  Pieces %d%s" % [record["stars"], record["pieces"], " / %d to unlock" % data["unlock"] if not owned else ""], 27, Color("a9d6ad")))
+		box.add_child(_label("%s  •  %s" % [data["role"], HeroData.element(id, record)], 27, Color("f3f7ff")))
+		box.add_child(_label("Stars %d/5  •  Pieces %d%s" % [record["stars"], record["pieces"], " / %d to unlock" % data["unlock"] if not owned else ""], 27, Color("68e69a")))
 		var button := _button("VIEW HERO")
 		button.pressed.connect(_open_detail.bind(id))
 		box.add_child(button)
-	add_child(_label("MILESTONES", 32, Color("e9c87d")))
+	add_child(_label("MILESTONES", 32, Color("ffd166")))
 	for key in HeroData.MILESTONES:
 		var reward: Dictionary = HeroData.MILESTONES[key]
-		add_child(_label("%s  •  %s  •  %d Gems + %d Crests + %d Pieces" % [reward["name"], "CLAIMED" if profile.hero_milestones.has(key) else "LOCKED", reward["gems"], reward["crests"], reward["pieces"]], 26, Color("a9d6ad") if profile.hero_milestones.has(key) else Color("aebdb4")))
+		add_child(_label("%s  •  %s  •  %d Gems + %d Crests + %d Pieces" % [reward["name"], "CLAIMED" if profile.hero_milestones.has(key) else "LOCKED", reward["gems"], reward["crests"], reward["pieces"]], 26, Color("68e69a") if profile.hero_milestones.has(key) else Color("b8cbe2")))
 
 func _build_detail() -> void:
 	var data: Dictionary = HeroData.HEROES[selected_id]
@@ -105,13 +108,13 @@ func _build_detail() -> void:
 	copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(copy)
 	copy.add_child(_label(HeroData.title(selected_id, record).to_upper(), 35, EquipmentData.COLORS[int(data["rarity"])]))
-	copy.add_child(_label("%s  •  %s" % [EquipmentData.RARITIES[int(data["rarity"])], HeroData.element(selected_id, record)], 29, Color("e9e8d7")))
-	copy.add_child(_label("%s  •  %s" % [data["role"], "SELECTED" if selected_id == profile.selected_hero_id else ("OWNED" if owned else "LOCKED")], 27, Color("aebdb4")))
-	copy.add_child(_label("Level %d shared  •  Stars %d/5" % [profile.level, record["stars"]], 27, Color("a9d6ad")))
-	box.add_child(_label("BASE STYLE  •  HP %.0f%%  ATK %.0f%%  ARMOR %.0f%%  SPEED %.0f%%" % [float(data["base"]["hp"]) * 100.0, float(data["base"]["atk"]) * 100.0, float(data["base"]["armor"]) * 100.0, float(data["base"]["speed"]) * 100.0], 27, Color("e9e8d7")))
-	box.add_child(_label("ACTIVE: %s" % HeroData.passive_text(selected_id, record, true), 28, Color("e9c87d")))
-	box.add_child(_label("OWNED: %s" % HeroData.passive_text(selected_id, record, false), 28, Color("a9d6ad")))
-	box.add_child(_label("Pieces %d  •  Evolution %d/4" % [record["pieces"], record["evolution"]], 27, Color("e9e8d7")))
+	copy.add_child(_label("%s  •  %s" % [EquipmentData.RARITIES[int(data["rarity"])], HeroData.element(selected_id, record)], 29, Color("f3f7ff")))
+	copy.add_child(_label("%s  •  %s" % [data["role"], "SELECTED" if selected_id == profile.selected_hero_id else ("OWNED" if owned else "LOCKED")], 27, Color("b8cbe2")))
+	copy.add_child(_label("Level %d shared  •  Stars %d/5" % [profile.level, record["stars"]], 27, Color("68e69a")))
+	box.add_child(_label("BASE STYLE  •  HP %.0f%%  ATK %.0f%%  ARMOR %.0f%%  SPEED %.0f%%" % [float(data["base"]["hp"]) * 100.0, float(data["base"]["atk"]) * 100.0, float(data["base"]["armor"]) * 100.0, float(data["base"]["speed"]) * 100.0], 27, Color("f3f7ff")))
+	box.add_child(_label("ACTIVE: %s" % HeroData.passive_text(selected_id, record, true), 28, Color("ffd166")))
+	box.add_child(_label("OWNED: %s" % HeroData.passive_text(selected_id, record, false), 28, Color("68e69a")))
+	box.add_child(_label("Pieces %d  •  Evolution %d/4" % [record["pieces"], record["evolution"]], 27, Color("f3f7ff")))
 	if owned:
 		var select := _button("CURRENT HERO" if selected_id == profile.selected_hero_id else "SELECT HERO")
 		select.disabled = battle.active or selected_id == profile.selected_hero_id
@@ -135,7 +138,7 @@ func _build_detail() -> void:
 		_build_conversion(record)
 
 func _build_form_preview(record: Dictionary) -> void:
-	add_child(_label("FORM PREVIEW  •  VISUAL ONLY", 30, Color("e9c87d")))
+	add_child(_label("FORM PREVIEW  •  VISUAL ONLY", 30, Color("ffd166")))
 	var stage := int(record["evolution"]) if preview_evolution < 0 else preview_evolution
 	var row := GridContainer.new()
 	row.columns = 3
@@ -167,14 +170,14 @@ func _preview_form(stage: int) -> void:
 	refresh()
 
 func _build_path(data: Dictionary, record: Dictionary) -> void:
-	add_child(_label("EVOLUTION PATH", 32, Color("e9c87d")))
+	add_child(_label("EVOLUTION PATH", 32, Color("ffd166")))
 	var path: Array = data["path"]
 	for stage in path.size():
 		var status := "CURRENT" if stage == int(record["evolution"]) else ("COMPLETE" if stage < int(record["evolution"]) else "LOCKED")
-		add_child(_label("%d. %s  •  %s" % [stage + 1, str(path[stage]).to_upper(), status], 29, Color("a9d6ad") if stage == int(record["evolution"]) else Color("aebdb4")))
+		add_child(_label("%d. %s  •  %s" % [stage + 1, str(path[stage]).to_upper(), status], 29, Color("68e69a") if stage == int(record["evolution"]) else Color("b8cbe2")))
 	var cost := HeroData.evolution_cost(selected_id, int(record["evolution"]))
 	if not cost.is_empty():
-		add_child(_label("Next evolution\nLevel %d / %d   •   Crests %d / %d\nGold %s / %s" % [profile.level, cost["level"], profile.evolution_crests, cost["crests"], NumberFormat.compact(profile.gold), NumberFormat.compact(int(cost["gold"]))], 29, Color("e9e8d7")))
+		add_child(_label("Next evolution\nLevel %d / %d   •   Crests %d / %d\nGold %s / %s" % [profile.level, cost["level"], profile.evolution_crests, cost["crests"], NumberFormat.compact(profile.gold), NumberFormat.compact(int(cost["gold"]))], 29, Color("f3f7ff")))
 		var evolve := _button("EVOLVE HERO")
 		evolve.disabled = battle.active or not progress.can_evolve(selected_id)
 		evolve.pressed.connect(_evolve)
@@ -183,10 +186,10 @@ func _build_path(data: Dictionary, record: Dictionary) -> void:
 		add_child(_label("Future evolution implementation", 28, Color("d8a399")))
 
 func _build_conversion(record: Dictionary) -> void:
-	add_child(_label("CONVERT GENERIC HERO PIECES", 32, Color("e9c87d")))
-	add_child(_label("%d Generic Pieces → 1 %s Piece" % [HeroData.CONVERSION_RATE, HeroData.HEROES[selected_id]["name"]], 28, Color("e9e8d7")))
+	add_child(_label("CONVERT GENERIC HERO PIECES", 32, Color("ffd166")))
+	add_child(_label("%d Generic Pieces → 1 %s Piece" % [HeroData.CONVERSION_RATE, HeroData.HEROES[selected_id]["name"]], 28, Color("f3f7ff")))
 	if pending_conversion > 0:
-		add_child(_label("Confirm conversion: %d Generic → %d %s Pieces?" % [pending_conversion * HeroData.CONVERSION_RATE, pending_conversion, HeroData.HEROES[selected_id]["name"]], 28, Color("e9c87d")))
+		add_child(_label("Confirm conversion: %d Generic → %d %s Pieces?" % [pending_conversion * HeroData.CONVERSION_RATE, pending_conversion, HeroData.HEROES[selected_id]["name"]], 28, Color("ffd166")))
 		var confirm := _button("CONFIRM CONVERSION")
 		confirm.pressed.connect(_confirm_conversion)
 		add_child(confirm)
@@ -223,13 +226,13 @@ func _build_evolution_result() -> void:
 	reveal.parallel().tween_property(new_portrait, "modulate", Color.WHITE, 0.45)
 	reveal.parallel().tween_property(new_portrait, "scale", Vector2(1.03, 1.03), 0.24).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	reveal.tween_property(new_portrait, "scale", Vector2.ONE, 0.20)
-	add_child(_label("%s  →  %s" % [evolution_result["previous"], evolution_result["next"]], 37, Color("e9c87d")))
-	add_child(_label("Element: %s  •  New title earned" % evolution_result["element"], 29, Color("a9d6ad")))
+	add_child(_label("%s  →  %s" % [evolution_result["previous"], evolution_result["next"]], 37, Color("ffd166")))
+	add_child(_label("Element: %s  •  New title earned" % evolution_result["element"], 29, Color("68e69a")))
 	var before: Dictionary = evolution_result.get("before_stats", {})
 	var after: Dictionary = evolution_result.get("after_stats", {})
 	if not before.is_empty() and not after.is_empty():
-		add_child(_label("HP %.0f → %.0f  •  ATK %.0f → %.0f  •  Armor %.0f → %.0f" % [before["hp"], after["hp"], before["atk"], after["atk"], before["armor"], after["armor"]], 29, Color("e9e8d7")))
-	add_child(_label("Active passive improved: %s" % HeroData.passive_text(selected_id, profile.heroes[selected_id], true), 29, Color("e9e8d7")))
+		add_child(_label("HP %.0f → %.0f  •  ATK %.0f → %.0f  •  Armor %.0f → %.0f" % [before["hp"], after["hp"], before["atk"], after["atk"], before["armor"], after["armor"]], 29, Color("f3f7ff")))
+	add_child(_label("Active passive improved: %s" % HeroData.passive_text(selected_id, profile.heroes[selected_id], true), 29, Color("f3f7ff")))
 	var continue_button := _button("SKIP / CONTINUE")
 	continue_button.pressed.connect(_continue_evolution)
 	add_child(continue_button)
