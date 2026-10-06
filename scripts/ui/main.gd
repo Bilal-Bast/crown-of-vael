@@ -1228,7 +1228,7 @@ func _format_upgrade_increase(stat: String, value: float) -> String:
 
 func _show_message(value: String) -> void:
 	# Ability casts already have battlefield effects; avoid stacking a toast on every cast.
-	if toast_panel == null or value.ends_with("!"):
+	if toast_panel == null or value.ends_with("!") or value.begins_with("Wave "):
 		return
 	toast_label.text = value
 	toast_panel.visible = true
