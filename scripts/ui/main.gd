@@ -779,10 +779,10 @@ func _build_navigation(root: VBoxContainer) -> void:
 	left_rail.name = "FloatingShortcutsLeft"
 	left_rail.anchor_right = 0.0
 	left_rail.anchor_bottom = 1.0
-	left_rail.offset_left = 4
-	left_rail.offset_right = 124
-	left_rail.offset_top = 120
-	left_rail.offset_bottom = -164
+	left_rail.offset_left = 2
+	left_rail.offset_right = 62
+	left_rail.anchor_top = 0.24
+	left_rail.anchor_bottom = 0.80
 	left_rail.add_theme_constant_override("separation", 1)
 	left_rail.mouse_filter = Control.MOUSE_FILTER_PASS
 	battlefield_host.add_child(left_rail)
@@ -793,10 +793,10 @@ func _build_navigation(root: VBoxContainer) -> void:
 	right_rail.anchor_left = 1.0
 	right_rail.anchor_right = 1.0
 	right_rail.anchor_bottom = 1.0
-	right_rail.offset_left = -124
-	right_rail.offset_right = -4
-	right_rail.offset_top = 120
-	right_rail.offset_bottom = -164
+	right_rail.offset_left = -62
+	right_rail.offset_right = -2
+	right_rail.anchor_top = 0.24
+	right_rail.anchor_bottom = 0.80
 	right_rail.add_theme_constant_override("separation", 1)
 	right_rail.mouse_filter = Control.MOUSE_FILTER_PASS
 	battlefield_host.add_child(right_rail)
@@ -838,10 +838,10 @@ func _add_nav_button(parent: Container, tab_name: String, floating: bool) -> voi
 	icon_slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	contents.add_child(icon_slot)
 	if floating:
-		icon.anchor_left = 0.15
-		icon.anchor_right = 0.85
-		icon.anchor_top = 0.15
-		icon.anchor_bottom = 0.85
+		icon.anchor_left = 0.04
+		icon.anchor_right = 0.96
+		icon.anchor_top = 0.04
+		icon.anchor_bottom = 0.96
 	else:
 		icon.custom_minimum_size = Vector2(96, 96)
 		icon.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
@@ -851,8 +851,35 @@ func _add_nav_button(parent: Container, tab_name: String, floating: bool) -> voi
 		icon.offset_bottom = 48.0
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	icon.texture = load("res://assets/ui/navigation_icons/%s.png" % NAV_ICON_FILES[tab_name])
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var nav_texture := load("res://assets/ui/navigation_icons/%s.png" % NAV_ICON_FILES[tab_name]) as Texture2D
+	if floating and nav_texture != null:
+		var icon_image := nav_texture.get_image()
+		if icon_image != null:
+			var used_rect := icon_image.get_used_rect()
+			if used_rect.size.x > 0 and used_rect.size.y > 0:
+				var cropped_texture := AtlasTexture.new()
+				cropped_texture.atlas = nav_texture
+				cropped_texture.region = Rect2(Vector2(used_rect.position), Vector2(used_rect.size))
+				nav_texture = cropped_texture
+		var shadow := TextureRect.new()
+		shadow.name = "NavIconShadow"
+		shadow.anchor_left = icon.anchor_left
+		shadow.anchor_right = icon.anchor_right
+		shadow.anchor_top = icon.anchor_top
+		shadow.anchor_bottom = icon.anchor_bottom
+		shadow.offset_left = 1.0
+		shadow.offset_right = 1.0
+		shadow.offset_top = 2.0
+		shadow.offset_bottom = 2.0
+		shadow.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		shadow.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		shadow.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		shadow.texture = nav_texture
+		shadow.modulate = Color(0.02, 0.04, 0.06, 0.88)
+		shadow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon_slot.add_child(shadow)
+	icon.texture = nav_texture
 	icon_slot.add_child(icon)
 	parent.add_child(button)
 	nav_buttons[tab_name] = button
@@ -1828,15 +1855,21 @@ func _update_navigation() -> void:
 			dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			dot.anchor_left = 1.0
 			dot.anchor_right = 1.0
-			dot.offset_left = -34
-			dot.offset_right = -6
-			dot.offset_top = 6
-			dot.offset_bottom = 34
+			if floating:
+				dot.offset_left = -15
+				dot.offset_right = -1
+				dot.offset_top = 1
+				dot.offset_bottom = 15
+			else:
+				dot.offset_left = -34
+				dot.offset_right = -6
+				dot.offset_top = 6
+				dot.offset_bottom = 34
 			var badge_style := StyleBoxFlat.new()
 			badge_style.bg_color = Color("d94f52")
 			badge_style.border_color = Color("f3e4c4")
-			badge_style.set_border_width_all(2)
-			badge_style.set_corner_radius_all(14)
+			badge_style.set_border_width_all(1 if floating else 2)
+			badge_style.set_corner_radius_all(7 if floating else 14)
 			badge_style.set_content_margin_all(0)
 			dot.add_theme_stylebox_override("panel", badge_style)
 			button.add_child(dot)
