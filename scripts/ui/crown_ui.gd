@@ -113,11 +113,11 @@ static func style_ornate_panel(panel: PanelContainer) -> void:
 	if _ornate_panel_style == null:
 		var style := StyleBoxTexture.new()
 		style.texture = MENU_FRAME
-		style.texture_margin_left = 150.0
-		style.texture_margin_right = 150.0
-		style.texture_margin_top = 150.0
-		style.texture_margin_bottom = 150.0
-		style.set_content_margin_all(62.0)
+		style.texture_margin_left = 112.0
+		style.texture_margin_right = 112.0
+		style.texture_margin_top = 112.0
+		style.texture_margin_bottom = 112.0
+		style.set_content_margin_all(24.0)
 		style.draw_center = true
 		_ornate_panel_style = style
 	panel.add_theme_stylebox_override("panel", _ornate_panel_style)
@@ -246,7 +246,7 @@ static func apply_screen_scale(root: Control, reduced_effects := false) -> void:
 			if not item.has_meta("crown_base_minimum_size"):
 				item.set_meta("crown_base_minimum_size", item.custom_minimum_size)
 			var base_minimum: Vector2 = item.get_meta("crown_base_minimum_size")
-			var target_minimum := Vector2(base_minimum.x, maxf(base_minimum.y, 132.0)) if compact else base_minimum
+			var target_minimum := Vector2(base_minimum.x, maxf(base_minimum.y, 132.0)) if compact and not bool(item.get_meta("crown_compact_control", false)) else base_minimum
 			if item.custom_minimum_size != target_minimum:
 				item.custom_minimum_size = target_minimum
 

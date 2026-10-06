@@ -21,6 +21,11 @@ const IdleRewardServiceScript = preload("res://scripts/progression/idle_reward_s
 const TutorialServiceScript = preload("res://scripts/progression/tutorial_service.gd")
 const NumberFormatScript = preload("res://scripts/core/number_format.gd")
 const CrownUI = preload("res://scripts/ui/crown_ui.gd")
+const NAV_ICON_FILES := {
+	"Heroes": "heroes", "Companions": "companions", "Equipment": "equipment", "Skills": "skills", "Summon": "summon",
+	"Adventure": "adventure", "Artifacts": "artifacts", "Quests": "quests", "Login": "login", "Pass": "pass",
+	"Shop": "shop", "Account": "account", "Social": "social", "Settings": "settings"
+}
 
 const INK := Color("111014")
 const PANEL := Color("252329")
@@ -33,6 +38,11 @@ var profile: SaveData
 var battle: BattleController
 var battlefield: Battlefield
 var battlefield_host: Control
+var feature_panel: PanelContainer
+var feature_header: HBoxContainer
+var feature_title_label: Label
+var feature_screens: VBoxContainer
+var feature_close_button: Button
 var pixel_battle_background: TextureRect
 var skill_bar: SkillBar
 var battle_area: VBoxContainer
@@ -112,8 +122,6 @@ var upgrade_mode_buttons: Dictionary = {}
 var upgrade_purchase_mode := "x1"
 var skill_auto_button: Button
 var nav_buttons: Dictionary = {}
-var menu_drawer: VBoxContainer
-var menu_toggle: Button
 var selected_tab := "Battle"
 var transition_id := 0
 var tab_transition: Tween
@@ -232,25 +240,52 @@ func _build_ui() -> void:
 
 	var root := VBoxContainer.new()
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	root.offset_left = 24
-	root.offset_right = -24
-	root.offset_top = 22
-	root.offset_bottom = -18
-	root.add_theme_constant_override("separation", 15)
+	root.offset_left = 18
+	root.offset_right = -18
+	root.offset_top = 8
+	root.offset_bottom = -10
+	root.add_theme_constant_override("separation", 8)
 	add_child(root)
 	_build_top_bar(root)
 	_build_stage_card(root)
 
 	battle_area = VBoxContainer.new()
-	battle_area.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	battle_area.add_theme_constant_override("separation", 5)
+	battle_area.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	battle_area.add_theme_constant_override("separation", 3)
 	root.add_child(battle_area)
+
+	feature_panel = _panel()
+	feature_panel.name = "FeatureDrawer"
+	feature_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	root.add_child(feature_panel)
+	var feature_box := VBoxContainer.new()
+	feature_box.add_theme_constant_override("separation", 4)
+	feature_panel.add_child(feature_box)
+	feature_header = HBoxContainer.new()
+	feature_header.custom_minimum_size.y = 88
+	feature_header.visible = false
+	feature_header.add_theme_constant_override("separation", 8)
+	feature_box.add_child(feature_header)
+	feature_title_label = _label("BATTLE", 30, GOLD)
+	feature_title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	feature_title_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	feature_header.add_child(feature_title_label)
+	feature_close_button = Button.new()
+	feature_close_button.text = "×"
+	feature_close_button.custom_minimum_size = Vector2(88, 80)
+	feature_close_button.tooltip_text = "Close feature"
+	feature_close_button.pressed.connect(_select_tab.bind("Battle"))
+	feature_header.add_child(feature_close_button)
+	feature_screens = VBoxContainer.new()
+	feature_screens.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	feature_screens.add_theme_constant_override("separation", 0)
+	feature_box.add_child(feature_screens)
 	_build_battle_area()
 
 	placeholder_area = _panel()
 	placeholder_area.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	placeholder_area.visible = false
-	root.add_child(placeholder_area)
+	feature_screens.add_child(placeholder_area)
 	var placeholder_box := VBoxContainer.new()
 	placeholder_box.alignment = BoxContainer.ALIGNMENT_CENTER
 	placeholder_box.add_theme_constant_override("separation", 22)
@@ -262,77 +297,77 @@ func _build_ui() -> void:
 	unlock_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	unlock_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	placeholder_box.add_child(unlock_note)
-	heroes_area = _screen_scroll(root)
+	heroes_area = _screen_scroll(feature_screens)
 	heroes_screen = HeroesScreenScript.new()
 	heroes_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	heroes_screen.add_theme_constant_override("separation", 12)
 	heroes_area.add_child(heroes_screen)
 	heroes_screen.configure(profile, battle, _on_hero_changed, _retreat_for_hero)
-	equipment_area = _screen_scroll(root)
+	equipment_area = _screen_scroll(feature_screens)
 	equipment_content = _screen_content(equipment_area)
-	skills_area = _screen_scroll(root)
+	skills_area = _screen_scroll(feature_screens)
 	skills_screen = SkillsScreenScript.new()
 	skills_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	skills_screen.add_theme_constant_override("separation", 12)
 	skills_area.add_child(skills_screen)
 	skills_screen.configure(profile, battle, _on_skills_changed)
-	summon_area = _screen_scroll(root)
+	summon_area = _screen_scroll(feature_screens)
 	summon_screen = SummonScreenScript.new()
 	summon_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	summon_screen.add_theme_constant_override("separation", 12)
 	summon_area.add_child(summon_screen)
 	summon_screen.configure(profile, _on_summon_changed, _select_tab)
-	companions_area = _screen_scroll(root)
+	companions_area = _screen_scroll(feature_screens)
 	companions_screen = CompanionsScreenScript.new()
 	companions_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	companions_screen.add_theme_constant_override("separation", 12)
 	companions_area.add_child(companions_screen)
 	companions_screen.configure(profile, battle, _on_build_changed, _select_tab.bind("Summon"))
-	artifacts_area = _screen_scroll(root)
+	artifacts_area = _screen_scroll(feature_screens)
 	artifacts_screen = ArtifactsScreenScript.new()
 	artifacts_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	artifacts_screen.add_theme_constant_override("separation", 12)
 	artifacts_area.add_child(artifacts_screen)
 	artifacts_screen.configure(profile, battle, _on_build_changed, _select_tab.bind("Summon"))
-	adventure_area = _screen_scroll(root)
+	adventure_area = _screen_scroll(feature_screens)
 	adventure_screen = AdventureScreenScript.new()
 	adventure_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	adventure_screen.add_theme_constant_override("separation", 14)
 	adventure_area.add_child(adventure_screen)
 	adventure_screen.configure(profile, _start_pve, _return_campaign, _select_campaign_stage)
 	adventure_screen.tutorial_feature_opened.connect(_show_feature_for_tab)
-	quests_area = _screen_scroll(root)
+	quests_area = _screen_scroll(feature_screens)
 	quests_screen = QuestsScreenScript.new()
 	quests_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	quests_area.add_child(quests_screen)
 	quests_screen.configure(profile, _on_progression_claimed)
-	login_area = _screen_scroll(root)
+	login_area = _screen_scroll(feature_screens)
 	login_screen = LoginScreenScript.new()
 	login_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	login_area.add_child(login_screen)
 	login_screen.configure(profile, _on_progression_claimed)
-	battle_pass_area = _screen_scroll(root)
+	battle_pass_area = _screen_scroll(feature_screens)
 	battle_pass_screen = BattlePassScreenScript.new()
 	battle_pass_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	battle_pass_area.add_child(battle_pass_screen)
 	battle_pass_screen.configure(profile, _on_progression_claimed)
-	shop_area = _screen_scroll(root)
+	shop_area = _screen_scroll(feature_screens)
 	shop_screen = ShopScreenScript.new()
 	shop_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	shop_area.add_child(shop_screen)
 	shop_screen.configure(profile, _on_progression_claimed)
-	account_area = _screen_scroll(root)
+	account_area = _screen_scroll(feature_screens)
 	account_screen = AccountScreenScript.new()
 	account_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	account_area.add_child(account_screen)
 	account_screen.configure(profile, _on_account_social_changed)
-	social_area = _screen_scroll(root)
+	social_area = _screen_scroll(feature_screens)
 	social_screen = SocialScreenScript.new()
 	social_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	social_area.add_child(social_screen)
 	social_screen.configure(profile, _on_account_social_changed)
 	social_screen.tutorial_feature_opened.connect(_show_feature_for_tab)
-	settings_area = _screen_scroll(root)
+	settings_area = _screen_scroll(feature_screens)
 	settings_screen = SettingsScreenScript.new()
 	settings_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	settings_area.add_child(settings_screen)
@@ -344,6 +379,8 @@ func _build_ui() -> void:
 
 func _screen_scroll(root: VBoxContainer) -> ScrollContainer:
 	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(0, 240)
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.visible = false
@@ -364,7 +401,7 @@ func _build_top_bar(root: VBoxContainer) -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 4)
 	panel.add_child(box)
-	CrownUI.style_ornate_panel(panel)
+	CrownUI.style_panel(panel, Color("6b5b43"), false)
 	var metrics := HBoxContainer.new()
 	metrics.add_theme_constant_override("separation", 8)
 	box.add_child(metrics)
@@ -525,7 +562,7 @@ func _build_battle_area() -> void:
 	battle_lower_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	battle_lower_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	battle_lower_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	battle_area.add_child(battle_lower_scroll)
+	feature_screens.add_child(battle_lower_scroll)
 	battle_lower_content = VBoxContainer.new()
 	battle_lower_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	battle_lower_scroll.add_child(battle_lower_content)
@@ -641,98 +678,76 @@ func _update_battlefield_height() -> void:
 	if battlefield_host == null:
 		return
 	var viewport_height := get_viewport_rect().size.y
-	battlefield_host.custom_minimum_size.y = maxf(1.0, viewport_height * 0.33)
+	battlefield_host.custom_minimum_size.y = maxf(1.0, viewport_height * 0.36)
 
 func _build_navigation(root: VBoxContainer) -> void:
 	var panel := _panel()
+	panel.name = "BottomNavigationDock"
 	root.add_child(panel)
-	var rows := VBoxContainer.new()
-	rows.add_theme_constant_override("separation", 7)
-	panel.add_child(rows)
-	menu_drawer = VBoxContainer.new()
-	menu_drawer.add_theme_constant_override("separation", 2)
-	rows.add_child(menu_drawer)
-	menu_drawer.visible = false
-	_drawer_group(menu_drawer, "JOURNEY", ["Adventure"])
-	_drawer_group(menu_drawer, "CHARACTER", ["Skills", "Companions", "Artifacts"])
-	_drawer_group(menu_drawer, "REWARDS", ["Quests", "Login", "Pass", "Shop"])
-	_drawer_group(menu_drawer, "COMMUNITY", ["Account", "Social"])
-	_drawer_group(menu_drawer, "PREFERENCES", ["Settings"])
 	var primary := HBoxContainer.new()
-	primary.add_theme_constant_override("separation", 4)
-	rows.add_child(primary)
-	for tab_name in ["Battle","Heroes","Equipment","Summon"]:
-		_add_nav_button(primary,tab_name)
-	menu_toggle = Button.new()
-	menu_toggle.text = "Menu +"
-	menu_toggle.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	menu_toggle.custom_minimum_size.y = 94
-	menu_toggle.add_theme_font_size_override("font_size",26)
-	menu_toggle.pressed.connect(func():
-		menu_drawer.visible = not menu_drawer.visible
-		menu_toggle.text = "Menu -" if menu_drawer.visible else "Menu +"
-		_style_menu_toggle()
-	)
-	primary.add_child(menu_toggle)
-	_style_menu_toggle()
+	primary.add_theme_constant_override("separation", 5)
+	panel.add_child(primary)
+	for tab_name in ["Heroes", "Companions", "Equipment", "Skills", "Summon"]:
+		_add_nav_button(primary, tab_name, false)
+	var left_rail := VBoxContainer.new()
+	left_rail.name = "FloatingShortcutsLeft"
+	left_rail.anchor_right = 0.0
+	left_rail.anchor_bottom = 1.0
+	left_rail.offset_left = 4
+	left_rail.offset_right = 124
+	left_rail.offset_top = 6
+	left_rail.offset_bottom = -6
+	left_rail.add_theme_constant_override("separation", 2)
+	left_rail.mouse_filter = Control.MOUSE_FILTER_PASS
+	battlefield_host.add_child(left_rail)
+	for tab_name in ["Adventure", "Quests", "Login", "Pass", "Shop"]:
+		_add_nav_button(left_rail, tab_name, true)
+	var right_rail := VBoxContainer.new()
+	right_rail.name = "FloatingShortcutsRight"
+	right_rail.anchor_left = 1.0
+	right_rail.anchor_right = 1.0
+	right_rail.anchor_bottom = 1.0
+	right_rail.offset_left = -124
+	right_rail.offset_right = -4
+	right_rail.offset_top = 6
+	right_rail.offset_bottom = -6
+	right_rail.add_theme_constant_override("separation", 2)
+	right_rail.mouse_filter = Control.MOUSE_FILTER_PASS
+	battlefield_host.add_child(right_rail)
+	for tab_name in ["Artifacts", "Account", "Social", "Settings"]:
+		_add_nav_button(right_rail, tab_name, true)
 	login_popup = PopupPanel.new()
 	login_popup.name = "DailyLoginPopup"
 	add_child(login_popup)
 	_update_navigation()
 
-func _add_nav_button(parent: Container, tab_name: String) -> void:
+func _add_nav_button(parent: Container, tab_name: String, floating: bool) -> void:
 	var button := Button.new()
-	button.text = tab_name
+	button.name = "Nav_%s" % tab_name
+	button.text = ""
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	button.custom_minimum_size.y = 94
-	button.add_theme_font_size_override("font_size",26)
+	button.custom_minimum_size = Vector2(132, 132) if floating else Vector2(132, 142)
+	button.tooltip_text = tab_name
 	button.pressed.connect(_select_tab.bind(tab_name))
 	button.pressed.connect(_play_audio.bind("button_click","UI"))
+	var contents := VBoxContainer.new()
+	contents.name = "Contents"
+	contents.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	contents.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	contents.alignment = BoxContainer.ALIGNMENT_CENTER
+	contents.add_theme_constant_override("separation", 2)
+	button.add_child(contents)
+	var icon := TextureRect.new()
+	icon.name = "NavIcon"
+	icon.custom_minimum_size = Vector2(84, 84) if floating else Vector2(96, 96)
+	icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	icon.texture = load("res://assets/ui/navigation_icons/%s.png" % NAV_ICON_FILES[tab_name])
+	contents.add_child(icon)
 	parent.add_child(button)
 	nav_buttons[tab_name] = button
-
-func _drawer_group(parent: VBoxContainer, title: String, destinations: Array) -> void:
-	var section := VBoxContainer.new()
-	section.add_theme_constant_override("separation", 3)
-	parent.add_child(section)
-	var heading := HBoxContainer.new()
-	heading.add_theme_constant_override("separation", 8)
-	section.add_child(heading)
-	var icon := TextureRect.new()
-	icon.texture = PixelUiIcons.navigation(str(destinations[0]))
-	icon.custom_minimum_size = Vector2(26, 26)
-	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	heading.add_child(icon)
-	var label := _label(title, 20, Color("c8a966"))
-	label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	heading.add_child(label)
-	var rule := ColorRect.new()
-	rule.color = Color("5f523b")
-	rule.custom_minimum_size = Vector2(0, 2)
-	rule.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	rule.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	heading.add_child(rule)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 5)
-	section.add_child(row)
-	for tab_name in destinations:
-		_add_nav_button(row, str(tab_name))
-
-func _style_menu_toggle() -> void:
-	if menu_toggle == null: return
-	var selected := menu_drawer.visible
-	var style := _button_style(Color("c5a566"), selected)
-	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
-		var feedback := style.duplicate() as StyleBoxFlat
-		if state == "hover" or state == "focus":
-			feedback.bg_color = Color("34414a")
-			feedback.border_color = Color("e2c783")
-		if state == "disabled":
-			feedback.bg_color = Color("1a252d")
-			feedback.border_color = Color("4a5352")
-		menu_toggle.add_theme_stylebox_override(state, feedback)
-	menu_toggle.add_theme_color_override("font_color", Color("f0d28a") if selected else PALE)
 
 func _build_guidance_popups() -> void:
 	tutorial_popup = PopupPanel.new()
@@ -1104,12 +1119,11 @@ func _show_message(value: String) -> void:
 
 func _select_tab(tab_name: String) -> void:
 	selected_tab = tab_name
-	if menu_drawer != null:
-		menu_drawer.hide()
-		menu_toggle.text = "Menu +"
-		_style_menu_toggle()
-	stage_panel.visible = tab_name == "Battle"
-	battle_area.visible = tab_name == "Battle"
+	stage_panel.visible = true
+	battle_area.visible = true
+	feature_header.visible = tab_name != "Battle"
+	feature_title_label.text = tab_name.to_upper()
+	battle_lower_scroll.visible = tab_name == "Battle"
 	heroes_area.visible = tab_name == "Heroes"
 	equipment_area.visible = tab_name == "Equipment"
 	skills_area.visible = tab_name == "Skills"
@@ -1125,7 +1139,7 @@ func _select_tab(tab_name: String) -> void:
 	social_area.visible = tab_name == "Social"
 	settings_area.visible = tab_name == "Settings"
 	var active_screen: Control = {
-		"Battle": battle_area, "Heroes": heroes_area, "Equipment": equipment_area,
+		"Battle": battle_lower_scroll, "Heroes": heroes_area, "Equipment": equipment_area,
 		"Skills": skills_area, "Summon": summon_area, "Companions": companions_area,
 		"Artifacts": artifacts_area, "Adventure": adventure_area, "Quests": quests_area,
 		"Login": login_area, "Pass": battle_pass_area, "Shop": shop_area,
@@ -1579,7 +1593,9 @@ func _update_navigation() -> void:
 		var selected: bool = tab_name == selected_tab
 		CrownUI.style_tab(button, selected, GOLD)
 		var badge := MonetizationService.new(profile).bp_badge() if tab_name == "Pass" else MonetizationService.new(profile).shop_badge() if tab_name == "Shop" else SocialService.new(profile).badge() if tab_name == "Social" else ProgressionService.new(profile).badge(tab_name)
-		button.text = tab_name
+		var icon := button.get_node_or_null("Contents/NavIcon") as TextureRect
+		if icon != null:
+			icon.modulate = Color("fff1cf") if selected else Color.WHITE
 		var dot := button.get_node_or_null("BadgeDot") as ColorRect
 		if dot == null:
 			dot = ColorRect.new()
@@ -1588,10 +1604,10 @@ func _update_navigation() -> void:
 			dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			dot.anchor_left = 1.0
 			dot.anchor_right = 1.0
-			dot.offset_left = -20
-			dot.offset_right = -7
-			dot.offset_top = 7
-			dot.offset_bottom = 20
+			dot.offset_left = -36
+			dot.offset_right = -4
+			dot.offset_top = 4
+			dot.offset_bottom = 36
 			button.add_child(dot)
 		dot.visible = badge
 
