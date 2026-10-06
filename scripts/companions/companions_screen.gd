@@ -23,6 +23,7 @@ func refresh() -> void:
 		remove_child(child)
 		child.queue_free()
 	var heading := _panel(Color("79c78b"))
+	CrownUI.style_ornate_panel(heading)
 	add_child(heading)
 	var head := VBoxContainer.new()
 	heading.add_child(head)
