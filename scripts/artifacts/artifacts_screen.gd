@@ -49,6 +49,7 @@ func refresh() -> void:
 			button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		button.custom_minimum_size.y = 107
 		button.disabled = index >= profile.artifact_slot_limit()
+		CrownUI.style_tab(button, id != "", Color("d09548"))
 		button.pressed.connect(_slot_pressed.bind(index))
 		slots.add_child(button)
 	if profile.artifact_slot_limit() < 3:
