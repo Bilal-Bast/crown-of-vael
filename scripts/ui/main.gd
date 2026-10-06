@@ -729,7 +729,7 @@ func _build_navigation(root: VBoxContainer) -> void:
 	left_rail.offset_left = 4
 	left_rail.offset_right = 124
 	left_rail.offset_top = 0
-	left_rail.offset_bottom = 0
+	left_rail.offset_bottom = -164
 	left_rail.add_theme_constant_override("separation", 1)
 	left_rail.mouse_filter = Control.MOUSE_FILTER_PASS
 	battlefield_host.add_child(left_rail)
@@ -743,7 +743,7 @@ func _build_navigation(root: VBoxContainer) -> void:
 	right_rail.offset_left = -124
 	right_rail.offset_right = -4
 	right_rail.offset_top = 0
-	right_rail.offset_bottom = 0
+	right_rail.offset_bottom = -164
 	right_rail.add_theme_constant_override("separation", 1)
 	right_rail.mouse_filter = Control.MOUSE_FILTER_PASS
 	battlefield_host.add_child(right_rail)
