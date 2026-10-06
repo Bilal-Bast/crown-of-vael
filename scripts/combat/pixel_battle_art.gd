@@ -7,7 +7,7 @@ const HERO_SHEET := "res://assets/prototype_pixel/heroes/squire/sheet.png"
 const HERO_RUN_SHEET := "res://assets/prototype_pixel/heroes/squire/run.png"
 const BACKGROUND := "res://assets/prototype_pixel/backgrounds/greenvale/battle.png"
 const FOREST_BACKGROUND := "res://assets/prototype_pixel/backgrounds/whispering_forest/battle.png"
-const ASHEN_BACKGROUND := "res://assets/prototype_pixel/backgrounds/ashen_highlands/battle.png"
+const ASHEN_BACKGROUND := "res://assets/prototype_pixel/backgrounds/ashen_highlands/battle_polished.png"
 const FROSTFANG_BACKGROUND := "res://assets/prototype_pixel/backgrounds/frostfang_mountains/battle.png"
 const SUNKEN_MARSHES_BACKGROUND := "res://assets/prototype_pixel/backgrounds/sunken_marshes/battle.png"
 const CRIMSON_DESERT_BACKGROUND := "res://assets/prototype_pixel/backgrounds/crimson_desert/battle.png"
@@ -212,7 +212,10 @@ static func is_active(battle: BattleController) -> bool:
 	if str(battle.mode_config.get("mode", "campaign")) != "campaign" or battle.region not in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
 		return false
 	set_battle_region(battle.region)
-	return battle.profile.selected_hero_id == "knight" and int(battle.profile.heroes.get("knight", {}).get("evolution", 0)) in [0, 1, 2, 3, 4]
+	var hero_id := battle.profile.selected_hero_id
+	if hero_id == "knight":
+		return int(battle.profile.heroes.get("knight", {}).get("evolution", 0)) in [0, 1, 2, 3, 4]
+	return HeroArtService.texture_for_hero(hero_id, 0, "idle") != null
 
 static func hero_sheet() -> Texture2D:
 	return load(HERO_SHEET) as Texture2D

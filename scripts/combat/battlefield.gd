@@ -418,9 +418,18 @@ func _draw_companions(unit: float) -> void:
 			pixel_companion_sprites[slot].visible = false
 			continue
 		var cell := Vector2(512.0, 384.0) if id in ["wolf", "dire_wolf", "shadow_wolf", "fenrir"] else Vector2(512.0, 256.0)
-		var draw_scale := unit * CompanionPixelArt.scale_for(id)
+		var group_count := 0
+		for candidate_id in battle.profile.equipped_companion_slots:
+			if candidate_id != "" and battle.profile.companions.has(candidate_id) and CompanionPixelArt.is_ranged(candidate_id) == CompanionPixelArt.is_ranged(id):
+				group_count += 1
+		var draw_scale := unit * CompanionPixelArt.scale_for(id) * CompanionPixelArt.formation_scale(id, group_count)
 		var contact_y := _ground_line_y() - CompanionPixelArt.hover_height(id) * draw_scale
-		var pos := Vector2(size.x * (0.075 + slot * 0.12), contact_y - (CompanionPixelArt.contact_y(id) - cell.y * 0.5) * draw_scale)
+		var group_index := 0
+		for earlier_slot in slot:
+			var earlier_id := battle.profile.equipped_companion_slots[earlier_slot]
+			if earlier_id != "" and battle.profile.companions.has(earlier_id) and CompanionPixelArt.is_ranged(earlier_id) == CompanionPixelArt.is_ranged(id):
+				group_index += 1
+		var pos := Vector2(size.x * CompanionPixelArt.formation_x(id, group_index), contact_y - (CompanionPixelArt.contact_y(id) - cell.y * 0.5) * draw_scale)
 		if lunge > 0.0:
 			pos.x += sin((1.0 - lunge / 0.24) * PI) * 42.0 * unit
 		var sprite := pixel_companion_sprites[slot]
@@ -575,13 +584,19 @@ func _draw_hero(pos: Vector2, unit: float, flash: bool) -> void:
 	var hero_id := battle.profile.selected_hero_id if battle != null and battle.profile != null else "knight"
 	var hero_record: Dictionary = battle.profile.heroes[hero_id] if battle != null and battle.profile != null else {"evolution": 0}
 	var form := clampi(int(hero_record.get("evolution", 0)), 0, 4) if hero_id == "knight" else 0
-	var metadata := HeroArtService.metadata(form)
+	var metadata := HeroArtService.metadata_for_hero(hero_id, form)
 	if hero_visual_state == "idle":
 		pos.y += sin(float(Time.get_ticks_msec()) * 0.002) * 1.5 * unit
 	var hero_scale := unit * float(metadata.get("scale", 1.0))
 	var hero_contact_y := 38.0 if hero_id == "knight" else 36.0
 	draw_set_transform(pos + metadata.get("offset", Vector2.ZERO) * unit - Vector2(0.0, hero_contact_y * hero_scale), 0.0, Vector2.ONE * hero_scale)
 	if hero_id != "knight":
+		if PixelBattleArt.is_active(battle) and HeroArtService.texture_for_hero(hero_id, 0, "idle") != null:
+			var ratio := battle.hero_hp / float(battle.hero["hp"]) if battle != null and not battle.hero.is_empty() else 1.0
+			_draw_hp_bar(Vector2(-57, -380), 114, ratio, Color("65d78c"))
+			draw_string(ThemeDB.fallback_font, Vector2(-57, -392), HeroData.title(hero_id, hero_record).to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("e4eee0"))
+			draw_set_transform(Vector2.ZERO)
+			return
 		_draw_other_hero(hero_id, flash)
 		draw_set_transform(Vector2.ZERO)
 		return
@@ -676,8 +691,8 @@ func _update_pixel_hero_sprite(pos: Vector2, unit: float, allow_visible: bool = 
 	var frame_count := HeroArtService.animation_frame_count(state)
 	var frame := int(floor(maxf(0.0, elapsed) * HeroArtService.animation_fps(state)))
 	frame = posmod(frame, frame_count) if looping else clampi(frame, 0, frame_count - 1)
-	pixel_hero_sprite.texture = HeroArtService.animation_frame(form, state, frame)
-	var form_scale := float(HeroArtService.metadata(form).get("scale", 1.0))
+	pixel_hero_sprite.texture = HeroArtService.animation_frame_for_hero(hero_id, form, state, frame)
+	var form_scale := float(HeroArtService.metadata_for_hero(hero_id, form).get("scale", 1.0))
 	pixel_hero_sprite.scale = Vector2(370.0 / 256.0, 392.0 / 256.0) * unit * form_scale
 	pixel_hero_sprite.position = pos + Vector2(0.0, -(PIXEL_FRAME_GROUND_Y - 128.0) * pixel_hero_sprite.scale.y)
 	pixel_hero_sprite.rotation = sin(float(Time.get_ticks_msec()) * 0.035) * 0.06 if hero_run_time > 0.0 else 0.0
