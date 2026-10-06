@@ -543,13 +543,23 @@ func _build_battle_area() -> void:
 	stage_overlay.add_child(stage_panel)
 	var skill_panel := _panel()
 	skill_panel.name = "BattleSkillPanel"
+	var skill_panel_style := StyleBoxFlat.new()
+	skill_panel_style.bg_color = Color("11161a", 0.20)
+	skill_panel_style.border_color = Color("c3a773", 0.28)
+	skill_panel_style.set_border_width_all(1)
+	skill_panel_style.set_corner_radius_all(12)
+	skill_panel_style.content_margin_left = 8
+	skill_panel_style.content_margin_right = 8
+	skill_panel_style.content_margin_top = 6
+	skill_panel_style.content_margin_bottom = 6
+	skill_panel.add_theme_stylebox_override("panel", skill_panel_style)
 	skill_panel.anchor_left = 0.0
 	skill_panel.anchor_right = 1.0
 	skill_panel.anchor_top = 1.0
 	skill_panel.anchor_bottom = 1.0
 	skill_panel.offset_left = 8.0
 	skill_panel.offset_right = -8.0
-	skill_panel.offset_top = -164.0
+	skill_panel.offset_top = -124.0
 	skill_panel.offset_bottom = -4.0
 	battlefield_host.add_child(skill_panel)
 	var skill_margins := MarginContainer.new()
@@ -568,6 +578,7 @@ func _build_battle_area() -> void:
 	skill_auto_button = Button.new()
 	skill_auto_button.name = "SkillAutoButton"
 	skill_auto_button.custom_minimum_size = Vector2(82, 94)
+	skill_auto_button.set_meta("crown_compact_control", true)
 	skill_auto_button.pressed.connect(_toggle_skill_auto)
 	var auto_style := StyleBoxFlat.new()
 	auto_style.bg_color = Color("172525")
@@ -597,7 +608,7 @@ func _build_battle_area() -> void:
 	battle_lower_scroll.add_child(battle_lower_content)
 	var upgrade_top_spacer := Control.new()
 	upgrade_top_spacer.name = "UpgradeTopBreathingRoom"
-	upgrade_top_spacer.custom_minimum_size.y = 8.0
+	upgrade_top_spacer.custom_minimum_size.y = 12.0
 	battle_lower_content.add_child(upgrade_top_spacer)
 	upgrade_list_scroll = battle_lower_scroll
 	upgrade_panel = _panel()
@@ -619,7 +630,8 @@ func _build_battle_area() -> void:
 		var mode_button := Button.new()
 		mode_button.name = "UpgradeMode_%s" % mode
 		mode_button.text = mode
-		mode_button.custom_minimum_size = Vector2(60, 42)
+		mode_button.custom_minimum_size = Vector2(60, 72)
+		mode_button.set_meta("crown_compact_control", true)
 		mode_button.add_theme_font_size_override("font_size", 18)
 		mode_button.pressed.connect(_set_upgrade_purchase_mode.bind(mode))
 		mode_row.add_child(mode_button)
