@@ -453,7 +453,7 @@ func _build_top_bar() -> void:
 	var hero_status := HBoxContainer.new()
 	hero_status.add_theme_constant_override("separation", 8)
 	box.add_child(hero_status)
-	battle_hero_level_text = _label("KNIGHT  •  LEVEL 1", 22, PALE)
+	battle_hero_level_text = _label("LEVEL 1", 22, PALE)
 	battle_hero_level_text.add_theme_font_size_override("font_size", 22)
 	hero_status.add_child(battle_hero_level_text)
 	battle_hero_hp_bar = ProgressBar.new()
@@ -1134,7 +1134,7 @@ func _refresh_ui() -> void:
 		var max_hp := maxf(1.0, float(battle.hero.get("hp", 1.0)))
 		var current_hp := clampf(float(battle.hero_hp), 0.0, max_hp)
 		var hp_ratio := current_hp / max_hp
-		battle_hero_level_text.text = "%s  •  LEVEL %d" % [HeroData.title(profile.selected_hero_id, profile.heroes[profile.selected_hero_id]).to_upper(), profile.level]
+		battle_hero_level_text.text = "LEVEL %d" % profile.level
 		battle_hero_hp_bar.max_value = max_hp
 		battle_hero_hp_bar.value = current_hp
 		battle_hero_hp_bar.add_theme_stylebox_override("fill", CrownUI.health_fill_style(hp_ratio <= 0.30))
