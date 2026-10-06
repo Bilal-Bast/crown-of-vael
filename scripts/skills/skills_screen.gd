@@ -43,6 +43,7 @@ func refresh() -> void:
 		button.custom_minimum_size.y = 118
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.add_theme_font_size_override("font_size", 25)
+		CrownUI.style_tab(button, id != "", Color("9c8be3"))
 		button.pressed.connect(_slot_pressed.bind(index))
 		slots.add_child(button)
 	var ultimate := _panel()
@@ -62,31 +63,8 @@ func refresh() -> void:
 		var owned := profile.skills.has(id)
 		var record: Dictionary = profile.skills.get(id, {})
 		var rarity := int(record.get("rarity", data["rarity"]))
-		var button := Button.new()
-		button.custom_minimum_size = Vector2(320, 255)
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_style_card(button, EquipmentData.COLORS[rarity], selected_id == id, owned)
-		var contents := VBoxContainer.new()
-		contents.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		contents.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		contents.alignment = BoxContainer.ALIGNMENT_CENTER
-		contents.add_theme_constant_override("separation", 1)
-		button.add_child(contents)
-		var icon := TextureRect.new()
-		icon.custom_minimum_size = Vector2(0, 165)
-		icon.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		icon.texture = PixelUiIcons.skill(id)
-		contents.add_child(icon)
-		var title := _label(data["name"], 23, EquipmentData.COLORS[rarity] if owned else Color("9da7a2"))
-		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		title.clip_text = true
-		contents.add_child(title)
-		var level_label := _label(("LV %d" % int(record.get("level", 1))) if owned else "LOCKED", 19, Color("c2c9bd"))
-		level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		contents.add_child(level_label)
+		var status: String = "LEVEL %d | %s" % [int(record.get("level", 1)), EquipmentData.RARITIES[rarity]] if owned else "LOCKED | " + EquipmentData.RARITIES[rarity]
+		var button := CrownUI.create_collection_card(EquipmentData.COLORS[rarity], selected_id == id, not owned, PixelUiIcons.skill(id), str(data["name"]), status, Vector2(320, 255), 165)
 		button.pressed.connect(_select.bind(id))
 		grid.add_child(button)
 
@@ -116,9 +94,6 @@ func _build_selected_detail() -> void:
 		detail.add_child(_label("COPIES %d / %d  •  NEXT: %s" % [record["duplicates"], SkillData.copies_to_level(int(record["level"])), SkillData.effect_text(selected_id, int(record["level"]) + 1)], 23, Color("a9d6ad")))
 	else:
 		detail.add_child(_label("Summon a copy to unlock this skill.", 24, Color("d8a399")))
-
-func _style_card(button: Button, border: Color, selected: bool, owned: bool) -> void:
-	CrownUI.style_card(button, border, selected, not owned)
 
 func _select(id: String) -> void:
 	selected_id = id
