@@ -25,11 +25,11 @@ func refresh() -> void:
 	add_child(intro)
 	var intro_box := VBoxContainer.new()
 	intro.add_child(intro_box)
-	intro_box.add_child(_label("SKILL GRIMOIRE", 36, Color("e9c87d")))
-	intro_box.add_child(_label("Select an owned skill, then tap a slot. Tap it again to unequip.", 29, Color("aebdb4")))
+	intro_box.add_child(_label("SKILL GRIMOIRE", 36, Color("ffd166")))
+	intro_box.add_child(_label("Select an owned skill, then tap a slot. Tap it again to unequip.", 29, Color("b8cbe2")))
 	var selected_name := str(SkillData.SKILLS[selected_id]["name"]) if SkillData.SKILLS.has(selected_id) else "None"
-	intro_box.add_child(_label("SELECTED: %s" % selected_name, 30, Color("a9d6ad")))
-	add_child(_label("ACTIVE SKILLS", 33, Color("e9c87d")))
+	intro_box.add_child(_label("SELECTED: %s" % selected_name, 30, Color("68e69a")))
+	add_child(_label("ACTIVE SKILLS", 33, Color("ffd166")))
 	var slots := HBoxContainer.new()
 	slots.add_theme_constant_override("separation", 8)
 	add_child(slots)
@@ -44,15 +44,15 @@ func refresh() -> void:
 		button.custom_minimum_size.y = 118
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.add_theme_font_size_override("font_size", 25)
-		CrownUI.style_tab(button, id != "", Color("9c8be3"))
+		CrownUI.style_tab(button, id != "", Color("b38aff"))
 		button.pressed.connect(_slot_pressed.bind(index))
 		slots.add_child(button)
 	var ultimate := _panel()
 	add_child(ultimate)
-	ultimate.add_child(_label("ULTIMATE SLOT  •  LOCKED  •  Unlocks later", 29, Color("aebdb4")))
+	ultimate.add_child(_label("ULTIMATE SLOT  •  LOCKED  •  Unlocks later", 29, Color("b8cbe2")))
 	if SkillData.SKILLS.has(selected_id):
 		_build_selected_detail()
-	add_child(_label("SKILL COLLECTION  •  %d / %d" % [profile.skills.size(), SkillData.SKILLS.size()], 33, Color("e9c87d")))
+	add_child(_label("SKILL COLLECTION  •  %d / %d" % [profile.skills.size(), SkillData.SKILLS.size()], 33, Color("ffd166")))
 	var grid := GridContainer.new()
 	grid.name = "SkillCollection"
 	grid.columns = 3
@@ -89,10 +89,10 @@ func _build_selected_detail() -> void:
 	detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(detail)
 	detail.add_child(_label(data["name"], 33, EquipmentData.COLORS[rarity]))
-	detail.add_child(_label(("LEVEL %d  •  %.0fS COOLDOWN" % [record["level"], data["cooldown"]]) if owned else ("LOCKED  •  %.0fS COOLDOWN" % data["cooldown"]), 25, Color("e9e8d7")))
-	detail.add_child(_label("%s  •  %s" % [data["description"], SkillData.effect_text(selected_id, int(record.get("level", 1)))], 24, Color("aebdb4")))
+	detail.add_child(_label(("LEVEL %d  •  %.0fS COOLDOWN" % [record["level"], data["cooldown"]]) if owned else ("LOCKED  •  %.0fS COOLDOWN" % data["cooldown"]), 25, Color("f3f7ff")))
+	detail.add_child(_label("%s  •  %s" % [data["description"], SkillData.effect_text(selected_id, int(record.get("level", 1)))], 24, Color("b8cbe2")))
 	if owned:
-		detail.add_child(_label("COPIES %d / %d  •  NEXT: %s" % [record["duplicates"], SkillData.copies_to_level(int(record["level"])), SkillData.effect_text(selected_id, int(record["level"]) + 1)], 23, Color("a9d6ad")))
+		detail.add_child(_label("COPIES %d / %d  •  NEXT: %s" % [record["duplicates"], SkillData.copies_to_level(int(record["level"])), SkillData.effect_text(selected_id, int(record["level"]) + 1)], 23, Color("68e69a")))
 	else:
 		detail.add_child(_label("Summon a copy to unlock this skill.", 24, Color("d8a399")))
 
