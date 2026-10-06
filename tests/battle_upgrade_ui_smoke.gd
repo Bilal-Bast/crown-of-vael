@@ -31,6 +31,11 @@ func _run() -> void:
 	var upgrade_buttons: Dictionary = main.get("upgrade_buttons")
 	var nav_buttons: Dictionary = main.get("nav_buttons")
 	var skill_bar: SkillBar = main.get("skill_bar")
+	var skill_panel_style := skill_panel.get_theme_stylebox("panel") as StyleBoxFlat
+	_check(skill_panel_style != null and skill_panel_style.bg_color.a < 0.3, "battle skill strip stays visually transparent")
+	_check((main.get("skill_auto_button") as Button).custom_minimum_size.y < 132.0, "Auto control keeps a compact touch height")
+	for mode_button in (main.get("upgrade_mode_buttons") as Dictionary).values():
+		_check((mode_button as Button).custom_minimum_size.y < 132.0, "upgrade purchase mode buttons keep a compact height")
 	var nav_top_before := (nav_buttons["Heroes"] as Control).get_global_rect().position.y
 	_check(battle_area.get_child_count() == 1 and battle_area.get_child(0) == battlefield_host, "battlefield fills the top battle section")
 	_check(absf(battlefield_host.get_global_rect().position.y - main.get_global_rect().position.y) <= 1.0, "battlefield begins at the top edge")
