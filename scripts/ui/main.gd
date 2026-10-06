@@ -17,11 +17,7 @@ const ShopScreenScript = preload("res://scripts/monetization/shop_screen.gd")
 const AccountScreenScript = preload("res://scripts/online/account_screen.gd")
 const SocialScreenScript = preload("res://scripts/online/social_screen.gd")
 const SettingsScreenScript = preload("res://scripts/ui/settings_screen.gd")
-const HEROES_MENU_BG = preload("res://assets/backgrounds/menus/heroes_hall.png")
-const ARMORY_MENU_BG = preload("res://assets/backgrounds/menus/armory_forge.png")
-const SUMMON_MENU_BG = preload("res://assets/backgrounds/menus/summoning_sanctum.png")
-const ADVENTURE_MENU_BG = preload("res://assets/backgrounds/menus/adventure_valley.png")
-const GUILD_MENU_BG = preload("res://assets/backgrounds/menus/guild_hall.png")
+const ScreenArtCatalog = preload("res://scripts/ui/screen_art_catalog.gd")
 const IdleRewardServiceScript = preload("res://scripts/progression/idle_reward_service.gd")
 const TutorialServiceScript = preload("res://scripts/progression/tutorial_service.gd")
 const NumberFormatScript = preload("res://scripts/core/number_format.gd")
@@ -32,12 +28,12 @@ const NAV_ICON_FILES := {
 	"Shop": "shop", "Account": "account", "Social": "social", "Settings": "settings"
 }
 
-const INK := Color("111014")
-const PANEL := Color("252329")
-const EDGE := Color("7b7159")
-const GOLD := Color("e9c87d")
-const PALE := Color("e9e8d7")
-const MUTED := Color("aebdb4")
+const INK := Color("0b1728")
+const PANEL := Color("172941")
+const EDGE := Color("5c91c4")
+const GOLD := Color("ffd166")
+const PALE := Color("f3f7ff")
+const MUTED := Color("b8cbe2")
 
 var profile: SaveData
 var battle: BattleController
@@ -49,6 +45,11 @@ var feature_title_label: Label
 var feature_screens: VBoxContainer
 var feature_backdrop: TextureRect
 var feature_close_button: Button
+var toast_panel: PanelContainer
+var toast_label: Label
+var toast_timer: Timer
+var toast_tween: Tween
+var backdrop_tween: Tween
 var pixel_battle_background: TextureRect
 var skill_bar: SkillBar
 var battle_area: Control
@@ -233,7 +234,7 @@ func _handle_back_request() -> void:
 func _build_ui() -> void:
 	_apply_ui_theme()
 	var backdrop := ColorRect.new()
-	backdrop.color = Color("111014")
+	backdrop.color = Color("0b1728")
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(backdrop)
 
@@ -268,10 +269,10 @@ func _build_ui() -> void:
 	feature_backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	feature_backdrop.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	feature_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	feature_backdrop.modulate = Color(1, 1, 1, 0.62)
+	feature_backdrop.modulate = Color(1, 1, 1, 0.78)
 	feature_layer.add_child(feature_backdrop)
 	var backdrop_shade := ColorRect.new()
-	backdrop_shade.color = Color("101318", 0.28)
+	backdrop_shade.color = Color("071426", 0.28)
 	backdrop_shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	backdrop_shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	feature_layer.add_child(backdrop_shade)
@@ -305,6 +306,7 @@ func _build_ui() -> void:
 	feature_screens.add_theme_constant_override("separation", 0)
 	feature_box.add_child(feature_screens)
 	_build_battle_area()
+	_build_toast()
 
 	placeholder_area = _panel()
 	placeholder_area.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -326,6 +328,7 @@ func _build_ui() -> void:
 	heroes_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	heroes_screen.add_theme_constant_override("separation", 12)
 	heroes_area.add_child(heroes_screen)
+	heroes_screen.art_changed.connect(_set_feature_art)
 	heroes_screen.configure(profile, battle, _on_hero_changed, _retreat_for_hero)
 	equipment_area = _screen_scroll(feature_screens)
 	equipment_content = _screen_content(equipment_area)
@@ -340,6 +343,7 @@ func _build_ui() -> void:
 	summon_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	summon_screen.add_theme_constant_override("separation", 12)
 	summon_area.add_child(summon_screen)
+	summon_screen.art_changed.connect(_set_feature_art)
 	summon_screen.configure(profile, _on_summon_changed, _select_tab)
 	companions_area = _screen_scroll(feature_screens)
 	companions_screen = CompanionsScreenScript.new()
@@ -359,6 +363,7 @@ func _build_ui() -> void:
 	adventure_screen.add_theme_constant_override("separation", 14)
 	adventure_area.add_child(adventure_screen)
 	adventure_screen.configure(profile, _start_pve, _return_campaign, _select_campaign_stage)
+	adventure_screen.art_changed.connect(_set_feature_art)
 	adventure_screen.tutorial_feature_opened.connect(_show_feature_for_tab)
 	quests_area = _screen_scroll(feature_screens)
 	quests_screen = QuestsScreenScript.new()
@@ -396,6 +401,7 @@ func _build_ui() -> void:
 	settings_screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	settings_area.add_child(settings_screen)
 	settings_screen.configure(profile, _on_settings_changed)
+	_set_feature_art("")
 	_build_navigation(root)
 	_build_guidance_popups()
 	_refresh_progression_screens()
@@ -456,7 +462,7 @@ func _build_top_bar() -> void:
 	battle_hero_hp_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	battle_hero_hp_bar.show_percentage = false
 	hero_status.add_child(battle_hero_hp_bar)
-	battle_hero_hp_text = _label("HP 0 / 0", 22, Color("9fd49f"))
+	battle_hero_hp_text = _label("HP 0 / 0", 22, Color("68e69a"))
 	battle_hero_hp_text.add_theme_font_size_override("font_size", 22)
 	battle_hero_hp_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	hero_status.add_child(battle_hero_hp_text)
@@ -733,7 +739,7 @@ func _build_battle_area() -> void:
 		button_content.alignment = BoxContainer.ALIGNMENT_CENTER
 		button_content.add_theme_constant_override("separation", 0)
 		button.add_child(button_content)
-		var action_label := _label("ENHANCE", 31, Color("e8e4d5"))
+		var action_label := _label("ENHANCE", 31, Color("eef5ff"))
 		action_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		button_content.add_child(action_label)
 		upgrade_actions[stat] = action_label
@@ -865,6 +871,7 @@ func _build_guidance_popups() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 14)
 	card.add_child(box)
+	_add_dialog_illustration(box, "tutorial", 92.0)
 	tutorial_title = _label("", 40, GOLD)
 	tutorial_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(tutorial_title)
@@ -898,17 +905,18 @@ func _build_guidance_popups() -> void:
 	scrim.mouse_filter = Control.MOUSE_FILTER_STOP
 	offline_popup.add_child(scrim)
 	var offline_card := _panel()
-	offline_card.custom_minimum_size = Vector2(690, 330)
+	offline_card.custom_minimum_size = Vector2(690, 440)
 	offline_card.set_anchors_preset(Control.PRESET_CENTER)
 	offline_card.offset_left = -345
 	offline_card.offset_right = 345
-	offline_card.offset_top = -165
-	offline_card.offset_bottom = 165
+	offline_card.offset_top = -220
+	offline_card.offset_bottom = 220
 	offline_card.mouse_filter = Control.MOUSE_FILTER_STOP
 	offline_popup.add_child(offline_card)
 	var offline_box := VBoxContainer.new()
-	offline_box.add_theme_constant_override("separation", 14)
+	offline_box.add_theme_constant_override("separation", 8)
 	offline_card.add_child(offline_box)
+	_add_dialog_illustration(offline_box, "offline_rewards", 92.0)
 	var offline_title := _label("WELCOME BACK\nOFFLINE REWARDS", 38, GOLD)
 	offline_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	offline_box.add_child(offline_title)
@@ -921,7 +929,7 @@ func _build_guidance_popups() -> void:
 	offline_box.add_child(claims)
 	var claim := Button.new()
 	claim.text = "CLAIM"
-	claim.custom_minimum_size.y = 132
+	claim.custom_minimum_size.y = 108
 	claim.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	claim.add_theme_font_size_override("font_size", 29)
 	claim.pressed.connect(_claim_idle_reward.bind(false))
@@ -929,7 +937,7 @@ func _build_guidance_popups() -> void:
 	offline_ad_button = Button.new()
 	offline_ad_button.text = "2× REWARD"
 	offline_ad_button.text = "2× REWARD • DEV SIM"
-	offline_ad_button.custom_minimum_size.y = 132
+	offline_ad_button.custom_minimum_size.y = 108
 	offline_ad_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	offline_ad_button.add_theme_font_size_override("font_size", 29)
 	offline_ad_button.pressed.connect(_claim_idle_reward.bind(true))
@@ -974,7 +982,7 @@ func _show_onboarding_step(id: String) -> void:
 		tutorial_next.text = "GOT IT"
 	tutorial_next.disabled = false
 	_highlight_first_upgrade(id == "upgrade")
-	tutorial_popup.popup_centered(Vector2i(720, 360))
+	tutorial_popup.popup_centered(Vector2i(720, 460))
 
 func _highlight_first_upgrade(enabled: bool) -> void:
 	var button := upgrade_buttons.get("atk") as Button
@@ -1040,7 +1048,7 @@ func _show_feature_for_tab(tab_name: String) -> void:
 	tutorial_next.text = "GOT IT"
 	tutorial_next.disabled = false
 	tutorial_skip.visible = false
-	tutorial_popup.popup_centered(Vector2i(720, 360))
+	tutorial_popup.popup_centered(Vector2i(720, 460))
 
 func _show_power_help() -> void:
 	power_help_dialog.popup_centered(Vector2i(760, 260))
@@ -1087,6 +1095,19 @@ func _on_feature_ack() -> void:
 func _apply_ui_theme() -> void:
 	theme = CrownUI.build_theme()
 
+func _add_dialog_illustration(parent: Container, screen_key: String, height: float) -> TextureRect:
+	var illustration := TextureRect.new()
+	illustration.name = "GeneratedIllustration"
+	illustration.texture = ScreenArtCatalog.texture_for(screen_key)
+	illustration.custom_minimum_size = Vector2(0, height)
+	illustration.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	illustration.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	illustration.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	illustration.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	illustration.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(illustration)
+	return illustration
+
 func _button_style(accent: Color, selected: bool, state := "normal") -> StyleBoxFlat:
 	return CrownUI.navigation_style(accent, selected, state)
 
@@ -1118,7 +1139,7 @@ func _refresh_ui() -> void:
 		battle_hero_hp_bar.value = current_hp
 		battle_hero_hp_bar.add_theme_stylebox_override("fill", CrownUI.health_fill_style(hp_ratio <= 0.30))
 		battle_hero_hp_text.text = "HP %s / %s" % [NumberFormatScript.compact(roundi(current_hp)), NumberFormatScript.compact(roundi(max_hp))]
-		battle_hero_hp_text.add_theme_color_override("font_color", Color("e08a73") if hp_ratio <= 0.30 else Color("9fd49f"))
+		battle_hero_hp_text.add_theme_color_override("font_color", Color("e08a73") if hp_ratio <= 0.30 else Color("68e69a"))
 	var campaign := str(battle.mode_config.get("mode", "campaign")) == "campaign"
 	if campaign:
 		var difficulty_name := str(CampaignData.DIFFICULTIES[profile.campaign_difficulty]).to_lower().capitalize()
@@ -1150,7 +1171,7 @@ func _refresh_ui() -> void:
 		upgrade_coins[stat].visible = not at_max_rank and int(quote["count"]) > 0
 		upgrade_actions[stat].text = "MAX LEVEL" if at_max_rank else "ENHANCE"
 		button.disabled = int(quote["count"]) <= 0 or at_max_rank
-		upgrade_actions[stat].add_theme_color_override("font_color", Color("99a39c") if button.disabled else Color("e8e4d5"))
+		upgrade_actions[stat].add_theme_color_override("font_color", Color("99a39c") if button.disabled else Color("eef5ff"))
 		upgrade_costs[stat].add_theme_color_override("font_color", Color("99a39c") if button.disabled else GOLD)
 	_maybe_show_upgrade_prompt()
 	skill_bar.queue_redraw()
@@ -1205,9 +1226,76 @@ func _format_upgrade_increase(stat: String, value: float) -> String:
 		return "%.0f%%" % (value * 100.0)
 	return _format_upgrade_stat(stat, value)
 
-func _show_message(_value: String) -> void:
-	# Keep transient event text out of the compact stage badge.
-	pass
+func _show_message(value: String) -> void:
+	# Ability casts already have battlefield effects; avoid stacking a toast on every cast.
+	if toast_panel == null or value.ends_with("!"):
+		return
+	toast_label.text = value
+	toast_panel.visible = true
+	toast_panel.modulate.a = 0.0
+	if toast_tween != null and toast_tween.is_running():
+		toast_tween.kill()
+	toast_tween = create_tween()
+	toast_tween.tween_property(toast_panel, "modulate:a", 1.0, 0.12).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	toast_timer.start(1.65)
+
+func _build_toast() -> void:
+	toast_panel = PanelContainer.new()
+	toast_panel.name = "BattleMessageToast"
+	toast_panel.anchor_left = 0.14
+	toast_panel.anchor_right = 0.86
+	toast_panel.anchor_top = 0.0
+	toast_panel.anchor_bottom = 0.0
+	toast_panel.offset_top = 202.0
+	toast_panel.offset_bottom = 264.0
+	toast_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	toast_panel.visible = false
+	toast_panel.z_index = 8
+	CrownUI.style_panel(toast_panel, CrownUI.CYAN, true)
+	toast_label = _label("", 32, PALE)
+	toast_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	toast_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	toast_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	toast_label.set_meta("crown_compact_control", true)
+	toast_label.set_meta("crown_no_compact_font_scaling", true)
+	toast_panel.add_child(toast_label)
+	battlefield_host.add_child(toast_panel)
+	toast_timer = Timer.new()
+	toast_timer.one_shot = true
+	toast_timer.wait_time = 1.65
+	toast_timer.timeout.connect(_fade_toast)
+	add_child(toast_timer)
+
+func _fade_toast() -> void:
+	if toast_panel == null or not toast_panel.visible:
+		return
+	if toast_tween != null and toast_tween.is_running():
+		toast_tween.kill()
+	toast_tween = create_tween()
+	toast_tween.tween_property(toast_panel, "modulate:a", 0.0, 0.16)
+	toast_tween.tween_callback(func() -> void: toast_panel.visible = false)
+
+func _set_feature_art(screen_key: String) -> void:
+	if feature_backdrop == null:
+		return
+	var next_texture := ScreenArtCatalog.texture_for(screen_key)
+	if feature_backdrop.texture == next_texture:
+		if backdrop_tween != null and backdrop_tween.is_running():
+			backdrop_tween.kill()
+		feature_backdrop.modulate.a = 0.78
+		return
+	if next_texture == null or profile == null or profile.reduced_effects or not is_inside_tree():
+		if backdrop_tween != null and backdrop_tween.is_running():
+			backdrop_tween.kill()
+		feature_backdrop.texture = next_texture
+		feature_backdrop.modulate.a = 0.78
+		return
+	if backdrop_tween != null and backdrop_tween.is_running():
+		backdrop_tween.kill()
+	backdrop_tween = create_tween()
+	backdrop_tween.tween_property(feature_backdrop, "modulate:a", 0.30, 0.07)
+	backdrop_tween.tween_callback(func() -> void: feature_backdrop.texture = next_texture)
+	backdrop_tween.tween_property(feature_backdrop, "modulate:a", 0.78, 0.11)
 
 func _update_stage_overlay_size() -> void:
 	if stage_panel == null:
@@ -1227,15 +1315,15 @@ func _select_tab(tab_name: String) -> void:
 	battle_area.visible = true
 	feature_header.visible = tab_name != "Battle"
 	feature_title_label.text = tab_name.to_upper()
-	feature_backdrop.texture = {
-		"Heroes": HEROES_MENU_BG,
-		"Equipment": ARMORY_MENU_BG,
-		"Summon": SUMMON_MENU_BG,
-		"Adventure": ADVENTURE_MENU_BG,
-		"Account": GUILD_MENU_BG,
-		"Social": GUILD_MENU_BG,
-		"Settings": GUILD_MENU_BG,
-	}.get(tab_name)
+	var art_key := str({
+		"Heroes": "heroes", "Equipment": "equipment", "Skills": "skills", "Summon": "summon",
+		"Companions": "companions", "Artifacts": "artifacts", "Adventure": "adventure_hub",
+		"Quests": "quests", "Login": "login", "Pass": "pass", "Shop": "shop",
+		"Account": "account", "Social": "social", "Settings": "settings",
+	}.get(tab_name, ""))
+	_set_feature_art(art_key)
+	if toast_panel != null:
+		toast_panel.visible = false
 	battle_lower_scroll.visible = tab_name == "Battle"
 	heroes_area.visible = tab_name == "Heroes"
 	equipment_area.visible = tab_name == "Equipment"
@@ -1300,7 +1388,8 @@ func _show_login_popup() -> void:
 	if profile.last_login_reward_date == CalendarService.day(): return
 	for child in login_popup.get_children(): child.queue_free()
 	var box := VBoxContainer.new()
-	box.custom_minimum_size = Vector2(680, 240)
+	box.custom_minimum_size = Vector2(680, 490)
+	_add_dialog_illustration(box, "login", 112.0)
 	login_popup.add_child(box)
 	box.add_child(_label("DAILY LOGIN  •  DAY %d" % [profile.daily_login_index + 1], 37, GOLD))
 	var reward: Dictionary = ProgressionData.login_reward(profile.daily_login_index)
@@ -1308,8 +1397,7 @@ func _show_login_popup() -> void:
 		box.add_child(_label("%d %s" % [int(reward[key]), str(key).replace("_", " ").capitalize()], 30, PALE))
 	var claim := Button.new()
 	claim.text = "CLAIM REWARD"
-	claim.custom_minimum_size.y = 82
-	claim.custom_minimum_size.y = 130
+	claim.custom_minimum_size.y = 108
 	claim.pressed.connect(_claim_login_popup)
 	box.add_child(claim)
 	login_popup.popup_centered()
@@ -1433,7 +1521,7 @@ func _build_heroes_screen() -> void:
 	identity_row.add_child(box)
 	box.add_child(_label("%s  •  %s" % [HeroData.title(profile.selected_hero_id, profile.heroes[profile.selected_hero_id]).to_upper(), str(HeroData.HEROES[profile.selected_hero_id]["role"]).to_upper()], 36, GOLD))
 	box.add_child(_label("Selected hero  •  %s" % HeroData.element(profile.selected_hero_id, profile.heroes[profile.selected_hero_id]), 31, PALE))
-	heroes_level_text = _label("LEVEL %d    POWER %d" % [profile.level, profile.power()], 31, Color("a9d6ad"))
+	heroes_level_text = _label("LEVEL %d    POWER %d" % [profile.level, profile.power()], 31, Color("68e69a"))
 	box.add_child(heroes_level_text)
 	box.add_child(_label("Evolution Crests: %d  •  Hero Pieces: %d" % [profile.evolution_crests, profile.hero_pieces], 29, MUTED))
 	heroes_exp_text = _label("HERO EXP  %d / %d" % [profile.exp, GameData.exp_to_next(profile.level)], 30, MUTED)
@@ -1462,7 +1550,7 @@ func _build_heroes_screen() -> void:
 		line.add_child(copy)
 		copy.add_child(_label(str(tier["name"]).to_upper(), 30, GOLD if index == 0 else PALE))
 		copy.add_child(_label("CURRENT FORM" if index == 0 else "Level %d  •  %d Evolution Crest%s" % [tier["level"], tier["crests"], "" if tier["crests"] == 1 else "s"], 29, MUTED))
-		line.add_child(_label("ACTIVE" if index == 0 else "LOCKED", 29, Color("a9d6ad") if index == 0 else Color("d8a399")))
+		line.add_child(_label("ACTIVE" if index == 0 else "LOCKED", 29, Color("68e69a") if index == 0 else Color("d8a399")))
 	_section_title(heroes_content, "FUTURE HEROES")
 	for name in ["Mage", "Ranger", "Assassin", "Necromancer"]:
 		var card := _panel()
@@ -1476,7 +1564,7 @@ func _build_heroes_screen() -> void:
 		var claimed: bool = profile.milestones.has("level_%d" % threshold)
 		var card := _panel()
 		heroes_content.add_child(card)
-		card.add_child(_label("Reach Level %d  •  2 Gems  •  %s" % [threshold, "CLAIMED" if claimed else "LOCKED"], 29, Color("a9d6ad") if claimed else MUTED))
+		card.add_child(_label("Reach Level %d  •  2 Gems  •  %s" % [threshold, "CLAIMED" if claimed else "LOCKED"], 29, Color("68e69a") if claimed else MUTED))
 
 func _section_title(parent: VBoxContainer, value: String) -> void:
 	var row := HBoxContainer.new()
@@ -1541,18 +1629,24 @@ func _build_equipment_screen() -> void:
 	for slot in EquipmentData.SLOTS:
 		var item := profile.get_item(str(profile.equipped.get(slot, "")))
 		var button := Button.new()
-		button.custom_minimum_size.y = 126
+		button.custom_minimum_size.y = 108
 		button.add_theme_font_size_override("font_size", 31)
+		button.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		button.add_theme_constant_override("icon_max_width", 82)
 		button.text = "%s    %s" % [slot.to_upper(), "EMPTY" if item.is_empty() else "%s  +%d" % [EquipmentData.title(item), item["level"]]]
 		if not item.is_empty():
 			button.icon = PixelUiIcons.item(str(item["kind"]), int(item["rarity"]))
 			button.expand_icon = true
 			button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		else:
+			button.icon = PixelUiIcons.equipment(str(slot))
+			button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		if not item.is_empty():
 			_style_rarity(button, int(item["rarity"]), selected_item_id == str(item["id"]))
 			button.pressed.connect(_select_item.bind(str(item["id"])))
 		else:
-			CrownUI.style_tab(button, false, Color("75694f"))
+			CrownUI.style_card(button, CrownUI.CYAN, false)
+			button.add_theme_color_override("font_color", CrownUI.MUTED)
 		equipment_content.add_child(button)
 	_section_title(equipment_content, "INVENTORY  •  %d ITEMS" % profile.inventory.size())
 	var grid := GridContainer.new()
@@ -1756,8 +1850,8 @@ func _floating_nav_style(state: String, selected: bool) -> StyleBox:
 	if state == "normal" or state == "disabled":
 		return StyleBoxEmpty.new()
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("e9c87d", 0.18 if state == "hover" or state == "focus" else 0.30)
-	style.border_color = Color("e9c87d", 0.55 if selected else 0.30)
+	style.bg_color = Color("ffd166", 0.18 if state == "hover" or state == "focus" else 0.30)
+	style.border_color = Color("ffd166", 0.55 if selected else 0.30)
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(24)
 	style.set_content_margin_all(0.0)
@@ -1804,7 +1898,7 @@ func _set_upgrade_purchase_mode(mode: String) -> void:
 		var selected := str(key) == mode
 		var style := StyleBoxFlat.new()
 		style.bg_color = Color("72542f") if selected else Color("202b30")
-		style.border_color = Color("e9c87d") if selected else Color("5f665e")
+		style.border_color = Color("ffd166") if selected else Color("5f665e")
 		style.set_border_width_all(2)
 		style.border_width_bottom = 4
 		style.set_corner_radius_all(5)
@@ -1823,7 +1917,7 @@ func _update_skill_auto_button() -> void:
 		return
 	var enabled := battle.skill_runtime.auto_enabled
 	skill_auto_button.text = "AUTO\n%s" % ("ON" if enabled else "OFF")
-	skill_auto_button.add_theme_color_override("font_color", Color("a9d6ad") if enabled else Color("bd8d84"))
+	skill_auto_button.add_theme_color_override("font_color", Color("68e69a") if enabled else Color("bd8d84"))
 
 func _on_manual_skill_requested(slot: int) -> void:
 	if battle != null and battle.active and battle.skill_runtime.manual_cast(slot, battle):

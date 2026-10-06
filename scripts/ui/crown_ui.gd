@@ -1,12 +1,17 @@
 class_name CrownUI
 extends RefCounted
 
-const GOLD := Color("d9b66f")
-const TEXT := Color("f0eadf")
-const MUTED := Color("aaa69c")
-const EDGE := Color("71603e")
-const SURFACE := Color("252329")
-const DEEP := Color("151419")
+const GOLD := Color("ffd166")
+const CYAN := Color("55d7ff")
+const TEAL := Color("46e0c1")
+const VIOLET := Color("b38aff")
+const SUCCESS := Color("68e69a")
+const DANGER := Color("ff718c")
+const TEXT := Color("f3f7ff")
+const MUTED := Color("b8cbe2")
+const EDGE := Color("5c91c4")
+const SURFACE := Color("182a42")
+const DEEP := Color("0b1728")
 
 static var _panel_styles: Dictionary = {}
 static var _card_styles: Dictionary = {}
@@ -17,7 +22,7 @@ static func build_theme() -> Theme:
 	shared.default_font_size = 24
 	shared.set_color("font_color", "Label", TEXT)
 	shared.set_color("font_color", "Button", TEXT)
-	shared.set_color("font_hover_color", "Button", Color("fff0c8"))
+	shared.set_color("font_hover_color", "Button", Color("ffffff"))
 	shared.set_color("font_pressed_color", "Button", GOLD)
 	shared.set_color("font_disabled_color", "Button", Color("788681"))
 	shared.set_color("font_focus_color", "Button", Color("fff0c8"))
@@ -28,11 +33,12 @@ static func build_theme() -> Theme:
 	shared.set_stylebox("fill", "ProgressBar", _progress_fill(GOLD))
 	
 	_register_button_variant(shared, &"PrimaryActionButton", GOLD)
-	_register_button_variant(shared, &"MagicActionButton", Color("9c8be3"))
-	_register_button_variant(shared, &"DangerActionButton", Color("c87568"))
-	_register_button_variant(shared, &"QuietButton", Color("8a857a"), true)
+	_register_button_variant(shared, &"MagicActionButton", VIOLET)
+	_register_button_variant(shared, &"TealActionButton", TEAL)
+	_register_button_variant(shared, &"DangerActionButton", DANGER)
+	_register_button_variant(shared, &"QuietButton", Color("8eb4d4"), true)
 	shared.set_type_variation(&"InsetPanel", &"PanelContainer")
-	shared.set_stylebox("panel", &"InsetPanel", _panel_box(Color("62543c"), true))
+	shared.set_stylebox("panel", &"InsetPanel", _panel_box(Color("397daf"), true))
 	shared.set_type_variation(&"RewardPanel", &"PanelContainer")
 	shared.set_stylebox("panel", &"RewardPanel", _panel_box(GOLD, false, true))
 	return shared
@@ -48,18 +54,20 @@ static func _register_button_variant(theme: Theme, type_name: StringName, accent
 
 static func _button_box(accent: Color, state: String, quiet: bool) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("1a191e") if quiet else Color("302c2b")
+	var base_fill := Color("112238", 0.91) if quiet else Color("1d3552", 0.95)
+	var accent_fill := accent.darkened(0.78)
+	style.bg_color = base_fill.lerp(accent_fill, 0.32) if not quiet else base_fill
 	if state == "hover" or state == "focus":
-		style.bg_color = Color("413b35")
+		style.bg_color = Color("284968").lerp(accent.darkened(0.55), 0.34)
 	elif state == "pressed":
-		style.bg_color = Color("17161a")
+		style.bg_color = Color("10243a")
 	elif state == "disabled":
-		style.bg_color = Color("201f22")
-	style.border_color = Color("39363a") if quiet else accent.darkened(0.32)
+		style.bg_color = Color("172333")
+	style.border_color = Color("35536f") if quiet else accent.darkened(0.32)
 	if state == "hover" or state == "focus":
-		style.border_color = accent.lightened(0.2)
+		style.border_color = accent.lightened(0.16)
 	if state == "disabled":
-		style.border_color = Color("38363a")
+		style.border_color = Color("344358")
 	style.set_border_width_all(1)
 	style.border_width_bottom = 2
 	style.set_corner_radius_all(10)
@@ -71,7 +79,7 @@ static func _button_box(accent: Color, state: String, quiet: bool) -> StyleBoxFl
 
 static func _panel_box(border: Color, inset: bool, reward := false) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("19181d", 0.96) if inset else (Color("29252a") if reward else Color("252329", 0.92))
+	style.bg_color = Color("102138", 0.94) if inset else (Color("223955", 0.96) if reward else Color("172941", 0.88))
 	style.border_color = border
 	style.set_border_width_all(2 if reward else 1)
 	style.border_width_bottom = 2
@@ -80,8 +88,8 @@ static func _panel_box(border: Color, inset: bool, reward := false) -> StyleBoxF
 	style.content_margin_right = 14
 	style.content_margin_top = 11
 	style.content_margin_bottom = 13
-	style.shadow_color = Color(0.01, 0.025, 0.035, 0.30)
-	style.shadow_size = 6 if reward else 4
+	style.shadow_color = Color(0.005, 0.02, 0.055, 0.36)
+	style.shadow_size = 7 if reward else 4
 	style.shadow_offset = Vector2(0, 3)
 	return style
 
@@ -116,11 +124,11 @@ static func style_card(button: Button, accent: Color, selected: bool, disabled :
 		var key := "%s:%s:%s:%s" % [accent.to_html(false), selected, disabled, state]
 		if not _card_styles.has(key):
 			var style := StyleBoxFlat.new()
-			style.bg_color = Color("29272d", 0.94) if not disabled else Color("211f24", 0.98)
+			style.bg_color = Color("1d3653", 0.94) if not disabled else Color("18283a", 0.97)
 			if state == &"hover" or state == &"focus":
-				style.bg_color = Color("3b3737")
+				style.bg_color = Color("2a4a69")
 			elif state == &"pressed":
-				style.bg_color = Color("19181d")
+				style.bg_color = Color("11243a")
 			style.border_color = GOLD if selected else accent.darkened(0.16)
 			style.set_border_width_all(2 if selected else 1)
 			style.border_width_bottom = 3 if selected else 2
@@ -129,7 +137,7 @@ static func style_card(button: Button, accent: Color, selected: bool, disabled :
 			style.content_margin_right = 12
 			style.content_margin_top = 12
 			style.content_margin_bottom = 14
-			style.shadow_color = Color(0.82, 0.65, 0.32, 0.14) if selected else Color(0, 0, 0, 0.28)
+			style.shadow_color = Color(1.0, 0.72, 0.24, 0.18) if selected else Color(0, 0.015, 0.04, 0.27)
 			style.shadow_size = 6 if selected else 3
 			style.shadow_offset = Vector2(0, 2)
 			_card_styles[key] = style
@@ -139,7 +147,7 @@ static func style_tab(button: Button, selected: bool, accent := GOLD) -> void:
 	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
 		button.add_theme_stylebox_override(state, navigation_style(accent, selected, state))
 	button.add_theme_color_override("font_color", GOLD if selected else MUTED)
-	button.add_theme_color_override("font_hover_color", Color("fff0c8"))
+	button.add_theme_color_override("font_hover_color", Color("ffffff"))
 	button.add_theme_color_override("font_pressed_color", GOLD)
 	button.add_theme_color_override("font_disabled_color", Color("788681"))
 
@@ -186,25 +194,25 @@ static func health_fill_style(low_health: bool) -> StyleBoxFlat:
 	var key := "low" if low_health else "normal"
 	if not _health_styles.has(key):
 		var style := StyleBoxFlat.new()
-		style.bg_color = Color("c97568") if low_health else Color("83bd88")
+		style.bg_color = Color("ff718c") if low_health else Color("55e59a")
 		style.set_corner_radius_all(5)
 		_health_styles[key] = style
 	return _health_styles[key]
 
 static func navigation_style(accent: Color, selected: bool, state := "normal") -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("332e2d") if selected else Color("19181d")
+	style.bg_color = Color("284968") if selected else Color("102138", 0.88)
 	if state == "hover" or state == "focus":
-		style.bg_color = Color("403a36")
+		style.bg_color = Color("305675")
 	elif state == "pressed":
-		style.bg_color = Color("17161a")
+		style.bg_color = Color("10243a")
 	elif state == "disabled":
-		style.bg_color = Color("201f23")
-	style.border_color = accent if selected else Color("514d4b")
+		style.bg_color = Color("172333")
+	style.border_color = accent if selected else Color("42617f")
 	if state == "hover" or state == "focus":
-		style.border_color = Color("e4c87f")
+		style.border_color = GOLD
 	if state == "disabled":
-		style.border_color = Color("3e3a3c")
+		style.border_color = Color("344358")
 	style.set_border_width_all(1)
 	style.border_width_bottom = 3 if selected else 2
 	style.set_corner_radius_all(10)
@@ -220,7 +228,7 @@ static func apply_screen_scale(root: Control, reduced_effects := false) -> void:
 			if not item.has_meta("crown_base_font_size"):
 				item.set_meta("crown_base_font_size", item.get_theme_font_size("font_size"))
 			var base_font := int(item.get_meta("crown_base_font_size"))
-			var target_font := maxi(base_font, 36) if compact else base_font
+			var target_font := maxi(base_font, 36) if compact and not bool(item.get_meta("crown_no_compact_font_scaling", false)) else base_font
 			if item.get_theme_font_size("font_size") != target_font:
 				item.add_theme_font_size_override("font_size", target_font)
 		if item is Button:
