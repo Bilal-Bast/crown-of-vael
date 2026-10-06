@@ -29,6 +29,8 @@ func _run() -> void:
 	profile.save_path = "res://.godot/battle_upgrade_ui_capture.save"
 	profile.tutorial_state.completed = true
 	profile.tutorial_state.skipped = true
+	profile.region = 3
+	profile.stage = 3
 	profile.level = 1
 	profile.exp = 0
 	profile.upgrades = {"atk": 0, "hp": 0, "armor": 0, "speed": 0, "crit_chance": 0, "crit_damage": 0}
@@ -40,6 +42,17 @@ func _run() -> void:
 		"healing_light": {"level": 1, "duplicates": 0, "rarity": 2},
 	}
 	profile.equipped_skill_slots = ["shield_bash", "whirlwind_slash", "iron_guard", "healing_light"]
+	profile.companions = {
+		"wolf": {"level": 1, "stars": 1, "evolution": 0, "rarity": 0},
+		"fairy": {"level": 1, "stars": 1, "evolution": 0, "rarity": 0},
+		"archer_companion": {"level": 1, "stars": 1, "evolution": 0, "rarity": 0},
+		"apprentice_mage": {"level": 1, "stars": 1, "evolution": 0, "rarity": 0}
+	}
+	profile.equipped_companion_slots = ["wolf", "fairy", "archer_companion", "apprentice_mage"]
+	var battle := main.get("battle") as BattleController
+	battle.start(profile)
+	battle.wave = 3
+	battle._spawn_wave()
 	upgrade_list = main.get("upgrade_list_scroll") as ScrollContainer
 	lower_scroll = main.get("battle_lower_scroll") as ScrollContainer
 	for popup in ["tutorial_popup", "offline_popup", "login_popup"]:
@@ -47,12 +60,18 @@ func _run() -> void:
 		if node is Window or node is Control:
 			node.hide()
 	main.call("_refresh_ui")
-	(main.get("battle") as BattleController).refresh_hero_stats()
-	(main.get("battle") as BattleController).skill_runtime.start(profile)
+	battle.refresh_hero_stats()
+	battle.skill_runtime.start(profile)
 	await _capture("battle_skills_above_upgrades_360x640", SMALL)
+	await _capture("ashen_highlands_wave3_battle_360x640", SMALL)
 	lower_scroll.scroll_vertical = 0
 	upgrade_list.scroll_vertical = 0
 	await _capture("battle_upgrade_list_top_360x640", SMALL)
+	(main.get("upgrade_mode_buttons")["x10"] as Button).pressed.emit()
+	await _capture("battle_upgrade_mode_x10_360x640", SMALL)
+	(main.get("upgrade_mode_buttons")["MAX"] as Button).pressed.emit()
+	await _capture("battle_upgrade_mode_max_360x640", SMALL)
+	(main.get("upgrade_mode_buttons")["x1"] as Button).pressed.emit()
 	var scroll_range := maxi(0, roundi(upgrade_list.get_v_scroll_bar().max_value - upgrade_list.get_v_scroll_bar().page))
 	upgrade_list.scroll_vertical = roundi(scroll_range * 0.35)
 	await _capture("battle_armor_attack_speed_cards_360x640", SMALL)

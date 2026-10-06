@@ -18,7 +18,12 @@ func _run() -> void:
 	profile.save_path = "res://.godot/battle_upgrade_ui_smoke.save"
 	profile.tutorial_state.completed = true
 	profile.tutorial_state.skipped = true
+	profile.campaign_complete = false
+	profile.boss_retry_required = false
 	profile.gold = 10000
+	profile.upgrades = {"atk": 0, "hp": 0, "armor": 0, "speed": 0, "crit_chance": 0, "crit_damage": 0}
+	battle.start(profile)
+	await process_frame
 	var battle_area: VBoxContainer = main.get("battle_area")
 	var upgrades_panel: Control = main.get("upgrade_panel")
 	var upgrade_scroll: ScrollContainer = main.get("upgrade_list_scroll")
@@ -26,11 +31,22 @@ func _run() -> void:
 	var nav_buttons: Dictionary = main.get("nav_buttons")
 	var skill_bar: SkillBar = main.get("skill_bar")
 	var nav_top_before := (nav_buttons["Battle"] as Control).get_global_rect().position.y
-	_check(battle_area.get_child_count() == 4, "battle area has field, skills, Power divider, and scrolling upgrades")
+	_check(battle_area.get_child_count() == 3, "battle area has field, skills, and scrolling upgrades")
 	_check(battle_area.get_child(0).name == "BattlefieldHost", "battlefield remains first in Battle layout")
 	_check(battle_area.get_child(1).name == "BattleSkillPanel", "skill strip sits directly below battlefield")
-	_check(battle_area.get_child(2).name == "BattlePowerDivider", "Power divider separates combat from upgrades")
-	_check(upgrades_panel.get_global_rect().position.y > battle_area.get_child(2).get_global_rect().position.y, "upgrade cards follow the Power divider")
+	_check(battle_area.get_child(2).name == "BattleLowerControlsScroll", "scrolling upgrades follow skills without the Power divider")
+	_check(upgrades_panel.get_global_rect().position.y > battle_area.get_child(1).get_global_rect().position.y, "upgrade cards follow the skill row")
+	_check(main.get("battle_power_divider") == null, "Power divider is removed from the Battle flow")
+	_check(PixelUiIcons.gold_coin() != null and PixelUiIcons.gems() != null, "top currencies use pixel-art icons")
+	var top_panel := main.find_child("TopCurrencyPanel", true, false) as Control
+	var top_box := top_panel.get_child(0) as VBoxContainer
+	_check(top_box.get_child_count() == 1 and (top_box.get_child(0) as HBoxContainer).get_child_count() == 3, "top bar keeps only Gold, Gems, and Power with no title or mystery button")
+	_check((main.get("upgrade_mode_buttons") as Dictionary).size() == 3, "x1, x10, and MAX purchase modes are available")
+	_check((main.get("skill_auto_button") as Button).get_global_rect().position.x < skill_bar.get_global_rect().position.x, "skill Auto control sits at left of skill row")
+	_check((main.get("skill_auto_button") as Button).text.contains("ON"), "skill Auto starts enabled")
+	_check(CompanionPixelArt.formation_x("archer_companion", 0) < CompanionPixelArt.formation_x("wolf", 0), "ranged companions are positioned behind melee companions")
+	_check(CompanionPixelArt.formation_x("archer_companion", 3) < 0.24 and CompanionPixelArt.formation_x("wolf", 0) > 0.24, "ranged companions group behind hero while melee companions flank beside it")
+	_check(CompanionPixelArt.formation_scale("fairy", 4) < CompanionPixelArt.formation_scale("fairy", 2) and is_equal_approx(CompanionPixelArt.formation_scale("wolf", 1), 1.0), "crowded companion groups compact slightly without resizing source art")
 	_check(upgrade_scroll == main.get("battle_lower_scroll"), "upgrade cards use one continuous dedicated vertical scroller")
 	_check(skill_bar.battle == battle, "four-skill row remains connected to the current battle runtime")
 	var order := ["atk", "hp", "armor", "speed", "crit_chance", "crit_damage"]
@@ -49,6 +65,7 @@ func _run() -> void:
 	await create_timer(0.35).timeout
 	_check(battle.run_time > run_time_before_scroll and battle.active, "combat and automatic skill runtime continue while the upgrade list scrolls")
 	upgrade_scroll.scroll_vertical = 0
+	battle.set_process(false)
 	for stat in order:
 		var before_gold := profile.gold
 		var before_rank := int(profile.upgrades[stat])
@@ -64,12 +81,53 @@ func _run() -> void:
 		_check(profile.gold == before_gold - expected_cost, "%s purchase deducts the correct Gold cost" % stat)
 		_check(after_value > before_value, "%s purchase raises its combat stat" % stat)
 		_check(main.get("upgrade_values")[stat].text != "" and main.get("upgrade_ranks")[stat].text != "", "%s card shows current value and upgrade rank" % stat)
-	_check((main.get("battle_power_value") as Label).text.contains((main.get("power_text") as Label).text), "Power divider immediately reflects Gold upgrades")
+	_check((main.get("power_text") as Label).text != "", "Power remains visible in the compact top bar")
 	_check(battle.active, "combat continues while the player uses upgrade controls")
 	var restored := SaveData.load_from(profile.save_path)
 	for stat in order:
 		_check(int(restored.upgrades[stat]) == int(profile.upgrades[stat]), "%s upgrade rank persists through save/load" % stat)
 	_check(float(restored.hero_stats()["speed"]) > 1.4 and float(restored.hero_stats()["crit_chance"]) > 0.15 and float(restored.hero_stats()["crit_damage"]) > 1.75, "saved premium ranks affect assembled hero combat stats")
+	profile.gold = 100000000
+	var rank_before_x10 := int(profile.upgrades["atk"])
+	var gold_before_x10 := profile.gold
+	(main.get("upgrade_mode_buttons")["x10"] as Button).pressed.emit()
+	(main.get("upgrade_buttons")["atk"] as Button).pressed.emit()
+	_check(profile.upgrades["atk"] == rank_before_x10 + 10, "x10 purchases ten ranks")
+	var x10_cost := 0
+	for rank in range(rank_before_x10, rank_before_x10 + 10):
+		x10_cost += GameData.upgrade_cost(rank, "atk")
+	_check(profile.gold == gold_before_x10 - x10_cost, "x10 deducts each rank cost")
+	_check(int(SaveData.load_from(profile.save_path).upgrades["atk"]) == int(profile.upgrades["atk"]), "x10 batch purchase persists through save/load")
+	var partial_rank := int(profile.upgrades["atk"])
+	profile.gold = GameData.upgrade_cost(partial_rank, "atk") + GameData.upgrade_cost(partial_rank + 1, "atk") + GameData.upgrade_cost(partial_rank + 2, "atk")
+	var partial_cost := profile.gold
+	(main.get("upgrade_buttons")["atk"] as Button).pressed.emit()
+	_check(profile.upgrades["atk"] == partial_rank + 3 and profile.gold == 0 and partial_cost > 0, "x10 stops after the last affordable rank")
+	var hp_rank := int(profile.upgrades["hp"])
+	profile.gold = GameData.upgrade_cost(hp_rank, "hp") + GameData.upgrade_cost(hp_rank + 1, "hp")
+	(main.get("upgrade_mode_buttons")["MAX"] as Button).pressed.emit()
+	(main.get("upgrade_buttons")["hp"] as Button).pressed.emit()
+	_check(profile.upgrades["hp"] == hp_rank + 2 and profile.gold == 0, "MAX stops after all affordable ranks are bought")
+	profile.gold = 100000000
+	var auto_button := main.get("skill_auto_button") as Button
+	auto_button.pressed.emit()
+	_check(not battle.skill_runtime.auto_enabled and auto_button.text.contains("OFF"), "Auto button disables automatic skill casts")
+	var manual_skill := profile.equipped_skill_slots[0]
+	if not battle.enemies.is_empty():
+		battle.enemies[0]["current_hp"] = float(battle.enemies[0]["hp"])
+		battle.enemies[0]["combat_ready"] = true
+	battle.skill_runtime.cooldowns[manual_skill] = 0.0
+	battle.skill_runtime.process(0.01, battle)
+	_check(float(battle.skill_runtime.cooldowns[manual_skill]) == 0.0, "ready skill stays uncast automatically while Auto is off")
+	_check(battle.skill_runtime.manual_cast(0, battle), "ready equipped skill casts manually while Auto is off")
+	auto_button.pressed.emit()
+	_check(battle.skill_runtime.auto_enabled and auto_button.text.contains("ON"), "Auto button restores automatic skill behavior")
+	if not battle.enemies.is_empty():
+		battle.enemies[0]["current_hp"] = float(battle.enemies[0]["hp"])
+		battle.enemies[0]["combat_ready"] = true
+	battle.skill_runtime.cooldowns[manual_skill] = 0.0
+	battle.skill_runtime.process(0.01, battle)
+	_check(float(battle.skill_runtime.cooldowns[manual_skill]) > 0.0, "ready skill auto-casts when Auto is enabled")
 	var legacy_path := "res://.godot/battle_upgrade_legacy.save"
 	var legacy_file := FileAccess.open(legacy_path, FileAccess.WRITE)
 	legacy_file.store_string(JSON.stringify({"upgrades": {"atk": 2, "hp": 3, "armor": 4}}))
@@ -99,6 +157,11 @@ func _run() -> void:
 	main.call("_refresh_ui")
 	for stat in ["speed", "crit_chance", "crit_damage"]:
 		_check((upgrade_buttons[stat] as Button).disabled and main.get("upgrade_actions")[stat].text == "MAX LEVEL", "%s maximum rank is visible and disabled" % stat)
+	profile.upgrades["atk"] = GameData.upgrade_max_rank("atk") - 1
+	profile.gold = 100000000
+	(main.get("upgrade_mode_buttons")["MAX"] as Button).pressed.emit()
+	(main.get("upgrade_buttons")["atk"] as Button).pressed.emit()
+	_check(int(profile.upgrades["atk"]) == GameData.upgrade_max_rank("atk"), "MAX stops at the stat rank cap")
 	main.call("_select_tab", "Heroes")
 	_check((main.get("heroes_area") as Control).visible and not (main.get("battle_area") as Control).visible, "navigation remains available while battle controls are shown")
 	main.queue_free()

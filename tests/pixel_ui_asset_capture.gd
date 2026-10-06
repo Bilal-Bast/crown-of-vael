@@ -62,12 +62,17 @@ func _run() -> void:
 	main.call("_select_tab", "Skills")
 	await _capture("skills_360", 360)
 	await _capture("skills_overview_1080", 1080)
+	main.call("_select_tab", "Battle")
+	(main.get("menu_toggle") as Button).emit_signal("pressed")
+	await _capture("menu_drawer_with_character_sections_360", 360)
+	(main.get("menu_toggle") as Button).emit_signal("pressed")
 	var screen := main.get("summon_screen") as SummonScreen
 	main.call("_select_tab", "Summon")
 	for test_case in [
 		{"banner":"equipment", "kind":"sacred_sword", "name":"summon_equipment_reward_360"},
 		{"banner":"artifacts", "kind":"dragon_heart", "name":"summon_artifact_reward_360"},
 		{"banner":"skills", "kind":"healing_light", "name":"summon_skill_reward_360"},
+		{"banner":"companions", "kind":"fairy", "name":"summon_companion_reward_360"},
 	]:
 		screen.results = [{"kind":test_case.kind, "rarity":4, "is_new":true}]
 		screen.result_banner = test_case.banner
