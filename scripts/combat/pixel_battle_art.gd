@@ -205,6 +205,7 @@ const CHARACTER_ANIMATIONS := {
 	},
 }
 static var _frame_cache: Dictionary = {}
+static var _enemy_art_cache: Dictionary = {}
 
 static func is_active(battle: BattleController) -> bool:
 	if not PROTOTYPE_ENABLED or battle == null or battle.profile == null:
@@ -216,6 +217,13 @@ static func is_active(battle: BattleController) -> bool:
 	if hero_id == "knight":
 		return int(battle.profile.heroes.get("knight", {}).get("evolution", 0)) in [0, 1, 2, 3, 4]
 	return HeroArtService.texture_for_hero(hero_id, 0, "idle") != null
+
+static func enemy_art_active(battle: BattleController, enemy_id: String) -> bool:
+	if not PROTOTYPE_ENABLED or battle == null or enemy_id.is_empty():
+		return false
+	if not _enemy_art_cache.has(enemy_id):
+		_enemy_art_cache[enemy_id] = enemy_sheet(enemy_id) != null
+	return bool(_enemy_art_cache[enemy_id])
 
 static func hero_sheet() -> Texture2D:
 	return load(HERO_SHEET) as Texture2D

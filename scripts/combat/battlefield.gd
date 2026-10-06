@@ -256,7 +256,7 @@ func _on_attack_started(attacker_index: int, target_index: int) -> void:
 		var enemy: Dictionary = battle.enemies[attacker_index]
 		var enemy_id := str(enemy.get("visual", enemy.get("kind", "")))
 		var attack_duration := float(EnemyArtService.metadata(enemy_id).get("attack_duration", 0.26))
-		if PixelBattleArt.is_active(battle):
+		if PixelBattleArt.enemy_art_active(battle, enemy_id):
 			attack_duration = PixelBattleArt.animation_duration(enemy_id, "attack", attack_duration)
 		enemy_attack_times[attacker_index] = attack_duration
 		enemy_attack_art_durations[attacker_index] = attack_duration
@@ -266,7 +266,7 @@ func _on_attack_started(attacker_index: int, target_index: int) -> void:
 				pixel_impact_overlay.show_impact(get_global_transform_with_canvas() * (_hero_position() + Vector2(0, -42)), 17.0 * minf(size.x / 1000.0, size.y / 560.0), 0.20, Color("ed7744"))
 		if str(battle.enemies[attacker_index].get("archetype", "")) in ["RANGED", "MAGIC", "HEALER"]:
 			var origin := _enemy_position(attacker_index) + Vector2(-18, -82)
-			var archer_arrow := PixelBattleArt.is_active(battle) and enemy_id in ["Goblin Archer", "Skeleton Archer", "Fire Archer", "Ice Archer", "Dark Archer", "Phantom Archer", "Demon Archer"]
+			var archer_arrow := PixelBattleArt.enemy_art_active(battle, enemy_id) and enemy_id in ["Goblin Archer", "Skeleton Archer", "Fire Archer", "Ice Archer", "Dark Archer", "Phantom Archer", "Demon Archer"]
 			var projectile_color := Color("91dff5") if enemy_id == "Ice Archer" and archer_arrow else (Color("a895e6") if enemy_id == "Phantom Archer" and archer_arrow else (Color("9c7fe2") if enemy_id == "Dark Archer" and archer_arrow else (Color("d85b46") if enemy_id == "Demon Archer" and archer_arrow else (Color("e99a5b") if enemy_id == "Fire Archer" and archer_arrow else (Color("d6b46e") if archer_arrow else (Color("d49aff") if str(battle.enemies[attacker_index].get("archetype", "")) == "MAGIC" else Color("dbe2c0")))))))
 			vfx.projectile(origin + (Vector2(-24, -8) if archer_arrow else Vector2.ZERO), _hero_position() + Vector2(0, -75), projectile_color, 0.26, 6, "pixel_arrow" if archer_arrow else "orb")
 			vfx.pulse(_hero_position() + Vector2(0, -50), Color("f4f0d5"), 0.7, 0.3)
@@ -286,9 +286,9 @@ func _on_damage_popup(target_index: int, amount: int, critical: bool, bash: bool
 	elif battle != null and target_index < battle.enemies.size():
 		var enemy: Dictionary = battle.enemies[target_index]
 		var enemy_id := str(enemy.get("visual", enemy.get("kind", "")))
-		pixel_boss_hit = enemy_id in ["Goblin Warlord", "Infernal Ogre", "Ancient Dragon"] and PixelBattleArt.is_active(battle)
+		pixel_boss_hit = enemy_id in ["Goblin Warlord", "Infernal Ogre", "Ancient Dragon"] and PixelBattleArt.enemy_art_active(battle, enemy_id)
 		var hit_duration := float(EnemyArtService.metadata(enemy_id).get("hit_duration", 0.22))
-		if PixelBattleArt.is_active(battle):
+		if PixelBattleArt.enemy_art_active(battle, enemy_id):
 			hit_duration = PixelBattleArt.animation_duration(enemy_id, "hit", hit_duration)
 		enemy_hit_times[target_index] = hit_duration
 		enemy_hit_art_durations[target_index] = hit_duration
@@ -319,9 +319,9 @@ func _on_damage_popup(target_index: int, amount: int, critical: bool, bash: bool
 func _on_enemy_defeated(target_index: int, gold: int, exp: int) -> void:
 	var pos := _enemy_position(target_index)
 	var enemy_id := str(battle.enemies[target_index].get("visual", battle.enemies[target_index].get("kind", "")))
-	var death_life := PixelBattleArt.animation_duration(enemy_id, "death", 0.62) if PixelBattleArt.is_active(battle) and enemy_id in ["Goblin Warlord", "Ancient Treant", "Infernal Ogre", "Corrupted King", "Lord of Shadows", "Ancient Dragon", "Demon Lord"] else 0.62
+	var death_life := PixelBattleArt.animation_duration(enemy_id, "death", 0.62) if PixelBattleArt.enemy_art_active(battle, enemy_id) and enemy_id in ["Goblin Warlord", "Ancient Treant", "Infernal Ogre", "Corrupted King", "Lord of Shadows", "Ancient Dragon", "Demon Lord"] else 0.62
 	deaths.append({"pos": pos + Vector2(0, -50), "index": target_index, "age": 0.0, "life": death_life})
-	if PixelBattleArt.is_active(battle) and enemy_id == "Goblin Warlord" and pixel_impact_overlay != null:
+	if PixelBattleArt.enemy_art_active(battle, enemy_id) and enemy_id == "Goblin Warlord" and pixel_impact_overlay != null:
 		pixel_impact_overlay.show_impact(get_global_transform_with_canvas() * (pos + Vector2(0, -115)), 25.0 * minf(size.x / 1000.0, size.y / 560.0), 0.48, Color("ed8c58"))
 	vfx.label(pos + Vector2(0, -140), "+%s GOLD  +%s EXP" % [NumberFormat.compact(gold), NumberFormat.compact(exp)], Color("ffe79c"), 22, 1.25)
 	vfx.pulse(pos + Vector2(0, -50), Color("d9f1a5"), 1.4 if int(battle.enemies[target_index].get("archetype", "") == "BOSS") else 1.0, 0.52)
@@ -368,7 +368,7 @@ func _draw() -> void:
 					if int(death.get("index", -1)) == i:
 						death_found = true
 						var death_ratio := float(death["age"]) / float(death["life"])
-						if PixelBattleArt.enemy_sheet(str(enemy.get("visual", enemy.get("kind", "")))) != null and PixelBattleArt.is_active(battle):
+						if PixelBattleArt.enemy_art_active(battle, str(enemy.get("visual", enemy.get("kind", "")))):
 							var enemy_kind := str(enemy.get("visual", enemy.get("kind", "")))
 							if enemy_kind in ["Goblin Warlord", "Ancient Treant", "Infernal Ogre", "Corrupted King", "Lord of Shadows", "Ancient Dragon", "Demon Lord"] and PixelBattleArt.animation_sheet(enemy_kind, "death") != null:
 								_update_pixel_enemy_sprite(i, _enemy_position(i) + shake, enemy, "death", enemy_unit)
@@ -734,7 +734,7 @@ func _enemy_presentation_unit(unit: float) -> float:
 
 func _update_pixel_enemy_sprite(index: int, pos: Vector2, enemy: Dictionary, state: String, unit: float, opacity: float = 1.0) -> void:
 	var kind := str(enemy.get("visual", enemy.get("kind", "")))
-	var sheet: Texture2D = PixelBattleArt.enemy_sheet(kind) if PixelBattleArt.is_active(battle) else null
+	var sheet: Texture2D = PixelBattleArt.enemy_sheet(kind) if PixelBattleArt.enemy_art_active(battle, kind) else null
 	if sheet == null:
 		_sync_pixel_enemy_visibility(index, false)
 		return
@@ -749,13 +749,14 @@ func _update_pixel_enemy_sprite(index: int, pos: Vector2, enemy: Dictionary, sta
 	var hero_ground_y := _ground_line_y()
 	sprite.z_index = 0 if pos.y < hero_ground_y - size.y * 0.015 else 2
 	var enemy_id := kind
-	var boss_scale := 1.65 if str(enemy.get("archetype", "")) == "BOSS" else 1.0
+	var boss_scale := (1.35 if PixelBattleArt.enemy_art_active(battle, kind) else 1.65) if str(enemy.get("archetype", "")) == "BOSS" else 1.0
 	var elite_scale := 1.2 if str(enemy.get("archetype", "")) == "ELITE" else 1.0
 	var actor_scale := unit * boss_scale * elite_scale
 	var body: Dictionary = PixelBattleArt.BODY_PLACEMENT.get(kind, {})
 	if state == "entry":
 		var frame_count := PixelBattleArt.enemy_entry_frame_count(kind)
-		var frame := int(floor(maxf(0.0, GameData.ENEMY_ENTRY_DURATION - float(enemy.get("entry_time", 0.0))) * PixelBattleArt.enemy_entry_fps(kind))) % frame_count
+		var entry_duration := GameData.BOSS_ENTRY_ANIMATION_DURATION if str(enemy.get("archetype", "")) == "BOSS" else GameData.ENEMY_ENTRY_DURATION
+		var frame := int(floor(maxf(0.0, entry_duration - float(enemy.get("entry_time", 0.0))) * PixelBattleArt.enemy_entry_fps(kind))) % frame_count
 		var entry_texture := PixelBattleArt.enemy_entry_frame(kind, frame)
 		sprite.texture = entry_texture if entry_texture != null else PixelBattleArt.enemy_fallback_frame(kind, "idle")
 	elif state == "death":
@@ -778,7 +779,7 @@ func _update_pixel_enemy_sprite(index: int, pos: Vector2, enemy: Dictionary, sta
 		sprite.texture = PixelBattleArt.animation_frame(enemy_id, "idle", idle_frame)
 		if sprite.texture == null:
 			sprite.texture = PixelBattleArt.enemy_fallback_frame(kind, "idle")
-	sprite.scale = Vector2(float(body.get("width", 1.0)), float(body.get("height", 1.0))) * (350.0 / 256.0) * actor_scale * (1.35 / 1.65 if str(enemy.get("archetype", "")) == "BOSS" and PixelBattleArt.is_active(battle) else 1.0)
+	sprite.scale = Vector2(float(body.get("width", 1.0)), float(body.get("height", 1.0))) * (350.0 / 256.0) * actor_scale * (1.35 / 1.65 if str(enemy.get("archetype", "")) == "BOSS" and PixelBattleArt.enemy_art_active(battle, kind) else 1.0)
 	var hover_height := float(PixelBattleArt.HOVER_PLACEMENT.get(kind, 0.0))
 	var contact_y := float(body.get("contact_y", PIXEL_FRAME_GROUND_Y))
 	sprite.position = pos + Vector2(size.x * float(body.get("offset_x", 0.0)), -(contact_y - 128.0 + hover_height) * sprite.scale.y)
@@ -864,17 +865,14 @@ func _draw_hero_projectiles(unit: float) -> void:
 			draw_circle(pos, 12 * unit, color)
 
 func enemy_visual_state(index: int) -> String:
-	if PixelBattleArt.is_active(battle) and index >= 0 and index < battle.enemies.size():
-		var enemy := battle.enemies[index]
-		var kind := str(enemy.get("visual", enemy.get("kind", "")))
 	if float(enemy_hit_times.get(index, 0.0)) > 0.0:
 		return "hit"
 	if float(enemy_attack_times.get(index, 0.0)) > 0.0:
 		return "attack"
-	if PixelBattleArt.is_active(battle) and index >= 0 and index < battle.enemies.size():
+	if index >= 0 and index < battle.enemies.size():
 		var enemy := battle.enemies[index]
 		var kind := str(enemy.get("visual", enemy.get("kind", "")))
-		if bool(enemy.get("spawned", false)) and float(enemy.get("entry_time", 0.0)) > 0.0 and PixelBattleArt.enemy_entry_frame(kind, 0) != null:
+		if PixelBattleArt.enemy_art_active(battle, kind) and bool(enemy.get("spawned", false)) and float(enemy.get("entry_time", 0.0)) > 0.0 and PixelBattleArt.enemy_entry_frame(kind, 0) != null:
 			return "entry"
 	return "idle"
 
@@ -884,10 +882,10 @@ func _draw_enemy(pos: Vector2, enemy: Dictionary, unit: float, flash: bool, enem
 	var enemy_state := enemy_visual_state(enemy_index)
 	var art_meta := EnemyArtService.metadata(kind)
 	var elite_scale := 1.2 if str(enemy.get("archetype", "")) == "ELITE" else 1.0
-	var boss_scale := (1.35 if PixelBattleArt.is_active(battle) else 1.65) if boss else 1.0
+	var boss_scale := (1.35 if PixelBattleArt.enemy_art_active(battle, kind) else 1.65) if boss else 1.0
 	var actor_scale := unit * elite_scale * boss_scale
 	var art_region := int(enemy.get("region", battle.region if battle != null and str(battle.mode_config.get("mode", "campaign")) == "campaign" else 0))
-	var pixel_sheet: Texture2D = PixelBattleArt.enemy_sheet(kind) if PixelBattleArt.is_active(battle) else null
+	var pixel_sheet: Texture2D = PixelBattleArt.enemy_sheet(kind) if PixelBattleArt.enemy_art_active(battle, kind) else null
 	if pixel_sheet == null:
 		draw_set_transform(pos, 0.0, Vector2.ONE * actor_scale)
 		draw_ellipse_placeholder(Vector2(0, 15), Vector2(39, 10), Color("314d37", 0.33))
@@ -964,7 +962,7 @@ func _draw_enemy(pos: Vector2, enemy: Dictionary, unit: float, flash: bool, enem
 
 func _draw_defeated_enemy(pos: Vector2, enemy: Dictionary, unit: float, ratio: float) -> void:
 	var kind := str(enemy.get("visual", enemy.get("kind", "")))
-	var pixel_sheet: Texture2D = PixelBattleArt.enemy_sheet(kind) if PixelBattleArt.is_active(battle) else null
+	var pixel_sheet: Texture2D = PixelBattleArt.enemy_sheet(kind) if PixelBattleArt.enemy_art_active(battle, kind) else null
 	if pixel_sheet != null:
 		draw_set_transform(pos - Vector2(0.0, 24.0 * unit), 0.0, Vector2.ONE * unit)
 		draw_texture_rect_region(pixel_sheet, Rect2(Vector2(-150.0, -276.0), Vector2(300.0, 300.0)), PixelBattleArt.frame_region(pixel_sheet, "idle"), Color(1, 1, 1, 1.0 - ratio))
@@ -976,7 +974,7 @@ func _draw_defeated_enemy(pos: Vector2, enemy: Dictionary, unit: float, ratio: f
 	var meta := EnemyArtService.metadata(kind)
 	var boss := str(enemy.get("archetype", "")) == "BOSS" or kind == "Goblin Warlord"
 	var elite_scale := 1.2 if str(enemy.get("archetype", "")) == "ELITE" else 1.0
-	var boss_scale := (1.35 if PixelBattleArt.is_active(battle) else 1.65) if boss else 1.0
+	var boss_scale := (1.35 if PixelBattleArt.enemy_art_active(battle, kind) else 1.65) if boss else 1.0
 	var actor_scale := unit * elite_scale * boss_scale
 	var height := 240.0 * float(meta.get("scale", 0.82))
 	var width := height * float(texture.get_width()) / float(texture.get_height())
