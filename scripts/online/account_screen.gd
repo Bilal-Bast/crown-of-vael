@@ -20,7 +20,10 @@ func configure(value: SaveData, callback: Callable) -> void:
 func refresh() -> void:
 	if profile == null: return
 	for child in get_children(): child.queue_free()
-	add_child(_label("ACCOUNT & CLOUD", 40))
+	var heading := PanelContainer.new()
+	CrownUI.style_ornate_panel(heading)
+	add_child(heading)
+	heading.add_child(_label("ACCOUNT  /  CLOUD", 40))
 	var meta: Dictionary = profile.account_meta
 	var frame_name := "Golden Profile Frame" if profile.owned_cosmetics.has("golden_frame") and profile.equipped_cosmetics.get("Profile Frame", "") == "golden_frame" else "No Frame"
 	var profile_row := VBoxContainer.new()

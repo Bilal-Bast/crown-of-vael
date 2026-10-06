@@ -26,11 +26,19 @@ func configure(value: SaveData, callback: Callable) -> void:
 func refresh() -> void:
 	if profile == null: return
 	for child in get_children(): child.queue_free()
-	add_child(_label("SOCIAL HALL • %s" % friends.online_state.to_upper(), 38))
+	var header := PanelContainer.new()
+	CrownUI.style_ornate_panel(header)
+	add_child(header)
+	var heading := VBoxContainer.new()
+	heading.add_theme_constant_override("separation", 4)
+	header.add_child(heading)
+	heading.add_child(_label("SOCIAL HALL", 38))
+	heading.add_child(_label(friends.online_state.to_upper(), 24))
 	var tabs := HBoxContainer.new()
 	add_child(tabs)
 	for name in ["Friends", "Guild", "PvP"]:
 		var button := _button(name.to_upper())
+		CrownUI.style_tab(button, tab == name, Color("8b9f91"))
 		button.pressed.connect(_select.bind(name))
 		tabs.add_child(button)
 	match tab:
