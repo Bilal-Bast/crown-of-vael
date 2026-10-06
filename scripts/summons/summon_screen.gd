@@ -44,6 +44,7 @@ func refresh() -> void:
 	for banner in SummonData.BANNERS:
 		var tab := _button(str(banner).capitalize(), SANCTUM.COLORS[banner])
 		tab.disabled = banner == selected_banner
+		CrownUI.style_tab(tab, banner == selected_banner, SANCTUM.COLORS[banner])
 		tab.pressed.connect(func(): selected_banner = banner; show_odds = false; refresh())
 		tabs.add_child(tab)
 	_build_banner(selected_banner)
@@ -81,11 +82,13 @@ func _build_banner(banner: String) -> void:
 	var free_row := HBoxContainer.new()
 	box.add_child(free_row)
 	var daily := _button("Daily gift\nREADY" if service.can_summon(banner,1,"daily") else "Daily gift\nClaimed",color)
+	CrownUI.set_button_role(daily, &"QuietButton")
 	daily.disabled = not service.can_summon(banner,1,"daily")
 	daily.pressed.connect(_summon.bind(banner,1,"daily"))
 	free_row.add_child(daily)
 	var used := int(state["ad_count"]) if state["ad_day"] == SummonService.local_day() else 0
 	var ad := _button("Rewarded pull\n%d / 3 left" % (3-used),color)
+	CrownUI.set_button_role(ad, &"QuietButton")
 	ad.disabled = not service.can_summon(banner,1,"ad")
 	ad.pressed.connect(_summon.bind(banner,1,"ad"))
 	free_row.add_child(ad)
