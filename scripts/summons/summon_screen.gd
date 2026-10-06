@@ -3,6 +3,8 @@ extends VBoxContainer
 
 const CrownUI = preload("res://scripts/ui/crown_ui.gd")
 
+signal art_changed(screen_key: String)
+
 var profile: SaveData
 var service: SummonService
 var on_change: Callable
@@ -29,12 +31,13 @@ func configure(new_profile: SaveData, changed: Callable, open_screen: Callable =
 
 func refresh() -> void:
 	if profile == null: return
+	art_changed.emit("summon_reveal" if not results.is_empty() else "summon")
 	for child in get_children():
 		remove_child(child)
 		child.queue_free()
 	add_theme_constant_override("separation", 14)
-	add_child(_label("THE SUMMONING SANCTUM", 38, Color("eed7a1")))
-	add_child(_label("%s Gems  /  A new discovery awaits" % NumberFormat.compact(profile.gems), 29, Color("b9c8cb")))
+	add_child(_label("THE SUMMONING SANCTUM", 38, Color("ffe08a")))
+	add_child(_label("%s Gems  /  A new discovery awaits" % NumberFormat.compact(profile.gems), 29, Color("bed5ec")))
 	if not results.is_empty():
 		_build_reveal()
 		return
@@ -72,14 +75,14 @@ func _build_banner(banner: String) -> void:
 	scene.reduced = profile.reduced_effects
 	box.add_child(scene)
 	var level := int(state["level"])
-	box.add_child(_label("Banner %d / 10   |   Legendary+ in %d pulls" % [level, SummonData.PITY_LIMIT - int(state["pity"])], 29, Color("eed7a1")))
+	box.add_child(_label("Banner %d / 10   |   Legendary+ in %d pulls" % [level, SummonData.PITY_LIMIT - int(state["pity"])], 29, Color("ffe08a")))
 	var bar := ProgressBar.new()
 	bar.custom_minimum_size.y = 12
 	bar.show_percentage = false
 	bar.max_value = SummonData.PITY_LIMIT
 	bar.value = int(state["pity"])
 	box.add_child(bar)
-	box.add_child(_label("EXP %s   |   Tickets %d" % ["MAX" if level == 10 else "%d/%d" % [state["exp"], SummonData.exp_to_next(level)], profile.summon_tickets.get(banner,0)], 27, Color("b3c2c4")))
+	box.add_child(_label("EXP %s   |   Tickets %d" % ["MAX" if level == 10 else "%d/%d" % [state["exp"], SummonData.exp_to_next(level)], profile.summon_tickets.get(banner,0)], 27, Color("bed5ec")))
 	var free_row := HBoxContainer.new()
 	box.add_child(free_row)
 	var daily := _button("Daily gift\nREADY" if service.can_summon(banner,1,"daily") else "Daily gift\nClaimed",color)
@@ -181,7 +184,7 @@ func _build_reveal() -> void:
 		icon.custom_minimum_size = Vector2(0,88)
 		box.add_child(icon)
 		box.add_child(_label(("NEW! " if bool(reward.get("is_new",false)) else "") + EquipmentData.RARITIES[rarity],22,EquipmentData.COLORS[rarity]))
-		box.add_child(_label(_reward_name(reward),24,Color("efe7d5")))
+		box.add_child(_label(_reward_name(reward),24,Color("eef5ff")))
 		var select := _button("FOCUS", EquipmentData.COLORS[rarity])
 		select.custom_minimum_size.y = 58
 		select.pressed.connect(_select_featured.bind(index))
@@ -200,7 +203,7 @@ func _build_reveal() -> void:
 			button.disabled = page+direction < 0 or page+direction >= pages
 			button.pressed.connect(func(): page += direction; featured_index = page * PAGE_SIZE; refresh())
 			pager.add_child(button)
-		add_child(_label("Page %d / %d   |   Rewards %d-%d of %d" % [page+1,pages,start+1,mini(start+PAGE_SIZE,results.size()),results.size()],26,Color("b9c8cb")))
+		add_child(_label("Page %d / %d   |   Rewards %d-%d of %d" % [page+1,pages,start+1,mini(start+PAGE_SIZE,results.size()),results.size()],26,Color("bed5ec")))
 	var close := _button("KEEP EXPLORING", color)
 	close.pressed.connect(_close_results)
 	add_child(close)
@@ -215,7 +218,7 @@ func _add_featured_reward(reward: Dictionary) -> void:
 	content.alignment = BoxContainer.ALIGNMENT_CENTER
 	content.add_theme_constant_override("separation", 8)
 	pedestal.add_child(content)
-	var tag := _label("✦  NEW DISCOVERY  ✦" if bool(reward.get("is_new", false)) else "REVEALED REWARD", 27, Color("f0d58f") if bool(reward.get("is_new", false)) else Color("b9c8cb"))
+	var tag := _label("✦  NEW DISCOVERY  ✦" if bool(reward.get("is_new", false)) else "REVEALED REWARD", 27, Color("f0d58f") if bool(reward.get("is_new", false)) else Color("bed5ec"))
 	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	content.add_child(tag)
 	var stage := PanelContainer.new()
@@ -241,7 +244,7 @@ func _add_featured_reward(reward: Dictionary) -> void:
 	var rarity_label := _label(EquipmentData.RARITIES[rarity].to_upper(), 31, color)
 	rarity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	content.add_child(rarity_label)
-	var name_label := _label(_reward_name(reward), 38, Color("efe7d5"))
+	var name_label := _label(_reward_name(reward), 38, Color("eef5ff"))
 	name_label.name = "FeaturedRewardName"
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
