@@ -64,34 +64,44 @@ func refresh() -> void:
 	add_child(_label("RELIC COLLECTION", 32, Color("e9c87d")))
 	if profile.artifacts.is_empty():
 		add_child(_label("No artifacts discovered yet. Explore modes or summon to find relics.", 29, Color("aebdb4")))
+	var grid := GridContainer.new()
+	grid.name = "ArtifactCollection"
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 10)
+	grid.add_theme_constant_override("v_separation", 10)
+	add_child(grid)
 	for id in ArtifactData.ARTIFACTS:
 		var data: Dictionary = ArtifactData.ARTIFACTS[id]
 		var owned := profile.artifacts.has(id)
 		var record: Dictionary = profile.artifacts.get(id, {})
 		var rarity := int(record.get("rarity", 2))
-		var panel := _panel(EquipmentData.COLORS[rarity] if owned else Color("52605c"))
-		add_child(panel)
-		var box := VBoxContainer.new()
-		panel.add_child(box)
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 12)
-		box.add_child(row)
-		var item_texture := TextureRect.new()
-		item_texture.custom_minimum_size = Vector2(72, 72)
-		item_texture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		item_texture.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		item_texture.texture = PixelUiIcons.artifact(id)
-		row.add_child(item_texture)
-		row.add_child(_label("%s  |  %s" % [data["name"], EquipmentData.RARITIES[rarity] if owned else "LOCKED"], 31, EquipmentData.COLORS[rarity] if owned else Color("aebdb4")))
-		if owned:
-			box.add_child(_label("Level %d  •  Duplicates %d  •  %s" % [record["level"], record["duplicates"], "DRAGON RELICS" if data.has("set") else "NO SET"], 27, Color("e9e8d7")))
-			box.add_child(_label("OWNED: %s  •  EQUIPPED: %s" % [ArtifactData.owned_text(id, record), data["effect_text"]], 27, Color("a9d6ad")))
-			var select := _button("SELECT" if selected_id != id else "SELECTED")
-			select.disabled = selected_id == id
-			select.pressed.connect(_select.bind(id))
-			box.add_child(select)
-		else:
-			box.add_child(_label("Summon a copy to unlock its owned bonus.", 27, Color("aebdb4")))
+		var card := Button.new()
+		card.custom_minimum_size = Vector2(320, 255)
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_style_card(card, EquipmentData.COLORS[rarity] if owned else Color("52605c"), selected_id == id)
+		var contents := VBoxContainer.new()
+		contents.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		contents.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		contents.alignment = BoxContainer.ALIGNMENT_CENTER
+		contents.add_theme_constant_override("separation", 1)
+		card.add_child(contents)
+		var icon := TextureRect.new()
+		icon.custom_minimum_size = Vector2(0, 165)
+		icon.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		icon.texture = PixelUiIcons.artifact(id)
+		contents.add_child(icon)
+		var title := _label(data["name"], 22, EquipmentData.COLORS[rarity] if owned else Color("9da7a2"))
+		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		title.clip_text = true
+		contents.add_child(title)
+		var level_label := _label(("LV %d" % record["level"]) if owned else "LOCKED", 19, Color("c2c9bd"))
+		level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		contents.add_child(level_label)
+		card.pressed.connect(_select.bind(id))
+		grid.add_child(card)
 
 func _build_detail() -> void:
 	var record: Dictionary = profile.artifacts[selected_id]
@@ -166,3 +176,13 @@ func _button(value: String) -> Button:
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.add_theme_font_size_override("font_size", 27)
 	return button
+
+func _style_card(button: Button, border: Color, selected: bool) -> void:
+	for state in ["normal", "hover", "pressed", "focus"]:
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color("26353a") if not selected else Color("374640")
+		style.border_color = Color("e9c87d") if selected else border
+		style.set_border_width_all(3 if selected else 2)
+		style.set_corner_radius_all(10)
+		style.set_content_margin_all(8)
+		button.add_theme_stylebox_override(state, style)
