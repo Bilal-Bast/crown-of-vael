@@ -126,6 +126,50 @@ static func style_card(button: Button, accent: Color, selected: bool, disabled :
 			_card_styles[key] = style
 		button.add_theme_stylebox_override(state, _card_styles[key])
 
+static func style_tab(button: Button, selected: bool, accent := GOLD) -> void:
+	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
+		button.add_theme_stylebox_override(state, navigation_style(accent, selected, state))
+	button.add_theme_color_override("font_color", GOLD if selected else MUTED)
+	button.add_theme_color_override("font_hover_color", Color("fff0c8"))
+	button.add_theme_color_override("font_pressed_color", GOLD)
+	button.add_theme_color_override("font_disabled_color", Color("788681"))
+
+static func create_collection_card(accent: Color, selected: bool, locked: bool, icon_texture: Texture2D, title: String, status: String, card_size := Vector2(320, 255), icon_height := 165) -> Button:
+	var card := Button.new()
+	card.custom_minimum_size = card_size
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.clip_contents = true
+	style_card(card, accent, selected, locked)
+	var contents := VBoxContainer.new()
+	contents.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	contents.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	contents.alignment = BoxContainer.ALIGNMENT_CENTER
+	contents.add_theme_constant_override("separation", 4)
+	card.add_child(contents)
+	var icon := TextureRect.new()
+	icon.custom_minimum_size = Vector2(0, icon_height)
+	icon.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	icon.texture = icon_texture
+	contents.add_child(icon)
+	var title_label := Label.new()
+	title_label.text = title
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_label.clip_text = true
+	title_label.add_theme_font_size_override("font_size", 23)
+	title_label.add_theme_color_override("font_color", Color("9da7a2") if locked else accent)
+	contents.add_child(title_label)
+	var status_label := Label.new()
+	status_label.text = status
+	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	status_label.clip_text = true
+	status_label.add_theme_font_size_override("font_size", 19)
+	status_label.add_theme_color_override("font_color", Color("aebdb4") if locked else Color("c2c9bd"))
+	contents.add_child(status_label)
+	return card
+
 static func set_button_role(button: Button, role: StringName = &"PrimaryActionButton") -> void:
 	button.theme_type_variation = role
 

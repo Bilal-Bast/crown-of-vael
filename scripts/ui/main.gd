@@ -1439,8 +1439,10 @@ func _build_equipment_screen() -> void:
 			button.expand_icon = true
 			button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		if not item.is_empty():
-			_style_rarity(button, int(item["rarity"]))
+			_style_rarity(button, int(item["rarity"]), selected_item_id == str(item["id"]))
 			button.pressed.connect(_select_item.bind(str(item["id"])))
+		else:
+			CrownUI.style_tab(button, false, Color("75694f"))
 		equipment_content.add_child(button)
 	_section_title(equipment_content, "INVENTORY  •  %d ITEMS" % profile.inventory.size())
 	var grid := GridContainer.new()
@@ -1452,7 +1454,7 @@ func _build_equipment_screen() -> void:
 		var button := Button.new()
 		button.custom_minimum_size = Vector2(320, 260)
 		button.text = ""
-		_style_rarity(button, int(item["rarity"]))
+		_style_rarity(button, int(item["rarity"]), selected_item_id == str(item["id"]))
 		var contents := VBoxContainer.new()
 		contents.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		contents.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1477,13 +1479,8 @@ func _build_equipment_screen() -> void:
 		button.pressed.connect(_select_item.bind(str(item["id"])))
 		grid.add_child(button)
 
-func _style_rarity(button: Button, rarity: int) -> void:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color("1c2d30")
-	style.border_color = EquipmentData.COLORS[rarity]
-	style.set_border_width_all(4)
-	style.set_corner_radius_all(9)
-	button.add_theme_stylebox_override("normal", style)
+func _style_rarity(button: Button, rarity: int, selected := false) -> void:
+	CrownUI.style_card(button, EquipmentData.COLORS[rarity], selected)
 	button.add_theme_color_override("font_color", EquipmentData.COLORS[rarity])
 
 func _action(parent: Container, caption: String, callback: Callable) -> Button:
@@ -1597,10 +1594,7 @@ func _update_navigation() -> void:
 	for tab_name in nav_buttons:
 		var button: Button = nav_buttons[tab_name]
 		var selected: bool = tab_name == selected_tab
-		for state in ["normal", "hover", "pressed", "focus", "disabled"]:
-			button.add_theme_stylebox_override(state, _button_style(GOLD, selected, state))
-		button.add_theme_color_override("font_color", GOLD if selected else MUTED)
-		button.add_theme_color_override("font_hover_color", PALE)
+		CrownUI.style_tab(button, selected, GOLD)
 		var badge := MonetizationService.new(profile).bp_badge() if tab_name == "Pass" else MonetizationService.new(profile).shop_badge() if tab_name == "Shop" else SocialService.new(profile).badge() if tab_name == "Social" else ProgressionService.new(profile).badge(tab_name)
 		button.text = tab_name
 		var dot := button.get_node_or_null("BadgeDot") as ColorRect

@@ -1,6 +1,8 @@
 class_name SettingsScreen
 extends VBoxContainer
 
+const CrownUI = preload("res://scripts/ui/crown_ui.gd")
+
 var profile: SaveData
 var on_change: Callable
 
@@ -12,11 +14,17 @@ func configure(value: SaveData, changed: Callable) -> void:
 func refresh() -> void:
 	for child in get_children():
 		child.queue_free()
-	add_child(_label("SETTINGS", 38, Color("e9c87d")))
-	add_child(_label("Audio levels apply immediately. Missing audio files remain silent.", 24, Color("aebdb4")))
+	var audio_panel := PanelContainer.new()
+	CrownUI.style_panel(audio_panel, Color("7d9d8a"))
+	add_child(audio_panel)
+	var audio_box := VBoxContainer.new()
+	audio_box.add_theme_constant_override("separation", 12)
+	audio_panel.add_child(audio_box)
+	audio_box.add_child(_label("SETTINGS  /  AUDIO", 38, Color("e9c87d")))
+	audio_box.add_child(_label("Audio levels apply immediately. Missing audio files remain silent.", 24, Color("aebdb4")))
 	for key in ["master", "music", "sfx", "ui"]:
 		var row := HBoxContainer.new()
-		add_child(row)
+		audio_box.add_child(row)
 		var label := _label(key.to_upper(), 26, Color("e9e8d7"))
 		label.custom_minimum_size.x = 150
 		row.add_child(label)
@@ -32,12 +40,19 @@ func refresh() -> void:
 	mute.text = "Mute all audio"
 	mute.button_pressed = bool(profile.audio_settings.get("muted", false))
 	mute.toggled.connect(_set_mute)
-	add_child(mute)
+	var access_panel := PanelContainer.new()
+	CrownUI.style_panel(access_panel, Color("9c8be3"), true)
+	add_child(access_panel)
+	var access_box := VBoxContainer.new()
+	access_box.add_theme_constant_override("separation", 8)
+	access_panel.add_child(access_box)
+	access_box.add_child(_label("ACCESSIBILITY", 30, Color("e9c87d")))
+	access_box.add_child(mute)
 	var reduced := CheckButton.new()
 	reduced.text = "Reduced combat effects and screen shake"
 	reduced.button_pressed = profile.reduced_effects
 	reduced.toggled.connect(_set_reduced)
-	add_child(reduced)
+	access_box.add_child(reduced)
 
 func _set_volume(value: float, key: String) -> void:
 	profile.audio_settings[key] = value
