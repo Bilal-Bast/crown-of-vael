@@ -14,6 +14,9 @@ func check(value: bool, label: String) -> void:
 func _run() -> void:
 	HeroArtService.clear_cache_for_tests()
 	var expected_forms := ["squire", "knight", "royal_knight", "paladin", "divine_paladin"]
+	var profile := SaveData.new()
+	var battle := BattleController.new()
+	battle.profile = profile
 	for form in expected_forms.size():
 		check(HeroArtService.form_folder(form) == expected_forms[form], "%s maps to evolution" % expected_forms[form])
 		for state in ["idle", "run", "attack", "guard", "hit"]:
@@ -38,9 +41,20 @@ func _run() -> void:
 			check(portrait.get_image().get_used_rect().size.x > 0, "%s portrait has visible pixels" % expected_forms[form])
 	var report := HeroArtService.validation_report()
 	check(report.is_empty(), "all evolution art validates")
-	var profile := SaveData.new()
-	var battle := BattleController.new()
-	battle.profile = profile
+	for hero_id in HeroArtService.OTHER_HEROES:
+		for state in ["idle", "run", "attack", "guard", "hit"]:
+			var sheet := HeroArtService.texture_for_hero(hero_id, 0, state)
+			check(sheet != null and sheet.get_width() == 1024 and sheet.get_height() == 256, "%s %s production sheet loads" % [hero_id, state])
+			check(sheet != null and sheet.get_image().detect_alpha(), "%s %s sheet retains transparency" % [hero_id, state])
+			for frame in 4:
+				var texture := HeroArtService.animation_frame_for_hero(hero_id, 0, state, frame)
+				check(texture != null and texture.get_image().get_used_rect().size.x > 0, "%s %s frame %d resolves visibly" % [hero_id, state, frame])
+		var portrait := HeroArtService.texture_for_hero(hero_id, 0, "portrait")
+		check(portrait != null and portrait.get_width() == 256 and portrait.get_height() == 256, "%s portrait resolves at target size" % hero_id)
+		profile.heroes[hero_id]["unlocked"] = true
+		profile.selected_hero_id = hero_id
+		check(PixelBattleArt.is_active(battle), "%s activates shared pixel battle renderer" % hero_id)
+	profile.selected_hero_id = "knight"
 	for form in expected_forms.size():
 		profile.heroes["knight"]["evolution"] = form
 		check(PixelBattleArt.is_active(battle), "%s keeps the converted pixel battle presentation" % expected_forms[form])

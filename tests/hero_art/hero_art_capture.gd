@@ -80,7 +80,31 @@ func _run() -> void:
 		heroes.refresh()
 		await process_frame
 		await _capture("%s_to_%s_evolution_result_360" % [_slug(FORMS[next_form - 1]), _slug(FORMS[next_form])], Vector2i(360, 640))
+	for hero_id in HeroArtService.OTHER_HEROES:
+		profile.heroes[hero_id]["unlocked"] = true
+		profile.selected_hero_id = hero_id
+		main.call("_select_tab", "Battle")
+		main.call("_refresh_ui")
+		field.hero_visual_state = "idle"
+		field.hero_attack_art_time = 0.0
+		field.hero_guard_art_time = 0.0
+		field.hero_hit_art_time = 0.0
+		field.queue_redraw()
+		await process_frame
+		await _capture("%s_battle_idle_360" % hero_id, Vector2i(360, 640))
+		field.hero_visual_state = "attack"
+		field.hero_attack_art_time = 0.26
+		field.queue_redraw()
+		await process_frame
+		await _capture("%s_battle_attack_360" % hero_id, Vector2i(360, 640))
+		heroes.selected_id = hero_id
+		heroes.view = "detail"
+		heroes.refresh()
+		main.call("_select_tab", "Heroes")
+		await process_frame
+		await _capture("%s_roster_portrait_360" % hero_id, Vector2i(360, 640))
 	profile.heroes["knight"]["evolution"] = 4
+	profile.selected_hero_id = "knight"
 	main.call("_select_tab", "Battle")
 	main.call("_refresh_ui")
 	await _capture("divine_paladin_battle_overview_1080", Vector2i(1080, 1920))
