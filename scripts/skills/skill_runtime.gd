@@ -6,6 +6,7 @@ var defense_time := 0.0
 var defense_amount := 0.0
 var attack_time := 0.0
 var attack_amount := 0.0
+var auto_enabled := true
 
 func start(profile: SaveData) -> void:
 	cooldowns.clear()
@@ -40,6 +41,8 @@ func process(delta: float, battle: BattleController) -> void:
 	attack_time = maxf(0.0, attack_time - delta)
 	if defense_expired or attack_expired:
 		battle.refresh_hero_stats()
+	if not auto_enabled:
+		return
 	for slot in 4:
 		var id := battle.profile.equipped_skill_slots[slot]
 		if id == "" or not cooldowns.has(id):
@@ -50,6 +53,20 @@ func process(delta: float, battle: BattleController) -> void:
 			battle.skill_cast.emit(id, slot)
 			if not battle.active:
 				return
+
+func manual_cast(slot: int, battle: BattleController) -> bool:
+	if slot < 0 or slot >= battle.profile.equipped_skill_slots.size():
+		return false
+	var id := battle.profile.equipped_skill_slots[slot]
+	if id == "" or not SkillData.SKILLS.has(id):
+		return false
+	if float(cooldowns.get(id, 0.0)) > 0.0:
+		return false
+	if not cast(id, battle):
+		return false
+	cooldowns[id] = float(SkillData.SKILLS[id]["cooldown"])
+	battle.skill_cast.emit(id, slot)
+	return true
 
 func cast(id: String, battle: BattleController) -> bool:
 	var data: Dictionary = SkillData.SKILLS[id]

@@ -46,40 +46,84 @@ func refresh() -> void:
 	var ultimate := _panel()
 	add_child(ultimate)
 	ultimate.add_child(_label("ULTIMATE SLOT  •  LOCKED  •  Unlocks later", 29, Color("aebdb4")))
-	add_child(_label("SKILL INVENTORY", 33, Color("e9c87d")))
+	if SkillData.SKILLS.has(selected_id):
+		_build_selected_detail()
+	add_child(_label("SKILL COLLECTION  •  %d / %d" % [profile.skills.size(), SkillData.SKILLS.size()], 33, Color("e9c87d")))
+	var grid := GridContainer.new()
+	grid.name = "SkillCollection"
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 10)
+	grid.add_theme_constant_override("v_separation", 10)
+	add_child(grid)
 	for id in SkillData.SKILLS:
 		var data: Dictionary = SkillData.SKILLS[id]
 		var owned := profile.skills.has(id)
 		var record: Dictionary = profile.skills.get(id, {})
 		var rarity := int(record.get("rarity", data["rarity"]))
-		var card := _panel(EquipmentData.COLORS[rarity])
-		add_child(card)
-		var box := VBoxContainer.new()
-		card.add_child(box)
-		var title_row := HBoxContainer.new()
-		title_row.add_theme_constant_override("separation", 12)
-		box.add_child(title_row)
+		var button := Button.new()
+		button.custom_minimum_size = Vector2(320, 255)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_style_card(button, EquipmentData.COLORS[rarity], selected_id == id, owned)
+		var contents := VBoxContainer.new()
+		contents.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		contents.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		contents.alignment = BoxContainer.ALIGNMENT_CENTER
+		contents.add_theme_constant_override("separation", 1)
+		button.add_child(contents)
 		var icon := TextureRect.new()
-		icon.texture = PixelUiIcons.skill(id)
-		icon.custom_minimum_size = Vector2(72, 72)
+		icon.custom_minimum_size = Vector2(0, 165)
+		icon.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		title_row.add_child(icon)
-		title_row.add_child(_label("%s  |  %s" % [data["name"], EquipmentData.RARITIES[rarity]], 31, EquipmentData.COLORS[rarity]))
-		box.add_child(_label("%s  •  %.0fs cooldown" % ["Level %d" % record["level"] if owned else "LOCKED", data["cooldown"]], 28, Color("e9e8d7")))
-		box.add_child(_label("%s  •  %s" % [data["description"], SkillData.effect_text(id, int(record.get("level", 1)))], 27, Color("aebdb4")))
-		if owned:
-			var level := int(record["level"])
-			box.add_child(_label("Copies %d/%d  •  Next: %s" % [record["duplicates"], SkillData.copies_to_level(level), SkillData.effect_text(id, level + 1)], 26, Color("a9d6ad")))
-			var button := Button.new()
-			button.text = "SELECT" if selected_id != id else "SELECTED"
-			button.custom_minimum_size.y = 75
-			button.add_theme_font_size_override("font_size", 27)
-			button.disabled = selected_id == id
-			button.pressed.connect(_select.bind(id))
-			box.add_child(button)
-		else:
-			box.add_child(_label("Summon a copy to unlock.", 27, Color("d8a399")))
+		icon.texture = PixelUiIcons.skill(id)
+		contents.add_child(icon)
+		var title := _label(data["name"], 23, EquipmentData.COLORS[rarity] if owned else Color("9da7a2"))
+		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		title.clip_text = true
+		contents.add_child(title)
+		var level_label := _label(("LV %d" % int(record.get("level", 1))) if owned else "LOCKED", 19, Color("c2c9bd"))
+		level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		contents.add_child(level_label)
+		button.pressed.connect(_select.bind(id))
+		grid.add_child(button)
+
+func _build_selected_detail() -> void:
+	var data: Dictionary = SkillData.SKILLS[selected_id]
+	var owned := profile.skills.has(selected_id)
+	var record: Dictionary = profile.skills.get(selected_id, {})
+	var rarity := int(record.get("rarity", data["rarity"]))
+	var panel := _panel(EquipmentData.COLORS[rarity])
+	add_child(panel)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 18)
+	panel.add_child(row)
+	var icon := TextureRect.new()
+	icon.custom_minimum_size = Vector2(144, 144)
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	icon.texture = PixelUiIcons.skill(selected_id)
+	row.add_child(icon)
+	var detail := VBoxContainer.new()
+	detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(detail)
+	detail.add_child(_label(data["name"], 33, EquipmentData.COLORS[rarity]))
+	detail.add_child(_label(("LEVEL %d  •  %.0fS COOLDOWN" % [record["level"], data["cooldown"]]) if owned else ("LOCKED  •  %.0fS COOLDOWN" % data["cooldown"]), 25, Color("e9e8d7")))
+	detail.add_child(_label("%s  •  %s" % [data["description"], SkillData.effect_text(selected_id, int(record.get("level", 1)))], 24, Color("aebdb4")))
+	if owned:
+		detail.add_child(_label("COPIES %d / %d  •  NEXT: %s" % [record["duplicates"], SkillData.copies_to_level(int(record["level"])), SkillData.effect_text(selected_id, int(record["level"]) + 1)], 23, Color("a9d6ad")))
+	else:
+		detail.add_child(_label("Summon a copy to unlock this skill.", 24, Color("d8a399")))
+
+func _style_card(button: Button, border: Color, selected: bool, owned: bool) -> void:
+	for state in ["normal", "hover", "pressed", "focus"]:
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color("26353a") if owned else Color("1a262b")
+		style.border_color = Color("e9c87d") if selected else border
+		style.set_border_width_all(3 if selected else 2)
+		style.set_corner_radius_all(10)
+		style.set_content_margin_all(8)
+		button.add_theme_stylebox_override(state, style)
 
 func _select(id: String) -> void:
 	selected_id = id

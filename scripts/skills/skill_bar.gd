@@ -1,11 +1,13 @@
 class_name SkillBar
 extends Control
 
+signal manual_skill_requested(slot: int)
+
 var battle: BattleController
 var flashes := {}
 
 func _ready() -> void:
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	mouse_filter = Control.MOUSE_FILTER_STOP
 	if battle != null:
 		battle.skill_cast.connect(_on_skill_cast)
 
@@ -49,3 +51,8 @@ func _draw() -> void:
 			draw_string(ThemeDB.fallback_font, center + Vector2(-20, radius + 17), "READY", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("a9d6ad"))
 		if float(flashes.get(slot, 0.0)) > 0.0:
 			draw_arc(center, radius + 2, 0.0, TAU, 48, Color(1.0, 0.9, 0.55, float(flashes[slot]) * 1.5), 5.0, true)
+
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		var width := size.x / 4.0
+		manual_skill_requested.emit(clampi(int(floor(event.position.x / maxf(1.0, width))), 0, 3))
