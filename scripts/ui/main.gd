@@ -20,11 +20,10 @@ const SettingsScreenScript = preload("res://scripts/ui/settings_screen.gd")
 const IdleRewardServiceScript = preload("res://scripts/progression/idle_reward_service.gd")
 const TutorialServiceScript = preload("res://scripts/progression/tutorial_service.gd")
 const NumberFormatScript = preload("res://scripts/core/number_format.gd")
-const CrownUITheme = preload("res://resources/ui/crown_theme.tres")
 const CrownUI = preload("res://scripts/ui/crown_ui.gd")
 
-const INK := Color("172425")
-const PANEL := Color("253739")
+const INK := Color("111014")
+const PANEL := Color("252329")
 const EDGE := Color("7b7159")
 const GOLD := Color("e9c87d")
 const PALE := Color("e9e8d7")
@@ -227,7 +226,7 @@ func _handle_back_request() -> void:
 func _build_ui() -> void:
 	_apply_ui_theme()
 	var backdrop := ColorRect.new()
-	backdrop.color = Color("121e29")
+	backdrop.color = Color("111014")
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(backdrop)
 
@@ -365,13 +364,7 @@ func _build_top_bar(root: VBoxContainer) -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 4)
 	panel.add_child(box)
-	var frame := StyleBoxFlat.new()
-	frame.bg_color = Color("182633")
-	frame.border_color = Color("c29b59")
-	frame.border_width_top = 3
-	frame.border_width_bottom = 3
-	frame.set_content_margin_all(8)
-	panel.add_theme_stylebox_override("panel", frame)
+	CrownUI.style_ornate_panel(panel)
 	var metrics := HBoxContainer.new()
 	metrics.add_theme_constant_override("separation", 8)
 	box.add_child(metrics)
@@ -395,13 +388,7 @@ func _build_top_bar(root: VBoxContainer) -> void:
 
 func _metric(parent: HBoxContainer, heading: String, value_color: Color) -> Label:
 	var metric_panel := PanelContainer.new()
-	var frame := StyleBoxFlat.new()
-	frame.bg_color = Color("1b2a34")
-	frame.border_color = value_color.darkened(0.45)
-	frame.set_border_width_all(1)
-	frame.border_width_bottom = 3
-	frame.set_content_margin_all(6)
-	metric_panel.add_theme_stylebox_override("panel", frame)
+	CrownUI.style_panel(metric_panel, value_color.darkened(0.25), true)
 	metric_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(metric_panel)
 	var cell := VBoxContainer.new()
@@ -659,12 +646,6 @@ func _update_battlefield_height() -> void:
 func _build_navigation(root: VBoxContainer) -> void:
 	var panel := _panel()
 	root.add_child(panel)
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color("111c26")
-	style.border_color = Color("a58a57")
-	style.border_width_top = 2
-	style.set_content_margin_all(8)
-	panel.add_theme_stylebox_override("panel",style)
 	var rows := VBoxContainer.new()
 	rows.add_theme_constant_override("separation", 7)
 	panel.add_child(rows)
@@ -983,7 +964,7 @@ func _on_feature_ack() -> void:
 	tutorial_skip.visible = true
 
 func _apply_ui_theme() -> void:
-	theme = CrownUITheme
+	theme = CrownUI.build_theme()
 
 func _button_style(accent: Color, selected: bool, state := "normal") -> StyleBoxFlat:
 	return CrownUI.navigation_style(accent, selected, state)
@@ -1309,6 +1290,7 @@ func _retreat_for_hero() -> void:
 func _build_heroes_screen() -> void:
 	_clear_content(heroes_content)
 	var identity := _panel()
+	CrownUI.style_ornate_panel(identity)
 	heroes_content.add_child(identity)
 	var identity_row := HBoxContainer.new()
 	identity_row.add_theme_constant_override("separation", 16)
@@ -1384,6 +1366,7 @@ func _section_title(parent: VBoxContainer, value: String) -> void:
 func _build_equipment_screen() -> void:
 	_clear_content(equipment_content)
 	var heading := _panel()
+	CrownUI.style_ornate_panel(heading)
 	equipment_content.add_child(heading)
 	var headbox := VBoxContainer.new()
 	heading.add_child(headbox)

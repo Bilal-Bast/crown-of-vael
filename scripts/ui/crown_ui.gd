@@ -1,16 +1,18 @@
 class_name CrownUI
 extends RefCounted
 
-const GOLD := Color("e6c16f")
-const TEXT := Color("efe8d7")
-const MUTED := Color("aebdb4")
-const EDGE := Color("75694f")
-const SURFACE := Color("202f39")
-const DEEP := Color("17252e")
+const GOLD := Color("d9b66f")
+const TEXT := Color("f0eadf")
+const MUTED := Color("aaa69c")
+const EDGE := Color("71603e")
+const SURFACE := Color("252329")
+const DEEP := Color("151419")
+const MENU_FRAME := preload("res://assets/ui/obsidian_menu_frame.png")
 
 static var _panel_styles: Dictionary = {}
 static var _card_styles: Dictionary = {}
 static var _health_styles: Dictionary = {}
+static var _ornate_panel_style: StyleBoxTexture
 
 static func build_theme() -> Theme:
 	var shared := Theme.new()
@@ -30,9 +32,9 @@ static func build_theme() -> Theme:
 	_register_button_variant(shared, &"PrimaryActionButton", GOLD)
 	_register_button_variant(shared, &"MagicActionButton", Color("9c8be3"))
 	_register_button_variant(shared, &"DangerActionButton", Color("c87568"))
-	_register_button_variant(shared, &"QuietButton", Color("708985"), true)
+	_register_button_variant(shared, &"QuietButton", Color("8a857a"), true)
 	shared.set_type_variation(&"InsetPanel", &"PanelContainer")
-	shared.set_stylebox("panel", &"InsetPanel", _panel_box(Color("4c5c60"), true))
+	shared.set_stylebox("panel", &"InsetPanel", _panel_box(Color("62543c"), true))
 	shared.set_type_variation(&"RewardPanel", &"PanelContainer")
 	shared.set_stylebox("panel", &"RewardPanel", _panel_box(GOLD, false, true))
 	return shared
@@ -48,47 +50,47 @@ static func _register_button_variant(theme: Theme, type_name: StringName, accent
 
 static func _button_box(accent: Color, state: String, quiet: bool) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("182630") if quiet else Color("263840")
+	style.bg_color = Color("1a191e") if quiet else Color("302c2b")
 	if state == "hover" or state == "focus":
-		style.bg_color = Color("34454b")
+		style.bg_color = Color("413b35")
 	elif state == "pressed":
-		style.bg_color = Color("121f27")
+		style.bg_color = Color("17161a")
 	elif state == "disabled":
-		style.bg_color = Color("1b272d")
-	style.border_color = Color("4d5e61") if quiet else accent.darkened(0.3)
+		style.bg_color = Color("201f22")
+	style.border_color = Color("39363a") if quiet else accent.darkened(0.32)
 	if state == "hover" or state == "focus":
-		style.border_color = accent.lightened(0.12)
+		style.border_color = accent.lightened(0.2)
 	if state == "disabled":
-		style.border_color = Color("39464a")
+		style.border_color = Color("38363a")
 	style.set_border_width_all(1)
-	style.border_width_bottom = 4
-	style.set_corner_radius_all(6)
-	style.content_margin_left = 12
-	style.content_margin_right = 12
-	style.content_margin_top = 8
-	style.content_margin_bottom = 10 if state == "pressed" else 12
+	style.border_width_bottom = 2
+	style.set_corner_radius_all(10)
+	style.content_margin_left = 16
+	style.content_margin_right = 16
+	style.content_margin_top = 10
+	style.content_margin_bottom = 12 if state == "pressed" else 14
 	return style
 
 static func _panel_box(border: Color, inset: bool, reward := false) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("192831") if inset else (Color("273941") if reward else SURFACE)
+	style.bg_color = Color("19181d") if inset else (Color("29252a") if reward else SURFACE)
 	style.border_color = border
 	style.set_border_width_all(2 if reward else 1)
-	style.border_width_bottom = 4 if reward else 3
-	style.set_corner_radius_all(7)
+	style.border_width_bottom = 2
+	style.set_corner_radius_all(11)
 	style.content_margin_left = 14
 	style.content_margin_right = 14
 	style.content_margin_top = 11
 	style.content_margin_bottom = 13
 	style.shadow_color = Color(0.01, 0.025, 0.035, 0.30)
-	style.shadow_size = 3
-	style.shadow_offset = Vector2(0, 2)
+	style.shadow_size = 6 if reward else 4
+	style.shadow_offset = Vector2(0, 3)
 	return style
 
 static func _progress_background() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = DEEP
-	style.border_color = Color("52605f")
+	style.border_color = Color("464148")
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(5)
 	return style
@@ -104,25 +106,43 @@ static func style_panel(panel: PanelContainer, accent := EDGE, inset := false, r
 	if not _panel_styles.has(key):
 		_panel_styles[key] = _panel_box(accent, inset, reward)
 	panel.add_theme_stylebox_override("panel", _panel_styles[key])
+	if reward:
+		style_ornate_panel(panel)
+
+static func style_ornate_panel(panel: PanelContainer) -> void:
+	if _ornate_panel_style == null:
+		var style := StyleBoxTexture.new()
+		style.texture = MENU_FRAME
+		style.texture_margin_left = 150.0
+		style.texture_margin_right = 150.0
+		style.texture_margin_top = 150.0
+		style.texture_margin_bottom = 150.0
+		style.set_content_margin_all(62.0)
+		style.draw_center = true
+		_ornate_panel_style = style
+	panel.add_theme_stylebox_override("panel", _ornate_panel_style)
 
 static func style_card(button: Button, accent: Color, selected: bool, disabled := false) -> void:
 	for state in [&"normal", &"hover", &"pressed", &"focus", &"disabled"]:
 		var key := "%s:%s:%s:%s" % [accent.to_html(false), selected, disabled, state]
 		if not _card_styles.has(key):
 			var style := StyleBoxFlat.new()
-			style.bg_color = Color("27383d") if not disabled else Color("202b30")
+			style.bg_color = Color("29272d") if not disabled else Color("211f24")
 			if state == &"hover" or state == &"focus":
-				style.bg_color = Color("34454b")
+				style.bg_color = Color("3b3737")
 			elif state == &"pressed":
-				style.bg_color = Color("18252d")
+				style.bg_color = Color("19181d")
 			style.border_color = GOLD if selected else accent.darkened(0.16)
-			style.set_border_width_all(3 if selected else 2)
-			style.border_width_bottom = 5 if selected else 4
-			style.set_corner_radius_all(7)
-			style.content_margin_left = 10
-			style.content_margin_right = 10
-			style.content_margin_top = 9
-			style.content_margin_bottom = 12
+			style.set_border_width_all(2 if selected else 1)
+			style.border_width_bottom = 3 if selected else 2
+			style.set_corner_radius_all(12)
+			style.content_margin_left = 12
+			style.content_margin_right = 12
+			style.content_margin_top = 12
+			style.content_margin_bottom = 14
+			style.shadow_color = Color(0.82, 0.65, 0.32, 0.14) if selected else Color(0, 0, 0, 0.28)
+			style.shadow_size = 6 if selected else 3
+			style.shadow_offset = Vector2(0, 2)
 			_card_styles[key] = style
 		button.add_theme_stylebox_override(state, _card_styles[key])
 
@@ -184,22 +204,22 @@ static func health_fill_style(low_health: bool) -> StyleBoxFlat:
 
 static func navigation_style(accent: Color, selected: bool, state := "normal") -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("2c3740") if selected else Color("182630")
+	style.bg_color = Color("332e2d") if selected else Color("19181d")
 	if state == "hover" or state == "focus":
-		style.bg_color = Color("35434b")
+		style.bg_color = Color("403a36")
 	elif state == "pressed":
-		style.bg_color = Color("111c25")
+		style.bg_color = Color("17161a")
 	elif state == "disabled":
-		style.bg_color = Color("1b252c")
-	style.border_color = accent if selected else Color("52606a")
+		style.bg_color = Color("201f23")
+	style.border_color = accent if selected else Color("514d4b")
 	if state == "hover" or state == "focus":
 		style.border_color = Color("e4c87f")
 	if state == "disabled":
-		style.border_color = Color("39464a")
+		style.border_color = Color("3e3a3c")
 	style.set_border_width_all(1)
-	style.border_width_bottom = 4 if selected else 3
-	style.set_corner_radius_all(6)
-	style.set_content_margin_all(9)
+	style.border_width_bottom = 3 if selected else 2
+	style.set_corner_radius_all(10)
+	style.set_content_margin_all(12)
 	return style
 
 static func apply_screen_scale(root: Control, reduced_effects := false) -> void:

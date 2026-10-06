@@ -15,7 +15,7 @@ func refresh() -> void:
 	for child in get_children():
 		child.queue_free()
 	var audio_panel := PanelContainer.new()
-	CrownUI.style_panel(audio_panel, Color("7d9d8a"))
+	CrownUI.style_ornate_panel(audio_panel)
 	add_child(audio_panel)
 	var audio_box := VBoxContainer.new()
 	audio_box.add_theme_constant_override("separation", 12)
