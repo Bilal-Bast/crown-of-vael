@@ -1,34 +1,5 @@
 extends Control
 
-class CampaignRouteTrack extends Control:
-	var current_stage := 1
-
-	func set_stage(value: int) -> void:
-		current_stage = clampi(value, 1, 20)
-		queue_redraw()
-
-	func _draw() -> void:
-		if size.x <= 20.0:
-			return
-		var left := 8.0
-		var right := size.x - 8.0
-		var center_y := size.y * 0.5
-		var active_x := lerpf(left, right, float(current_stage - 1) / 19.0)
-		draw_line(Vector2(left, center_y), Vector2(right, center_y), Color("76817b", 0.68), 3.0, true)
-		draw_line(Vector2(left, center_y), Vector2(active_x, center_y), Color("d7ad5c", 0.92), 4.0, true)
-		for index in 20:
-			var x := lerpf(left, right, float(index) / 19.0)
-			var milestone := (index + 1) % 5 == 0
-			var boss := index == 19
-			var radius := 11.0 if milestone else 3.0
-			var color := Color("c86e62") if boss else (Color("edcb79") if index + 1 <= current_stage else Color("59645f"))
-			if index + 1 == current_stage:
-				draw_circle(Vector2(x, center_y), radius + 4.0, Color("a9deeb", 0.36))
-				draw_circle(Vector2(x, center_y), radius + 1.5, Color("dcebef"))
-			draw_circle(Vector2(x, center_y), radius, color)
-			if milestone and not boss:
-				draw_circle(Vector2(x, center_y), radius * 0.48, Color("b9873e"))
-
 const BattleScript = preload("res://scripts/combat/battle_controller.gd")
 const BattlefieldScript = preload("res://scripts/combat/battlefield.gd")
 const SkillBarScript = preload("res://scripts/skills/skill_bar.gd")
@@ -107,10 +78,8 @@ var login_popup: PopupPanel
 var adventure_screen: AdventureScreen
 var pve_service: PveService
 var current_run := {}
-var road_track: CampaignRouteTrack
 var stage_panel: PanelContainer
 var currency_panel: PanelContainer
-var stage_status_row: HBoxContainer
 var skills_screen: SkillsScreen
 var heroes_screen: HeroesScreen
 var summon_screen: SummonScreen
@@ -123,9 +92,6 @@ var heroes_exp_bar: ProgressBar
 var heroes_level_text: Label
 var selected_item_id := ""
 var stage_text: Label
-var region_text: Label
-var wave_text: Label
-var boss_text: Label
 var gold_text: Label
 var gems_text: Label
 var power_text: Label
@@ -137,7 +103,6 @@ var hero_hp_text: Label
 var battle_hero_portrait: HeroPortrait
 var hero_stats_text: Label
 var exp_bar: ProgressBar
-var message_text: Label
 var tutorial_text: Label
 var action_button: Button
 var upgrade_buttons: Dictionary = {}
@@ -510,71 +475,31 @@ func _build_stage_card() -> void:
 	stage_panel = panel
 	stage_panel.mouse_filter = Control.MOUSE_FILTER_PASS
 	var stage_style := StyleBoxFlat.new()
-	stage_style.bg_color = Color("11161a", 0.48)
-	stage_style.border_color = Color("c3a773", 0.60)
+	stage_style.bg_color = Color("11161a", 0.36)
+	stage_style.border_color = Color("c3a773", 0.52)
 	stage_style.set_border_width_all(1)
-	stage_style.set_corner_radius_all(12)
-	stage_style.content_margin_left = 12
-	stage_style.content_margin_right = 12
-	stage_style.content_margin_top = 5
-	stage_style.content_margin_bottom = 5
+	stage_style.set_corner_radius_all(10)
+	stage_style.content_margin_left = 8
+	stage_style.content_margin_right = 8
+	stage_style.content_margin_top = 3
+	stage_style.content_margin_bottom = 3
 	stage_panel.add_theme_stylebox_override("panel", stage_style)
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 0)
-	panel.add_child(box)
 	var heading := HBoxContainer.new()
-	heading.add_theme_constant_override("separation", 7)
-	box.add_child(heading)
-	var stage_emblem := TextureRect.new()
-	stage_emblem.name = "CampaignStageEmblem"
-	stage_emblem.custom_minimum_size = Vector2(38, 38)
-	stage_emblem.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	stage_emblem.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	stage_emblem.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	stage_emblem.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	stage_emblem.texture = PixelUiIcons.gold_coin()
-	heading.add_child(stage_emblem)
+	heading.add_theme_constant_override("separation", 8)
+	panel.add_child(heading)
 	stage_text = _label("", 36, PALE)
-	stage_text.add_theme_font_size_override("font_size", 28)
+	stage_text.add_theme_font_size_override("font_size", 30)
 	stage_text.clip_text = true
 	stage_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	heading.add_child(stage_text)
-	boss_text = _label("", 30, Color("ff9f84"))
-	boss_text.add_theme_font_size_override("font_size", 24)
-	boss_text.clip_text = true
-	heading.add_child(boss_text)
-	var context := HBoxContainer.new()
-	context.add_theme_constant_override("separation", 10)
-	box.add_child(context)
-	region_text = _label(str(CampaignData.REGIONS[0]["name"]), 24, Color("a9d6ad"))
-	region_text.add_theme_font_size_override("font_size", 24)
-	region_text.clip_text = true
-	region_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	context.add_child(region_text)
-	wave_text = _label("", 22, MUTED)
-	wave_text.add_theme_font_size_override("font_size", 22)
-	wave_text.clip_text = true
-	context.add_child(wave_text)
-	road_track = CampaignRouteTrack.new()
-	road_track.name = "CampaignRouteTrack"
-	road_track.custom_minimum_size.y = 24
-	box.add_child(road_track)
-	stage_status_row = HBoxContainer.new()
-	stage_status_row.add_theme_constant_override("separation", 6)
-	stage_status_row.visible = false
-	box.add_child(stage_status_row)
-	message_text = _label("", 20, Color("a6dee2"))
-	message_text.add_theme_font_size_override("font_size", 20)
-	message_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	message_text.clip_text = true
-	stage_status_row.add_child(message_text)
 	action_button = Button.new()
-	action_button.text = "RETRY BOSS"
-	action_button.custom_minimum_size = Vector2(150, 42)
-	action_button.add_theme_font_size_override("font_size", 21)
+	action_button.text = "RETRY"
+	action_button.custom_minimum_size = Vector2(118, 42)
+	action_button.add_theme_font_size_override("font_size", 20)
+	action_button.visible = false
 	CrownUI.set_button_role(action_button, &"DangerActionButton")
 	action_button.pressed.connect(_on_action_pressed)
-	stage_status_row.add_child(action_button)
+	heading.add_child(action_button)
 
 func _build_battle_area() -> void:
 	battlefield_host = Control.new()
@@ -1149,21 +1074,6 @@ func _refresh_ui() -> void:
 	var stage_style := stage_panel.get_theme_stylebox("panel") as StyleBoxFlat
 	if stage_style != null:
 		stage_style.border_color = Color("d6aa66", 0.88) if boss_stage else Color("c3a773", 0.65)
-	region_text.text = CampaignData.REGIONS[profile.region - 1]["name"] if campaign else battle.mode_detail()
-	road_track.visible = campaign
-	road_track.set_stage(profile.stage)
-	if not campaign:
-		wave_text.text = "%d enemies remaining" % _living_enemies()
-	elif profile.campaign_complete:
-		wave_text.text = "COMPLETE"
-	elif profile.stage == 20:
-		wave_text.text = "BOSS"
-	else:
-		wave_text.text = "W%d/3  •  %d LEFT" % [battle.wave, _living_enemies()]
-	boss_text.visible = campaign and profile.stage == 20 and battle.active
-	boss_text.text = "00:%02d" % ceili(battle.boss_time)
-	boss_text.add_theme_color_override("font_color", Color("ff786c") if battle.boss_time <= 10.0 else Color("ffb38d"))
-	boss_text.add_theme_font_size_override("font_size", 28 if battle.boss_time <= 10.0 else 24)
 	if skill_auto_button != null:
 		_update_skill_auto_button()
 	if heroes_exp_text != null:
@@ -1240,21 +1150,17 @@ func _format_upgrade_increase(stat: String, value: float) -> String:
 		return "%.0f%%" % (value * 100.0)
 	return _format_upgrade_stat(stat, value)
 
-func _show_message(value: String) -> void:
-	if message_text != null:
-		if value.contains(" | Wave "):
-			message_text.text = ""
-		else:
-			message_text.text = value
-		_update_stage_overlay_size()
+func _show_message(_value: String) -> void:
+	# Keep transient event text out of the compact stage badge.
+	pass
 
 func _update_stage_overlay_size() -> void:
-	if stage_panel == null or stage_status_row == null:
+	if stage_panel == null:
 		return
 	var retry_visible := action_button != null and action_button.visible
-	var show_status := not message_text.text.is_empty() or retry_visible
-	stage_status_row.visible = show_status
-	stage_panel.offset_bottom = 330.0 if retry_visible else (246.0 if show_status else 208.0)
+	stage_panel.anchor_left = 0.06
+	stage_panel.anchor_right = 0.52 if not retry_visible else 0.94
+	stage_panel.offset_bottom = 154.0 if not retry_visible else 190.0
 
 func _select_tab(tab_name: String) -> void:
 	if tab_name != "Battle" and tab_name == selected_tab:
