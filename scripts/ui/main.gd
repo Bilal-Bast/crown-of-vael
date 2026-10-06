@@ -104,8 +104,9 @@ var upgrade_values: Dictionary = {}
 var upgrade_costs: Dictionary = {}
 var upgrade_actions: Dictionary = {}
 var upgrade_coins: Dictionary = {}
-var battle_power_divider: PanelContainer
-var battle_power_value: Label
+var upgrade_mode_buttons: Dictionary = {}
+var upgrade_purchase_mode := "x1"
+var skill_auto_button: Button
 var nav_buttons: Dictionary = {}
 var menu_drawer: VBoxContainer
 var menu_toggle: Button
@@ -349,31 +350,24 @@ func _screen_content(scroll: ScrollContainer) -> VBoxContainer:
 
 func _build_top_bar(root: VBoxContainer) -> void:
 	var panel := _panel()
+	panel.name = "TopCurrencyPanel"
 	root.add_child(panel)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 7)
+	box.add_theme_constant_override("separation", 4)
 	panel.add_child(box)
 	var frame := StyleBoxFlat.new()
 	frame.bg_color = Color("182633")
 	frame.border_color = Color("c29b59")
 	frame.border_width_top = 3
 	frame.border_width_bottom = 3
-	frame.set_content_margin_all(15)
+	frame.set_content_margin_all(8)
 	panel.add_theme_stylebox_override("panel", frame)
-	var title := _label("CROWN  OF  VAEL", 36, GOLD)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(title)
 	var metrics := HBoxContainer.new()
-	metrics.add_theme_constant_override("separation", 16)
+	metrics.add_theme_constant_override("separation", 8)
 	box.add_child(metrics)
 	gold_text = _metric(metrics, "GOLD", GOLD)
 	gems_text = _metric(metrics, "GEMS", Color("a5dded"))
 	power_text = _metric(metrics, "POWER", Color("d9e9ca"))
-	var power_help := Button.new()
-	power_help.text = "?"
-	power_help.custom_minimum_size = Vector2(54, 54)
-	power_help.pressed.connect(_show_power_help)
-	metrics.add_child(power_help)
 
 func _metric(parent: HBoxContainer, heading: String, value_color: Color) -> Label:
 	var metric_panel := PanelContainer.new()
@@ -392,9 +386,23 @@ func _metric(parent: HBoxContainer, heading: String, value_color: Color) -> Labe
 	var caption := _label(heading, 22, MUTED)
 	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	cell.add_child(caption)
+	var value_row := HBoxContainer.new()
+	value_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	value_row.add_theme_constant_override("separation", 5)
+	cell.add_child(value_row)
+	var currency_icon: Texture2D = PixelUiIcons.gold_coin() if heading == "GOLD" else (PixelUiIcons.gems() if heading == "GEMS" else null)
+	if currency_icon != null:
+		var icon := TextureRect.new()
+		icon.custom_minimum_size = Vector2(28, 28)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		icon.texture = currency_icon
+		icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		value_row.add_child(icon)
 	var value := _label("0", 34, value_color)
 	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	cell.add_child(value)
+	value_row.add_child(value)
 	return value
 
 func _build_stage_card(root: VBoxContainer) -> void:
@@ -478,45 +486,26 @@ func _build_battle_area() -> void:
 	var skill_row := HBoxContainer.new()
 	skill_row.add_theme_constant_override("separation", 9)
 	skill_box.add_child(skill_row)
-	var auto_badge := PanelContainer.new()
-	auto_badge.custom_minimum_size = Vector2(100, 96)
+	skill_auto_button = Button.new()
+	skill_auto_button.name = "SkillAutoButton"
+	skill_auto_button.custom_minimum_size = Vector2(82, 94)
+	skill_auto_button.pressed.connect(_toggle_skill_auto)
 	var auto_style := StyleBoxFlat.new()
 	auto_style.bg_color = Color("172525")
 	auto_style.border_color = Color("7b7159")
 	auto_style.set_border_width_all(2)
 	auto_style.border_width_bottom = 4
 	auto_style.set_corner_radius_all(20)
-	auto_badge.add_theme_stylebox_override("panel", auto_style)
-	skill_row.add_child(auto_badge)
-	var auto_box := VBoxContainer.new()
-	auto_box.alignment = BoxContainer.ALIGNMENT_CENTER
-	auto_badge.add_child(auto_box)
-	var auto_title := _label("AUTO", 26, GOLD)
-	auto_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	auto_box.add_child(auto_title)
-	var auto_state := _label("● ON", 19, Color("a9d6ad"))
-	auto_state.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	auto_box.add_child(auto_state)
+	skill_auto_button.add_theme_stylebox_override("normal", auto_style)
+	skill_auto_button.add_theme_stylebox_override("hover", auto_style)
+	skill_auto_button.add_theme_font_size_override("font_size", 21)
+	skill_row.add_child(skill_auto_button)
 	skill_bar = SkillBarScript.new()
 	skill_bar.custom_minimum_size = Vector2(530, 104)
 	skill_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	skill_bar.battle = battle
+	skill_bar.manual_skill_requested.connect(_on_manual_skill_requested)
 	skill_row.add_child(skill_bar)
-
-	battle_power_divider = PanelContainer.new()
-	battle_power_divider.name = "BattlePowerDivider"
-	battle_area.add_child(battle_power_divider)
-	var power_style := StyleBoxFlat.new()
-	power_style.bg_color = Color("171f2b")
-	power_style.border_color = Color("b18a4f")
-	power_style.border_width_top = 3
-	power_style.border_width_bottom = 3
-	power_style.set_content_margin_all(5)
-	battle_power_divider.add_theme_stylebox_override("panel", power_style)
-	battle_power_divider.custom_minimum_size.y = 48
-	battle_power_value = _label("POWER  0", 36, GOLD)
-	battle_power_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	battle_power_divider.add_child(battle_power_value)
 
 	battle_lower_scroll = ScrollContainer.new()
 	battle_lower_scroll.name = "BattleLowerControlsScroll"
@@ -540,8 +529,18 @@ func _build_battle_area() -> void:
 	var heading_label := _label("BATTLE UPGRADES", 30, GOLD)
 	heading_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	upgrade_heading.add_child(heading_label)
-	upgrade_heading.add_child(_label("TAP TO ENHANCE", 18, MUTED))
-	upgrade_list_scroll.name = "BattleUpgradeList"
+	var mode_row := HBoxContainer.new()
+	mode_row.add_theme_constant_override("separation", 4)
+	upgrade_heading.add_child(mode_row)
+	for mode in ["x1", "x10", "MAX"]:
+		var mode_button := Button.new()
+		mode_button.name = "UpgradeMode_%s" % mode
+		mode_button.text = mode
+		mode_button.custom_minimum_size = Vector2(60, 42)
+		mode_button.add_theme_font_size_override("font_size", 18)
+		mode_button.pressed.connect(_set_upgrade_purchase_mode.bind(mode))
+		mode_row.add_child(mode_button)
+		upgrade_mode_buttons[mode] = mode_button
 	var upgrade_rows := VBoxContainer.new()
 	upgrade_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	upgrade_rows.add_theme_constant_override("separation", 7)
@@ -562,13 +561,17 @@ func _build_battle_area() -> void:
 		var card_row := HBoxContainer.new()
 		card_row.add_theme_constant_override("separation", 9)
 		card.add_child(card_row)
+		var icon_slot := Control.new()
+		icon_slot.custom_minimum_size = Vector2(84, 84)
+		icon_slot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		card_row.add_child(icon_slot)
 		var icon := TextureRect.new()
-		icon.custom_minimum_size = Vector2(84, 84)
-		icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		icon.texture = _upgrade_stat_icon(stat)
-		card_row.add_child(icon)
+		icon.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		icon_slot.add_child(icon)
 		var details := VBoxContainer.new()
 		details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		details.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -606,6 +609,8 @@ func _build_battle_area() -> void:
 		button_content.add_child(price_row)
 		var coin := TextureRect.new()
 		coin.custom_minimum_size = Vector2(25, 25)
+		coin.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		coin.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		coin.texture = PixelUiIcons.gold_coin()
 		coin.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		price_row.add_child(coin)
@@ -616,6 +621,8 @@ func _build_battle_area() -> void:
 		upgrade_values[stat] = value_label
 		upgrade_costs[stat] = cost_label
 		upgrade_coins[stat] = coin
+	_set_upgrade_purchase_mode("x1")
+	_update_skill_auto_button()
 
 func _update_battlefield_height() -> void:
 	if battlefield_host == null:
@@ -640,7 +647,7 @@ func _build_navigation(root: VBoxContainer) -> void:
 	rows.add_child(menu_drawer)
 	menu_drawer.visible = false
 	_drawer_group(menu_drawer, "JOURNEY", ["Adventure"])
-	_drawer_group(menu_drawer, "CHARACTER", ["Skills"])
+	_drawer_group(menu_drawer, "CHARACTER", ["Skills", "Companions", "Artifacts"])
 	_drawer_group(menu_drawer, "REWARDS", ["Quests", "Login", "Pass", "Shop"])
 	_drawer_group(menu_drawer, "COMMUNITY", ["Account", "Social"])
 	_drawer_group(menu_drawer, "PREFERENCES", ["Settings"])
@@ -1045,8 +1052,8 @@ func _refresh_ui() -> void:
 	boss_text.text = "00:%02d" % ceili(battle.boss_time)
 	boss_text.add_theme_color_override("font_color", Color("ff786c") if battle.boss_time <= 10.0 else Color("ffb38d"))
 	boss_text.add_theme_font_size_override("font_size", 39 if battle.boss_time <= 10.0 else 34)
-	if battle_power_value != null:
-		battle_power_value.text = "POWER  %s" % NumberFormatScript.compact(profile.power())
+	if skill_auto_button != null:
+		_update_skill_auto_button()
 	if heroes_exp_text != null:
 		heroes_exp_text.text = "HERO EXP  %d / %d" % [profile.exp, GameData.exp_to_next(profile.level)]
 		heroes_exp_bar.max_value = GameData.exp_to_next(profile.level)
@@ -1057,14 +1064,14 @@ func _refresh_ui() -> void:
 		var rank := int(profile.upgrades.get(stat, 0))
 		var max_rank := GameData.upgrade_max_rank(stat)
 		var at_max_rank := rank >= max_rank
-		var cost := GameData.upgrade_cost(rank, stat)
+		var quote := _upgrade_quote(stat, rank)
 		var button: Button = upgrade_buttons[stat]
 		upgrade_ranks[stat].text = "LV %d" % rank
 		upgrade_values[stat].text = _format_upgrade_stat(stat, float(stats.get(stat, 0.0)))
-		upgrade_costs[stat].text = "MAX" if at_max_rank else NumberFormatScript.compact(cost)
-		upgrade_coins[stat].visible = not at_max_rank
+		upgrade_costs[stat].text = "MAX" if at_max_rank else NumberFormatScript.compact(int(quote["cost"]))
+		upgrade_coins[stat].visible = not at_max_rank and int(quote["count"]) > 0
 		upgrade_actions[stat].text = "MAX LEVEL" if at_max_rank else "ENHANCE"
-		button.disabled = profile.gold < cost or at_max_rank
+		button.disabled = int(quote["count"]) <= 0 or at_max_rank
 		upgrade_actions[stat].add_theme_color_override("font_color", Color("99a39c") if button.disabled else Color("e8e4d5"))
 		upgrade_costs[stat].add_theme_color_override("font_color", Color("99a39c") if button.disabled else GOLD)
 	_maybe_show_upgrade_prompt()
@@ -1434,19 +1441,36 @@ func _build_equipment_screen() -> void:
 		equipment_content.add_child(button)
 	_section_title(equipment_content, "INVENTORY  •  %d ITEMS" % profile.inventory.size())
 	var grid := GridContainer.new()
-	grid.columns = 2
+	grid.columns = 3
 	grid.add_theme_constant_override("h_separation", 8)
 	grid.add_theme_constant_override("v_separation", 8)
 	equipment_content.add_child(grid)
 	for item in profile.inventory:
 		var button := Button.new()
-		button.custom_minimum_size = Vector2(485, 132)
-		button.add_theme_font_size_override("font_size", 30)
-		button.text = "%s\n+%d  %s" % [EquipmentData.ITEMS[item["kind"]]["name"], item["level"], EquipmentData.RARITIES[int(item["rarity"])]]
-		button.icon = PixelUiIcons.item(str(item["kind"]), int(item["rarity"]))
-		button.expand_icon = true
-		button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		button.custom_minimum_size = Vector2(320, 260)
+		button.text = ""
 		_style_rarity(button, int(item["rarity"]))
+		var contents := VBoxContainer.new()
+		contents.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		contents.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		contents.alignment = BoxContainer.ALIGNMENT_CENTER
+		contents.add_theme_constant_override("separation", 1)
+		button.add_child(contents)
+		var icon := TextureRect.new()
+		icon.custom_minimum_size = Vector2(0, 170)
+		icon.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		icon.texture = PixelUiIcons.item(str(item["kind"]), int(item["rarity"]))
+		contents.add_child(icon)
+		var item_name := _label(EquipmentData.ITEMS[item["kind"]]["name"], 22, EquipmentData.COLORS[int(item["rarity"])])
+		item_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		item_name.clip_text = true
+		contents.add_child(item_name)
+		var item_rank := _label("LV %d  •  %s" % [int(item["level"]), EquipmentData.RARITIES[int(item["rarity"])].to_upper()], 18, PALE)
+		item_rank.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		contents.add_child(item_rank)
 		button.pressed.connect(_select_item.bind(str(item["id"])))
 		grid.add_child(button)
 
@@ -1590,16 +1614,70 @@ func _update_navigation() -> void:
 		dot.visible = badge
 
 func _buy_upgrade(stat: String) -> void:
-	if profile.buy_upgrade(stat):
+	var limit := 1 if upgrade_purchase_mode == "x1" else (10 if upgrade_purchase_mode == "x10" else -1)
+	var bought := profile.buy_upgrade_ranks(stat, limit)
+	if bought > 0:
 		_play_audio("upgrade", "UI")
 		if battle.active:
 			battle.refresh_hero_stats()
-		_show_message("%s upgraded! Your power increased." % stat.to_upper())
+		_show_message("%s %s upgraded. Power increased." % [stat.to_upper(), "rank" if bought == 1 else "%d ranks" % bought])
 		_refresh_ui()
 		_schedule_cloud_sync()
 		if stat == "atk" and tutorials != null and tutorials.onboarding_active() and not bool(profile.tutorial_state.steps.get("upgrade", false)):
 			tutorials.mark_step("upgrade")
 			_show_onboarding_step("waves")
+
+func _upgrade_quote(stat: String, starting_rank: int = -1) -> Dictionary:
+	var rank := int(profile.upgrades.get(stat, 0)) if starting_rank < 0 else starting_rank
+	var limit := 1 if upgrade_purchase_mode == "x1" else (10 if upgrade_purchase_mode == "x10" else -1)
+	var count := 0
+	var total_cost := 0
+	var remaining := profile.gold
+	while limit < 0 or count < limit:
+		if rank >= GameData.upgrade_max_rank(stat):
+			break
+		var cost := GameData.upgrade_cost(rank, stat)
+		if remaining < cost:
+			break
+		remaining -= cost
+		total_cost += cost
+		rank += 1
+		count += 1
+	return {"count": count, "cost": total_cost}
+
+func _set_upgrade_purchase_mode(mode: String) -> void:
+	if not ["x1", "x10", "MAX"].has(mode):
+		return
+	upgrade_purchase_mode = mode
+	for key in upgrade_mode_buttons:
+		var button := upgrade_mode_buttons[key] as Button
+		var selected := str(key) == mode
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color("72542f") if selected else Color("202b30")
+		style.border_color = Color("e9c87d") if selected else Color("5f665e")
+		style.set_border_width_all(2)
+		style.border_width_bottom = 4
+		style.set_corner_radius_all(5)
+		button.add_theme_stylebox_override("normal", style)
+		button.add_theme_stylebox_override("hover", style)
+		button.add_theme_color_override("font_color", GOLD if selected else PALE)
+	_refresh_ui()
+
+func _toggle_skill_auto() -> void:
+	battle.skill_runtime.auto_enabled = not battle.skill_runtime.auto_enabled
+	_update_skill_auto_button()
+	skill_bar.queue_redraw()
+
+func _update_skill_auto_button() -> void:
+	if skill_auto_button == null or battle == null:
+		return
+	var enabled := battle.skill_runtime.auto_enabled
+	skill_auto_button.text = "AUTO\n%s" % ("ON" if enabled else "OFF")
+	skill_auto_button.add_theme_color_override("font_color", Color("a9d6ad") if enabled else Color("bd8d84"))
+
+func _on_manual_skill_requested(slot: int) -> void:
+	if battle != null and battle.active and battle.skill_runtime.manual_cast(slot, battle):
+		skill_bar.queue_redraw()
 
 func _on_stage_cleared() -> void:
 	_schedule_cloud_sync()
