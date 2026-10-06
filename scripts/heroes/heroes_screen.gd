@@ -39,13 +39,19 @@ func refresh() -> void:
 		_build_roster()
 
 func _header() -> void:
-	add_child(_label("HEROES  •  SHARED LEVEL %d" % profile.level, 37, Color("e9c87d")))
-	add_child(_label("EXP %d/%d  •  Gold %d  •  Crests %d  •  Generic Pieces %d" % [profile.exp, GameData.exp_to_next(profile.level), profile.gold, profile.evolution_crests, profile.hero_pieces], 27, Color("e9e8d7")))
-	add_child(_label("Gear, skills, companions, artifacts, and Gold upgrades are shared.", 27, Color("aebdb4")))
+	var panel := _panel(Color("d9b66f"))
+	CrownUI.style_ornate_panel(panel)
+	add_child(panel)
+	var copy := VBoxContainer.new()
+	copy.add_theme_constant_override("separation", 4)
+	panel.add_child(copy)
+	copy.add_child(_label("HEROES  •  SHARED LEVEL %d" % profile.level, 37, Color("e9c87d")))
+	copy.add_child(_label("EXP %d/%d  •  Gold %d  •  Crests %d  •  Generic Pieces %d" % [profile.exp, GameData.exp_to_next(profile.level), profile.gold, profile.evolution_crests, profile.hero_pieces], 27, Color("e9e8d7")))
+	copy.add_child(_label("Gear, skills, companions, artifacts, and Gold upgrades are shared.", 27, Color("aebdb4")))
 	if battle.active:
 		var retreat := _button("RETREAT TO SWITCH HERO  •  ENDS CURRENT FIGHT")
 		retreat.pressed.connect(on_retreat)
-		add_child(retreat)
+		copy.add_child(retreat)
 
 func _build_roster() -> void:
 	add_child(_label("HERO ROSTER", 32, Color("e9c87d")))
@@ -55,6 +61,8 @@ func _build_roster() -> void:
 		var owned := bool(record["unlocked"])
 		var card_border: Color = HeroArtService.frame_color(int(record["evolution"])) if id == "knight" and owned else (EquipmentData.COLORS[int(data["rarity"])] if owned else Color("586462"))
 		var panel := _panel(card_border)
+		if id == profile.selected_hero_id:
+			CrownUI.style_ornate_panel(panel)
 		add_child(panel)
 		var box := VBoxContainer.new()
 		panel.add_child(box)
