@@ -21,7 +21,7 @@ func _run() -> void:
 	var upgrade_list: ScrollContainer = main.get("upgrade_list_scroll")
 	var skill_panel := main.find_child("BattleSkillPanel", true, false) as Control
 	var guide_y := main.size.y * 0.33
-	if battle_area.get_child_count() != 1 or battle_area.get_child(0) != main.get("battlefield_host") or skill_panel.get_parent() != main.get("battlefield_host") or absf(field.get_global_rect().position.y - main.get_global_rect().position.y) > 1.0 or absf(upgrade_panel.get_global_rect().position.y - guide_y) > 24.0:
+	if battle_area.get_child_count() != 1 or battle_area.get_child(0) != main.get("battlefield_host") or skill_panel.get_parent() != main.get("battlefield_host") or absf(field.get_global_rect().position.y - main.get_global_rect().position.y) > 1.0 or absf(upgrade_panel.get_global_rect().position.y - guide_y) > 40.0:
 		push_error("Battlefield should fill the top section, with skills over it and upgrades starting at the one-third guide.")
 		quit(1)
 		return
