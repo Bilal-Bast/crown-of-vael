@@ -13,17 +13,19 @@ func _draw() -> void:
 	var scale_factor := minf(size.x / 210.0, size.y / 250.0)
 	draw_set_transform(Vector2((size.x - 210.0 * scale_factor) * 0.5, (size.y - 250.0 * scale_factor) * 0.5), 0.0, Vector2.ONE * scale_factor)
 	draw_rect(Rect2(0, 0, 210, 250), Color("173034"))
-	var border := Color("efcf8e") if profile_frame == "golden_frame" else HeroArtService.frame_color(evolution) if hero_id == "knight" else Color("75827d")
+	var border := Color("efcf8e") if profile_frame == "golden_frame" else HeroArtService.frame_color_for_hero(hero_id, evolution)
 	draw_rect(Rect2(3, 3, 204, 244), border, false, 5)
 	draw_circle(Vector2(160, 42), 28, Color("d9c384", 0.45))
+	var portrait_texture := HeroArtService.texture_for_hero(hero_id, evolution, "portrait")
+	if portrait_texture != null:
+		var aspect := float(portrait_texture.get_width()) / float(portrait_texture.get_height())
+		var width := minf(210.0, 250.0 * aspect)
+		var height := width / aspect
+		draw_texture_rect(portrait_texture, Rect2((210.0 - width) * 0.5, 250.0 - height, width, height), false)
+		if locked_preview:
+			draw_rect(Rect2(0, 0, 210, 250), Color("10191a", 0.48))
+		return
 	if hero_id == "knight":
-		var portrait_texture := HeroArtService.texture_for(evolution, "portrait")
-		if portrait_texture != null:
-			var aspect := float(portrait_texture.get_width()) / float(portrait_texture.get_height())
-			var width := minf(210.0, 250.0 * aspect)
-			var height := width / aspect
-			draw_texture_rect(portrait_texture, Rect2((210.0 - width) * 0.5, 250.0 - height, width, height), false)
-			return
 		if locked_preview:
 			_draw_variant()
 			draw_rect(Rect2(0, 0, 210, 250), Color("10191a", 0.63))

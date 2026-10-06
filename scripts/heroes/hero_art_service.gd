@@ -14,6 +14,9 @@ const FORM_META := [
 	{"scale": 0.7875, "offset": Vector2.ZERO, "portrait_scale": 1.0, "attack_duration": 0.26, "hit_duration": 0.30, "aura": 0.62},
 ]
 const BASE := "res://assets/heroes/knight"
+const OTHER_HEROES := ["mage", "ranger", "assassin", "necromancer"]
+const OTHER_FRAME_COLORS := {"mage": Color("b46e9f"), "ranger": Color("86a66b"), "assassin": Color("9876b9"), "necromancer": Color("7e6e9e")}
+const OTHER_BASES := {"mage": "res://assets/heroes/mage", "ranger": "res://assets/heroes/ranger", "assassin": "res://assets/heroes/assassin", "necromancer": "res://assets/heroes/necromancer"}
 const SQUIRE_FILES := {"idle": "squire_idle.png", "run": "squire_run.png", "attack": "squire_attack.png", "guard": "squire_guard.png", "hit": "squire_hit.png", "portrait": "squire_portrait.png"}
 const STANDARD_FILES := {"idle": "idle.png", "run": "run.png", "attack": "attack.png", "guard": "guard.png", "hit": "hit.png", "portrait": "portrait.png", "skill": "skill.png", "death": "death.png", "evolution_fx": "evolution_fx.png", "aura": "aura.png"}
 static var _texture_cache: Dictionary = {}
@@ -53,18 +56,44 @@ static func texture_for(evolution: int, slot: String) -> Texture2D:
 	_texture_cache[path] = texture
 	return texture
 
+static func asset_path_for_hero(hero_id: String, evolution: int, slot: String) -> String:
+	if hero_id == "knight":
+		return asset_path(evolution, slot)
+	if not OTHER_BASES.has(hero_id) or slot not in STANDARD_FILES:
+		return ""
+	return "%s/%s" % [OTHER_BASES[hero_id], STANDARD_FILES[slot]]
+
+static func texture_for_hero(hero_id: String, evolution: int, slot: String) -> Texture2D:
+	if hero_id == "knight":
+		return texture_for(evolution, slot)
+	var path := asset_path_for_hero(hero_id, evolution, slot)
+	if path.is_empty() or not ResourceLoader.exists(path, "Texture2D"):
+		return null
+	if _texture_cache.has(path):
+		return _texture_cache[path] as Texture2D
+	_load_counts[path] = int(_load_counts.get(path, 0)) + 1
+	var texture := ResourceLoader.load(path, "Texture2D") as Texture2D
+	_texture_cache[path] = texture
+	return texture
+
 static func metadata(evolution: int) -> Dictionary:
 	return FORM_META[clampi(evolution, 0, FORM_META.size() - 1)]
 
+static func metadata_for_hero(hero_id: String, evolution: int) -> Dictionary:
+	return metadata(evolution) if hero_id == "knight" else {"scale": 0.675, "offset": Vector2.ZERO, "portrait_scale": 1.0, "attack_duration": 0.26, "hit_duration": 0.30, "aura": 0.0}
+
 static func animation_frame(form: int, slot: String, frame: int) -> Texture2D:
-	var sheet := texture_for(form, slot)
+	return animation_frame_for_hero("knight", form, slot, frame)
+
+static func animation_frame_for_hero(hero_id: String, form: int, slot: String, frame: int) -> Texture2D:
+	var sheet := texture_for_hero(hero_id, form, slot)
 	if sheet == null or slot == "portrait":
 		return sheet
 	var frame_width := sheet.get_width() / 4
 	if frame_width <= 0 or sheet.get_height() != 256 or sheet.get_width() != 1024:
 		return null
 	var frame_index := posmod(frame, 4)
-	var key := "%d:%s:%d" % [clampi(form, 0, 4), slot, frame_index]
+	var key := "%s:%d:%s:%d" % [hero_id, clampi(form, 0, 4), slot, frame_index]
 	if _frame_cache.has(key):
 		return _frame_cache[key] as Texture2D
 	var atlas := AtlasTexture.new()
@@ -81,6 +110,9 @@ static func animation_frame_count(slot: String) -> int:
 
 static func frame_color(evolution: int) -> Color:
 	return FRAME_COLORS[clampi(evolution, 0, FRAME_COLORS.size() - 1)]
+
+static func frame_color_for_hero(hero_id: String, evolution: int) -> Color:
+	return frame_color(evolution) if hero_id == "knight" else OTHER_FRAME_COLORS.get(hero_id, Color("75827d"))
 
 static func validation_report() -> Array[String]:
 	var warnings: Array[String] = []
@@ -100,6 +132,19 @@ static func validation_report() -> Array[String]:
 					warnings.append("Invalid portrait dimensions: %s" % resolved)
 			elif image.get_width() != 1024 or image.get_height() != 256:
 				warnings.append("Invalid four-frame %s sheet: %s" % [slot, resolved])
+	for hero_id in OTHER_HEROES:
+		for slot in ["idle", "run", "attack", "guard", "hit", "portrait"]:
+			var path := asset_path_for_hero(hero_id, 0, slot)
+			var texture := texture_for_hero(hero_id, 0, slot)
+			if texture == null:
+				warnings.append("Missing %s art for %s: %s" % [slot, hero_id, path])
+				continue
+			var image := texture.get_image()
+			if slot == "portrait":
+				if image.get_width() != 256 or image.get_height() != 256:
+					warnings.append("Invalid %s portrait: %s" % [hero_id, path])
+			elif image.get_width() != 1024 or image.get_height() != 256:
+				warnings.append("Invalid %s four-frame %s sheet: %s" % [hero_id, slot, path])
 	return warnings
 
 static func cached_load_count(path: String) -> int:
