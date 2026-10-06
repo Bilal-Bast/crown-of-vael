@@ -445,11 +445,11 @@ func _build_top_bar() -> void:
 	box.add_theme_constant_override("separation", 1)
 	panel.add_child(box)
 	var metrics := HBoxContainer.new()
-	metrics.add_theme_constant_override("separation", 5)
+	metrics.add_theme_constant_override("separation", 4)
 	box.add_child(metrics)
+	power_text = _metric(metrics, "POWER", Color("d9e9ca"))
 	gold_text = _metric(metrics, "GOLD", GOLD)
 	gems_text = _metric(metrics, "GEMS", Color("a5dded"))
-	power_text = _metric(metrics, "POWER", Color("d9e9ca"))
 	var hero_status := HBoxContainer.new()
 	hero_status.add_theme_constant_override("separation", 8)
 	box.add_child(hero_status)
@@ -475,11 +475,11 @@ func _metric(parent: HBoxContainer, heading: String, value_color: Color) -> Labe
 	capsule_edge.a = 0.78
 	capsule.border_color = capsule_edge
 	capsule.set_border_width_all(2)
-	capsule.set_corner_radius_all(14)
-	capsule.content_margin_left = 10
-	capsule.content_margin_right = 10
-	capsule.content_margin_top = 3
-	capsule.content_margin_bottom = 3
+	capsule.set_corner_radius_all(12)
+	capsule.content_margin_left = 7
+	capsule.content_margin_right = 7
+	capsule.content_margin_top = 2
+	capsule.content_margin_bottom = 2
 	metric_panel.add_theme_stylebox_override("panel", capsule)
 	metric_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	metric_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -487,29 +487,25 @@ func _metric(parent: HBoxContainer, heading: String, value_color: Color) -> Labe
 	var value_row := HBoxContainer.new()
 	value_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	value_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	value_row.add_theme_constant_override("separation", 5)
+	value_row.add_theme_constant_override("separation", 4)
 	var metric_box := VBoxContainer.new()
 	metric_box.alignment = BoxContainer.ALIGNMENT_CENTER
 	metric_box.add_theme_constant_override("separation", 0)
 	metric_panel.add_child(metric_box)
-	var heading_label := _label(heading, 14, MUTED)
-	heading_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	heading_label.add_theme_font_size_override("font_size", 14)
-	metric_box.add_child(heading_label)
 	metric_box.add_child(value_row)
 	metric_panel.tooltip_text = heading
 	var currency_icon: Texture2D = PixelUiIcons.gold_coin() if heading == "GOLD" else (PixelUiIcons.gems() if heading == "GEMS" else PixelUiIcons.navigation("Battle"))
 	if currency_icon != null:
 		var icon := TextureRect.new()
-		icon.custom_minimum_size = Vector2(18, 18)
+		icon.custom_minimum_size = Vector2(22, 22)
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		icon.texture = currency_icon
 		icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		value_row.add_child(icon)
-	var value := _label("0", 28, value_color)
-	value.add_theme_font_size_override("font_size", 18)
+	var value := _label("0", 26, value_color)
+	value.add_theme_font_size_override("font_size", 17)
 	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	value_row.add_child(value)
 	return value
