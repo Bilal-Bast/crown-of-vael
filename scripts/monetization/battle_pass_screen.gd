@@ -19,9 +19,15 @@ func refresh() -> void:
 	for child in get_children():
 		remove_child(child)
 		child.queue_free()
-	add_child(_label("BATTLE PASS • SEASON 1", 40))
-	add_child(_label("%s to %s  •  Level %d/50  •  %d XP" % [profile.bp_season.start, profile.bp_season.end, profile.bp_season.level, profile.bp_season.xp], 27))
-	add_child(_label("Daily quests +%d XP  •  Weekly quests +%d XP" % [MonetizationData.DAILY_QUEST_XP, MonetizationData.WEEKLY_QUEST_XP], 25))
+	var header := PanelContainer.new()
+	CrownUI.style_ornate_panel(header)
+	add_child(header)
+	var summary := VBoxContainer.new()
+	summary.add_theme_constant_override("separation", 4)
+	header.add_child(summary)
+	summary.add_child(_label("BATTLE PASS  /  SEASON 1", 40))
+	summary.add_child(_label("%s to %s  •  Level %d/50  •  %d XP" % [profile.bp_season.start, profile.bp_season.end, profile.bp_season.level, profile.bp_season.xp], 27))
+	summary.add_child(_label("Daily quests +%d XP  •  Weekly quests +%d XP" % [MonetizationData.DAILY_QUEST_XP, MonetizationData.WEEKLY_QUEST_XP], 25))
 	var row := HBoxContainer.new()
 	add_child(row)
 	for track in [false, true]:

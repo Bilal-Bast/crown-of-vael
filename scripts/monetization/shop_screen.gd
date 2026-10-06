@@ -23,8 +23,14 @@ func refresh() -> void:
 		if child == confirm: continue
 		remove_child(child)
 		child.queue_free()
-	add_child(_label("ROYAL SHOP • %d GEMS" % profile.gems, 40))
-	add_child(_label("Development purchases and simulated rewarded ads", 25))
+	var header := PanelContainer.new()
+	CrownUI.style_ornate_panel(header)
+	add_child(header)
+	var heading := VBoxContainer.new()
+	heading.add_theme_constant_override("separation", 4)
+	header.add_child(heading)
+	heading.add_child(_label("ROYAL SHOP  /  %d GEMS" % profile.gems, 40))
+	heading.add_child(_label("Development purchases and simulated rewarded ads", 25))
 	var tabs := GridContainer.new()
 	tabs.columns = 3
 	add_child(tabs)
