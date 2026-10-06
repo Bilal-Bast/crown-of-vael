@@ -89,6 +89,7 @@ func _world_map() -> void:
 		var difficulty_button := _button(CampaignData.DIFFICULTIES[index].substr(0, 3).to_upper())
 		difficulty_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		difficulty_button.disabled = index > profile.highest_difficulty_unlocked
+		CrownUI.style_tab(difficulty_button, index == map_difficulty, Color("d9b66f"))
 		difficulty_button.pressed.connect(_choose_difficulty.bind(index))
 		difficulty_row.add_child(difficulty_button)
 	for index in CampaignData.REGIONS.size():
@@ -246,8 +247,14 @@ func _back() -> void:
 	add_child(button)
 
 func _heading(title: String, subtitle: String) -> void:
-	add_child(_label(title, 40, Color("e9c87d")))
-	add_child(_label(subtitle, 29, Color("aebdb4")))
+	var panel := PanelContainer.new()
+	CrownUI.style_ornate_panel(panel)
+	add_child(panel)
+	var copy := VBoxContainer.new()
+	copy.add_theme_constant_override("separation", 4)
+	panel.add_child(copy)
+	copy.add_child(_label(title, 40, Color("e9c87d")))
+	copy.add_child(_label(subtitle, 29, Color("aebdb4")))
 
 func _card(title: String, detail: String, reward: String, action: String, callback: Callable, disabled: bool = false) -> void:
 	var panel := PanelContainer.new()
