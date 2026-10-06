@@ -789,17 +789,27 @@ func add_rewards(reward_gold: int, reward_exp: int, combat_gold: bool = true) ->
 	return leveled_up
 
 func buy_upgrade(stat: String) -> bool:
+	return buy_upgrade_ranks(stat, 1) == 1
+
+func buy_upgrade_ranks(stat: String, purchase_limit: int = 1) -> int:
 	if GameData.UPGRADEABLE_STATS.has(stat) and not upgrades.has(stat):
 		upgrades[stat] = 0
 	if not upgrades.has(stat):
-		return false
+		return 0
+	var bought := 0
 	var rank := int(upgrades[stat])
-	if rank >= GameData.upgrade_max_rank(stat):
-		return false
-	var cost := GameData.upgrade_cost(rank, stat)
-	if gold < cost:
-		return false
-	gold -= cost
-	upgrades[stat] = int(upgrades[stat]) + 1
-	save()
-	return true
+	var remaining_gold := gold
+	while purchase_limit < 0 or bought < purchase_limit:
+		if rank >= GameData.upgrade_max_rank(stat):
+			break
+		var cost := GameData.upgrade_cost(rank, stat)
+		if remaining_gold < cost:
+			break
+		remaining_gold -= cost
+		rank += 1
+		bought += 1
+	if bought > 0:
+		gold = remaining_gold
+		upgrades[stat] = rank
+		save()
+	return bought
