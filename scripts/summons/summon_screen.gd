@@ -61,6 +61,7 @@ func _build_banner(banner: String) -> void:
 	var state: Dictionary = profile.banners[banner]
 	var color: Color = SANCTUM.COLORS[banner]
 	var panel := _panel(color)
+	CrownUI.style_ornate_panel(panel)
 	add_child(panel)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 12)
