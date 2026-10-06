@@ -1,6 +1,8 @@
 class_name AccountScreen
 extends VBoxContainer
 
+const CrownUI = preload("res://scripts/ui/crown_ui.gd")
+
 var profile: SaveData
 var service: AccountService
 var on_change: Callable
@@ -41,6 +43,7 @@ func refresh() -> void:
 	display_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_row.add_child(display_edit)
 	var rename := _button("SAVE NAME")
+	CrownUI.set_button_role(rename, &"PrimaryActionButton")
 	rename.pressed.connect(_rename)
 	name_row.add_child(rename)
 	if str(meta.account_type) == "Guest":
@@ -55,6 +58,7 @@ func refresh() -> void:
 		add_child(signout)
 	add_child(_label("Cloud status: %s\nLast local save: %s\nLast cloud sync: %s" % [profile.cloud_meta.get("sync_status", "Local only"), meta.get("last_local_save", "Not saved yet"), profile.cloud_meta.get("last_cloud_sync", "Never")], 25))
 	var sync := _button("SYNC NOW")
+	CrownUI.set_button_role(sync, &"MagicActionButton")
 	sync.pressed.connect(_sync)
 	add_child(sync)
 	var restore := _button("RESTORE CLOUD SAVE")
@@ -137,4 +141,5 @@ func _button(value: String) -> Button:
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.add_theme_font_size_override("font_size", 23)
 	button.clip_text = true
+	CrownUI.set_button_role(button, &"QuietButton")
 	return button
