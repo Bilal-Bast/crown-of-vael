@@ -45,7 +45,7 @@ var feature_screens: VBoxContainer
 var feature_close_button: Button
 var pixel_battle_background: TextureRect
 var skill_bar: SkillBar
-var battle_area: VBoxContainer
+var battle_area: Control
 var battle_lower_scroll: ScrollContainer
 var battle_lower_content: VBoxContainer
 var upgrade_panel: PanelContainer
@@ -78,9 +78,10 @@ var login_popup: PopupPanel
 var adventure_screen: AdventureScreen
 var pve_service: PveService
 var current_run := {}
-var road_row: HBoxContainer
 var road_track: HBoxContainer
 var stage_panel: PanelContainer
+var currency_panel: PanelContainer
+var stage_status_row: HBoxContainer
 var skills_screen: SkillsScreen
 var heroes_screen: HeroesScreen
 var summon_screen: SummonScreen
@@ -102,7 +103,6 @@ var power_text: Label
 var battle_hero_level_text: Label
 var battle_hero_hp_text: Label
 var battle_hero_hp_bar: ProgressBar
-var road_text: Label
 var stage_markers: Array[ColorRect] = []
 var hero_level_text: Label
 var hero_hp_text: Label
@@ -242,16 +242,16 @@ func _build_ui() -> void:
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.offset_left = 18
 	root.offset_right = -18
-	root.offset_top = 8
+	root.offset_top = 0
 	root.offset_bottom = -10
 	root.add_theme_constant_override("separation", 8)
 	add_child(root)
-	_build_top_bar(root)
+	_build_top_bar()
 	_build_stage_card()
 
-	battle_area = VBoxContainer.new()
+	battle_area = Control.new()
+	battle_area.name = "BattleTopSection"
 	battle_area.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	battle_area.add_theme_constant_override("separation", 3)
 	root.add_child(battle_area)
 
 	feature_panel = _panel()
@@ -394,17 +394,25 @@ func _screen_content(scroll: ScrollContainer) -> VBoxContainer:
 	scroll.add_child(content)
 	return content
 
-func _build_top_bar(root: VBoxContainer) -> void:
+func _build_top_bar() -> void:
 	var panel := PanelContainer.new()
 	panel.name = "TopCurrencyPanel"
+	currency_panel = panel
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var top_style := StyleBoxFlat.new()
 	top_style.bg_color = Color(0.0, 0.0, 0.0, 0.0)
 	top_style.set_content_margin_all(0.0)
 	panel.add_theme_stylebox_override("panel", top_style)
-	root.add_child(panel)
+	panel.anchor_left = 0.0
+	panel.anchor_right = 1.0
+	panel.anchor_top = 0.0
+	panel.anchor_bottom = 0.0
+	panel.offset_left = 10.0
+	panel.offset_right = -10.0
+	panel.offset_top = 5.0
+	panel.offset_bottom = 98.0
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 2)
+	box.add_theme_constant_override("separation", 1)
 	panel.add_child(box)
 	var metrics := HBoxContainer.new()
 	metrics.add_theme_constant_override("separation", 5)
@@ -432,7 +440,7 @@ func _build_top_bar(root: VBoxContainer) -> void:
 func _metric(parent: HBoxContainer, heading: String, value_color: Color) -> Label:
 	var metric_panel := PanelContainer.new()
 	var capsule := StyleBoxFlat.new()
-	capsule.bg_color = Color("101820", 0.70)
+	capsule.bg_color = Color("101820", 0.60)
 	var capsule_edge := value_color
 	capsule_edge.a = 0.78
 	capsule.border_color = capsule_edge
@@ -446,29 +454,24 @@ func _metric(parent: HBoxContainer, heading: String, value_color: Color) -> Labe
 	metric_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	metric_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(metric_panel)
-	var cell := VBoxContainer.new()
-	cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	metric_panel.add_child(cell)
-	var caption := _label(heading, 20, Color("d3d5cb"))
-	caption.add_theme_font_size_override("font_size", 20)
-	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	cell.add_child(caption)
 	var value_row := HBoxContainer.new()
 	value_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	value_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	value_row.add_theme_constant_override("separation", 5)
-	cell.add_child(value_row)
-	var currency_icon: Texture2D = PixelUiIcons.gold_coin() if heading == "GOLD" else (PixelUiIcons.gems() if heading == "GEMS" else null)
+	metric_panel.add_child(value_row)
+	metric_panel.tooltip_text = heading
+	var currency_icon: Texture2D = PixelUiIcons.gold_coin() if heading == "GOLD" else (PixelUiIcons.gems() if heading == "GEMS" else PixelUiIcons.navigation("Battle"))
 	if currency_icon != null:
 		var icon := TextureRect.new()
-		icon.custom_minimum_size = Vector2(36, 36)
+		icon.custom_minimum_size = Vector2(32, 32)
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		icon.texture = currency_icon
 		icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		value_row.add_child(icon)
-	var value := _label("0", 26, value_color)
-	value.add_theme_font_size_override("font_size", 26)
+	var value := _label("0", 28, value_color)
+	value.add_theme_font_size_override("font_size", 28)
 	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	value_row.add_child(value)
 	return value
@@ -478,10 +481,9 @@ func _build_stage_card() -> void:
 	panel.name = "BattleStagePanel"
 	stage_panel = panel
 	stage_panel.mouse_filter = Control.MOUSE_FILTER_PASS
-	stage_panel.custom_minimum_size = Vector2(0, 122)
 	var stage_style := StyleBoxFlat.new()
-	stage_style.bg_color = Color("11161a", 0.64)
-	stage_style.border_color = Color("c3a773", 0.65)
+	stage_style.bg_color = Color("11161a", 0.48)
+	stage_style.border_color = Color("c3a773", 0.60)
 	stage_style.set_border_width_all(1)
 	stage_style.set_corner_radius_all(12)
 	stage_style.content_margin_left = 12
@@ -496,55 +498,56 @@ func _build_stage_card() -> void:
 	box.add_child(heading)
 	stage_text = _label("", 36, PALE)
 	stage_text.add_theme_font_size_override("font_size", 28)
+	stage_text.clip_text = true
 	stage_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	heading.add_child(stage_text)
 	boss_text = _label("", 30, Color("ff9f84"))
 	boss_text.add_theme_font_size_override("font_size", 24)
+	boss_text.clip_text = true
 	heading.add_child(boss_text)
 	var context := HBoxContainer.new()
 	context.add_theme_constant_override("separation", 10)
 	box.add_child(context)
 	region_text = _label(str(CampaignData.REGIONS[0]["name"]), 24, Color("a9d6ad"))
 	region_text.add_theme_font_size_override("font_size", 24)
+	region_text.clip_text = true
 	region_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	context.add_child(region_text)
 	wave_text = _label("", 22, MUTED)
 	wave_text.add_theme_font_size_override("font_size", 22)
+	wave_text.clip_text = true
 	context.add_child(wave_text)
-	road_row = HBoxContainer.new()
-	box.add_child(road_row)
-	road_text = _label("", 22, GOLD)
-	road_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	road_row.add_child(road_text)
-	road_row.add_child(_label("5  •  10  •  15  •  20 BOSS", 19, Color("d8a399")))
 	road_track = HBoxContainer.new()
-	road_track.add_theme_constant_override("separation", 6)
+	road_track.add_theme_constant_override("separation", 3)
 	box.add_child(road_track)
 	for i in 20:
 		var marker := ColorRect.new()
 		marker.color = Color("52605c")
-		marker.custom_minimum_size.y = 11
+		marker.custom_minimum_size.y = 7
 		marker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		road_track.add_child(marker)
 		stage_markers.append(marker)
-	var status_row := HBoxContainer.new()
-	status_row.add_theme_constant_override("separation", 8)
-	box.add_child(status_row)
+	stage_status_row = HBoxContainer.new()
+	stage_status_row.add_theme_constant_override("separation", 6)
+	stage_status_row.visible = false
+	box.add_child(stage_status_row)
 	message_text = _label("", 20, Color("a6dee2"))
+	message_text.add_theme_font_size_override("font_size", 20)
 	message_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	status_row.add_child(message_text)
+	message_text.clip_text = true
+	stage_status_row.add_child(message_text)
 	action_button = Button.new()
 	action_button.text = "RETRY BOSS"
 	action_button.custom_minimum_size = Vector2(150, 42)
 	action_button.add_theme_font_size_override("font_size", 21)
 	CrownUI.set_button_role(action_button, &"DangerActionButton")
 	action_button.pressed.connect(_on_action_pressed)
-	status_row.add_child(action_button)
+	stage_status_row.add_child(action_button)
 
 func _build_battle_area() -> void:
 	battlefield_host = Control.new()
 	battlefield_host.name = "BattlefieldHost"
-	battlefield_host.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	battlefield_host.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	battle_area.add_child(battlefield_host)
 	_update_battlefield_height()
 	pixel_battle_background = TextureRect.new()
@@ -567,19 +570,41 @@ func _build_battle_area() -> void:
 	stage_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	stage_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	battlefield_host.add_child(stage_overlay)
+	stage_overlay.add_child(currency_panel)
+	currency_panel.anchor_left = 0.0
+	currency_panel.anchor_right = 1.0
+	currency_panel.anchor_top = 0.0
+	currency_panel.anchor_bottom = 0.0
+	currency_panel.offset_top = 0.0
+	currency_panel.offset_bottom = 98.0
 	stage_panel.anchor_left = 0.12
 	stage_panel.anchor_right = 0.88
 	stage_panel.anchor_top = 0.0
 	stage_panel.anchor_bottom = 0.0
-	stage_panel.offset_top = 8.0
-	stage_panel.offset_bottom = 190.0
+	stage_panel.offset_top = 102.0
+	stage_panel.offset_bottom = 255.0
 	stage_overlay.add_child(stage_panel)
 	var skill_panel := _panel()
 	skill_panel.name = "BattleSkillPanel"
-	battle_area.add_child(skill_panel)
+	skill_panel.anchor_left = 0.0
+	skill_panel.anchor_right = 1.0
+	skill_panel.anchor_top = 1.0
+	skill_panel.anchor_bottom = 1.0
+	skill_panel.offset_left = 8.0
+	skill_panel.offset_right = -8.0
+	skill_panel.offset_top = -164.0
+	skill_panel.offset_bottom = -4.0
+	battlefield_host.add_child(skill_panel)
+	var skill_margins := MarginContainer.new()
+	skill_margins.mouse_filter = Control.MOUSE_FILTER_PASS
+	skill_margins.add_theme_constant_override("margin_left", 124)
+	skill_margins.add_theme_constant_override("margin_right", 124)
+	skill_margins.add_theme_constant_override("margin_top", 0)
+	skill_margins.add_theme_constant_override("margin_bottom", 0)
+	skill_panel.add_child(skill_margins)
 	var skill_box := VBoxContainer.new()
 	skill_box.add_theme_constant_override("separation", 0)
-	skill_panel.add_child(skill_box)
+	skill_margins.add_child(skill_box)
 	var skill_row := HBoxContainer.new()
 	skill_row.add_theme_constant_override("separation", 9)
 	skill_box.add_child(skill_row)
@@ -722,10 +747,10 @@ func _build_battle_area() -> void:
 	_update_skill_auto_button()
 
 func _update_battlefield_height() -> void:
-	if battlefield_host == null:
+	if battle_area == null:
 		return
-	var viewport_height := get_viewport_rect().size.y
-	battlefield_host.custom_minimum_size.y = maxf(1.0, viewport_height * 0.43)
+	var viewport_height: float = size.y if size.y > 0.0 else get_viewport_rect().size.y
+	battle_area.custom_minimum_size.y = maxf(1.0, viewport_height * 0.33 - 8.0)
 
 func _build_navigation(root: VBoxContainer) -> void:
 	var panel := _panel()
@@ -742,9 +767,9 @@ func _build_navigation(root: VBoxContainer) -> void:
 	left_rail.anchor_bottom = 1.0
 	left_rail.offset_left = 4
 	left_rail.offset_right = 124
-	left_rail.offset_top = 6
-	left_rail.offset_bottom = -6
-	left_rail.add_theme_constant_override("separation", 2)
+	left_rail.offset_top = 0
+	left_rail.offset_bottom = 0
+	left_rail.add_theme_constant_override("separation", 1)
 	left_rail.mouse_filter = Control.MOUSE_FILTER_PASS
 	battlefield_host.add_child(left_rail)
 	for tab_name in ["Adventure", "Quests", "Login", "Pass", "Shop"]:
@@ -756,9 +781,9 @@ func _build_navigation(root: VBoxContainer) -> void:
 	right_rail.anchor_bottom = 1.0
 	right_rail.offset_left = -124
 	right_rail.offset_right = -4
-	right_rail.offset_top = 6
-	right_rail.offset_bottom = -6
-	right_rail.add_theme_constant_override("separation", 2)
+	right_rail.offset_top = 0
+	right_rail.offset_bottom = 0
+	right_rail.add_theme_constant_override("separation", 1)
 	right_rail.mouse_filter = Control.MOUSE_FILTER_PASS
 	battlefield_host.add_child(right_rail)
 	for tab_name in ["Artifacts", "Account", "Social", "Settings"]:
@@ -774,7 +799,10 @@ func _add_nav_button(parent: Container, tab_name: String, floating: bool) -> voi
 	button.set_meta("crown_floating_nav", floating)
 	button.text = ""
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	button.custom_minimum_size = Vector2(132, 132) if floating else Vector2(132, 142)
+	button.size_flags_vertical = Control.SIZE_EXPAND_FILL if floating else Control.SIZE_SHRINK_CENTER
+	button.custom_minimum_size = Vector2.ZERO if floating else Vector2(132, 142)
+	if floating:
+		button.set_meta("crown_compact_control", true)
 	button.tooltip_text = tab_name
 	button.pressed.connect(_select_tab.bind(tab_name))
 	button.pressed.connect(_play_audio.bind("button_click","UI"))
@@ -790,15 +818,23 @@ func _add_nav_button(parent: Container, tab_name: String, floating: bool) -> voi
 	icon.name = "NavIcon"
 	var icon_slot := Control.new()
 	icon_slot.name = "IconSlot"
-	icon_slot.custom_minimum_size = Vector2(96, 96)
+	icon_slot.custom_minimum_size = Vector2.ZERO if floating else Vector2(96, 96)
+	icon_slot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	icon_slot.size_flags_vertical = Control.SIZE_EXPAND_FILL if floating else Control.SIZE_SHRINK_CENTER
 	icon_slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	contents.add_child(icon_slot)
-	icon.custom_minimum_size = Vector2(84, 84) if floating else Vector2(96, 96)
-	icon.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	icon.offset_left = -icon.custom_minimum_size.x * 0.5
-	icon.offset_right = icon.custom_minimum_size.x * 0.5
-	icon.offset_top = -icon.custom_minimum_size.y * 0.5
-	icon.offset_bottom = icon.custom_minimum_size.y * 0.5
+	if floating:
+		icon.anchor_left = 0.15
+		icon.anchor_right = 0.85
+		icon.anchor_top = 0.15
+		icon.anchor_bottom = 0.85
+	else:
+		icon.custom_minimum_size = Vector2(96, 96)
+		icon.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+		icon.offset_left = -48.0
+		icon.offset_right = 48.0
+		icon.offset_top = -48.0
+		icon.offset_bottom = 48.0
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
@@ -1078,19 +1114,17 @@ func _refresh_ui() -> void:
 	if stage_style != null:
 		stage_style.border_color = Color("d6aa66", 0.88) if boss_stage else Color("c3a773", 0.65)
 	region_text.text = CampaignData.REGIONS[profile.region - 1]["name"] if campaign else battle.mode_detail()
-	road_row.visible = campaign
 	road_track.visible = campaign
-	road_text.text = "REGION ROAD  %d/20" % profile.stage
 	for i in stage_markers.size():
 		stage_markers[i].color = (Color("d48463") if i == 19 else (Color("bf9bcf") if (i + 1) in [5, 10, 15] else GOLD)) if i < profile.stage else Color("52605c")
 	if not campaign:
-		wave_text.text = "%s  |  %d enemies remaining" % [battle.mode_detail(), _living_enemies()]
+		wave_text.text = "%d enemies remaining" % _living_enemies()
 	elif profile.campaign_complete:
-		wave_text.text = "Region complete"
+		wave_text.text = "COMPLETE"
 	elif profile.stage == 20:
-		wave_text.text = "BOSS | %s" % CampaignData.REGIONS[profile.region - 1]["boss"]
+		wave_text.text = "BOSS"
 	else:
-		wave_text.text = "Wave %d/3  |  %d enemies remaining" % [battle.wave, _living_enemies()]
+		wave_text.text = "W%d/3  •  %d LEFT" % [battle.wave, _living_enemies()]
 	boss_text.visible = campaign and profile.stage == 20 and battle.active
 	boss_text.text = "00:%02d" % ceili(battle.boss_time)
 	boss_text.add_theme_color_override("font_color", Color("ff786c") if battle.boss_time <= 10.0 else Color("ffb38d"))
@@ -1103,6 +1137,7 @@ func _refresh_ui() -> void:
 		heroes_exp_bar.value = profile.exp
 		heroes_level_text.text = "LEVEL %d    POWER %d" % [profile.level, profile.power()]
 	action_button.visible = campaign and profile.stage == 20 and profile.boss_retry_required and not battle.active and not profile.campaign_complete
+	_update_stage_overlay_size()
 	for stat in upgrade_buttons:
 		var rank := int(profile.upgrades.get(stat, 0))
 		var max_rank := GameData.upgrade_max_rank(stat)
@@ -1176,6 +1211,15 @@ func _show_message(value: String) -> void:
 			message_text.text = ""
 		else:
 			message_text.text = value
+		_update_stage_overlay_size()
+
+func _update_stage_overlay_size() -> void:
+	if stage_panel == null or stage_status_row == null:
+		return
+	var retry_visible := action_button != null and action_button.visible
+	var show_status := not message_text.text.is_empty() or retry_visible
+	stage_status_row.visible = show_status
+	stage_panel.offset_bottom = 330.0 if retry_visible else (246.0 if show_status else 208.0)
 
 func _select_tab(tab_name: String) -> void:
 	if tab_name != "Battle" and tab_name == selected_tab:
@@ -1682,18 +1726,24 @@ func _update_navigation() -> void:
 					icon.offset_top = target_top
 					icon.offset_bottom = target_bottom
 					icon.scale = target_scale
-		var dot := button.get_node_or_null("BadgeDot") as ColorRect
+		var dot := button.get_node_or_null("BadgeDot") as PanelContainer
 		if dot == null:
-			dot = ColorRect.new()
+			dot = PanelContainer.new()
 			dot.name = "BadgeDot"
-			dot.color = Color("d94f52")
 			dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			dot.anchor_left = 1.0
 			dot.anchor_right = 1.0
-			dot.offset_left = -36
-			dot.offset_right = -4
-			dot.offset_top = 4
-			dot.offset_bottom = 36
+			dot.offset_left = -34
+			dot.offset_right = -6
+			dot.offset_top = 6
+			dot.offset_bottom = 34
+			var badge_style := StyleBoxFlat.new()
+			badge_style.bg_color = Color("d94f52")
+			badge_style.border_color = Color("f3e4c4")
+			badge_style.set_border_width_all(2)
+			badge_style.set_corner_radius_all(14)
+			badge_style.set_content_margin_all(0)
+			dot.add_theme_stylebox_override("panel", badge_style)
 			button.add_child(dot)
 		dot.visible = badge
 
