@@ -1,6 +1,8 @@
 class_name ShopScreen
 extends VBoxContainer
 
+const CrownUI = preload("res://scripts/ui/crown_ui.gd")
+
 var profile: SaveData
 var service: MonetizationService
 var on_change: Callable
@@ -28,6 +30,7 @@ func refresh() -> void:
 	add_child(tabs)
 	for name in ["Featured", "Gems", "Daily", "Weekly", "Subscription", "Cosmetics"]:
 		var button := _button(name)
+		CrownUI.style_tab(button, tab == name, Color("c5a566"))
 		button.pressed.connect(_select.bind(name))
 		tabs.add_child(button)
 	match tab:
@@ -88,13 +91,7 @@ func refresh() -> void:
 func _product(id: String) -> void:
 	var product: Dictionary = MonetizationData.PRODUCTS[id]
 	var panel := PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color("253739")
-	style.border_color = Color("7b7159")
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(8)
-	style.set_content_margin_all(10)
-	panel.add_theme_stylebox_override("panel", style)
+	CrownUI.style_panel(panel, Color("c5a566"), false, id == "premium_pass")
 	add_child(panel)
 	var box := VBoxContainer.new()
 	panel.add_child(box)
@@ -174,4 +171,5 @@ func _button(value: String) -> Button:
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.add_theme_font_size_override("font_size", 24)
 	button.clip_text = true
+	CrownUI.set_button_role(button, &"QuietButton")
 	return button

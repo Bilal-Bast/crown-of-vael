@@ -1,6 +1,8 @@
 class_name BattlePassScreen
 extends VBoxContainer
 
+const CrownUI = preload("res://scripts/ui/crown_ui.gd")
+
 var profile: SaveData
 var service: MonetizationService
 var on_change: Callable
@@ -24,9 +26,11 @@ func refresh() -> void:
 	add_child(row)
 	for track in [false, true]:
 		var button := _button("PREMIUM" if track else "FREE")
+		CrownUI.style_tab(button, premium_view == track, Color("c5a566") if track else Color("7d9d8a"))
 		button.pressed.connect(_view.bind(track))
 		row.add_child(button)
 	var all := _button("CLAIM ALL AVAILABLE")
+	CrownUI.set_button_role(all, &"PrimaryActionButton")
 	all.pressed.connect(_claim_all)
 	add_child(all)
 	if not profile.premium_pass_owned:
@@ -48,6 +52,7 @@ func refresh() -> void:
 		elif level > int(profile.bp_season.level): button.text += "  • %d XP" % MonetizationData.total_xp_for_level(level)
 		else: button.text += "  • CLAIM"
 		button.disabled = not service.can_claim_bp(level, premium_view)
+		CrownUI.set_button_role(button, &"QuietButton")
 		button.pressed.connect(_claim.bind(level, premium_view))
 		add_child(button)
 
