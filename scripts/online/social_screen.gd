@@ -297,7 +297,7 @@ func _add_portrait(parent: Control, hero_id: String, evolution: int, frame: Stri
 	parent.add_child(portrait)
 
 func _label(value: String, size: int) -> Label:
-	var label := Label.new(); label.text = value; label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; label.add_theme_font_size_override("font_size", size); label.add_theme_color_override("font_color", Color("e9c87d")); return label
+	var label := Label.new(); label.text = value; label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; label.add_theme_font_size_override("font_size", size); label.add_theme_color_override("font_color", Color("ffd166")); return label
 
 func _button(value: String) -> Button:
 	var button := Button.new(); button.text = value; button.custom_minimum_size.y = 68; button.size_flags_horizontal = Control.SIZE_EXPAND_FILL; button.add_theme_font_size_override("font_size", 21); button.clip_text = true; CrownUI.set_button_role(button, &"QuietButton"); return button
