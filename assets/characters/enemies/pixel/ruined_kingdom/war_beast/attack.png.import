@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://g1d8wu4k6ean"
-path="res://.godot/imported/attack.png-7e0ec4fbe8bc8dbd421974b4ef4d4718.ctex"
+path="res://.godot/imported/attack.png-7aea69104a026839b59c898a9bfcb6cb.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/ruined_kingdom/war_beast/attack.png"
-dest_files=["res://.godot/imported/attack.png-7e0ec4fbe8bc8dbd421974b4ef4d4718.ctex"]
+source_file="res://assets/characters/enemies/pixel/ruined_kingdom/war_beast/attack.png"
+dest_files=["res://.godot/imported/attack.png-7aea69104a026839b59c898a9bfcb6cb.ctex"]
 
 [params]
 
