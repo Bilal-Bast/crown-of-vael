@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d37u1bcba84t"
-path="res://.godot/imported/idle.png-56ae26a9457caa5897de111f0f8da50a.ctex"
+path="res://.godot/imported/idle.png-97dd01e5167434d7205f0da5af8fc75d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/ashen_highlands/fire_imp/idle.png"
-dest_files=["res://.godot/imported/idle.png-56ae26a9457caa5897de111f0f8da50a.ctex"]
+source_file="res://assets/characters/enemies/standard/ashen_highlands/fire_imp/idle.png"
+dest_files=["res://.godot/imported/idle.png-97dd01e5167434d7205f0da5af8fc75d.ctex"]
 
 [params]
 
