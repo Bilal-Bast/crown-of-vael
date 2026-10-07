@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://boi7bvggcbvs"
-path="res://.godot/imported/battle.png-bad5ce2a8dfe30f3fa7368b2f676bad3.ctex"
+path="res://.godot/imported/battle.png-d7b85114aaaa24e25809f5e0e68cb7d5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/backgrounds/greenvale/battle.png"
-dest_files=["res://.godot/imported/battle.png-bad5ce2a8dfe30f3fa7368b2f676bad3.ctex"]
+source_file="res://assets/environments/regions/greenvale_outskirts/pixel/battle.png"
+dest_files=["res://.godot/imported/battle.png-d7b85114aaaa24e25809f5e0e68cb7d5.ctex"]
 
 [params]
 
