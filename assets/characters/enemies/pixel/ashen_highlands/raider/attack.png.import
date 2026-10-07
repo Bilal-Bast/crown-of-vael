@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bxatn2a108un0"
-path="res://.godot/imported/attack.png-8efd928cdb73a4bccb94f8e3326e5467.ctex"
+path="res://.godot/imported/attack.png-ffa19cfd4d6e1c7f75b24a424e386592.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/ashen_highlands/raider/attack.png"
-dest_files=["res://.godot/imported/attack.png-8efd928cdb73a4bccb94f8e3326e5467.ctex"]
+source_file="res://assets/characters/enemies/pixel/ashen_highlands/raider/attack.png"
+dest_files=["res://.godot/imported/attack.png-ffa19cfd4d6e1c7f75b24a424e386592.ctex"]
 
 [params]
 
