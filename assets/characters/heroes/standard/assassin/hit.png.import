@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ci7yulgwgwc2w"
-path="res://.godot/imported/hit.png-c86c814a2529e88bef996a0ba62b527c.ctex"
+path="res://.godot/imported/hit.png-80332e24ed36a78a6f39c85b230a2329.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/heroes/assassin/hit.png"
-dest_files=["res://.godot/imported/hit.png-c86c814a2529e88bef996a0ba62b527c.ctex"]
+source_file="res://assets/characters/heroes/standard/assassin/hit.png"
+dest_files=["res://.godot/imported/hit.png-80332e24ed36a78a6f39c85b230a2329.ctex"]
 
 [params]
 
