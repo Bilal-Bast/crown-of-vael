@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b0cvgkfw3xlii"
-path="res://.godot/imported/death.png-7d731c0675965addb2b2153dc1e34380.ctex"
+path="res://.godot/imported/death.png-9b247513c189a1347ae953d660ede14c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/greenvale/goblin_warlord/death.png"
-dest_files=["res://.godot/imported/death.png-7d731c0675965addb2b2153dc1e34380.ctex"]
+source_file="res://assets/characters/enemies/pixel/greenvale/goblin_warlord/death.png"
+dest_files=["res://.godot/imported/death.png-9b247513c189a1347ae953d660ede14c.ctex"]
 
 [params]
 
