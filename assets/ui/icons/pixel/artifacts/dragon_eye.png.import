@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dplhc6adw6u5k"
-path="res://.godot/imported/dragon_eye.png-2bfce812edc5c9810718d2e1666c9bcc.ctex"
+path="res://.godot/imported/dragon_eye.png-b325b97cf4bc4300cb6c77ce0fc7d557.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/pixel_ui/artifacts/dragon_eye.png"
-dest_files=["res://.godot/imported/dragon_eye.png-2bfce812edc5c9810718d2e1666c9bcc.ctex"]
+source_file="res://assets/ui/icons/pixel/artifacts/dragon_eye.png"
+dest_files=["res://.godot/imported/dragon_eye.png-b325b97cf4bc4300cb6c77ce0fc7d557.ctex"]
 
 [params]
 
