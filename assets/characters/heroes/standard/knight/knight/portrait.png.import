@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d1ae3iafc3bne"
-path="res://.godot/imported/portrait.png-111d12261b2d141f9fb1bbdecebac436.ctex"
+path="res://.godot/imported/portrait.png-b865aca006879a8332425b81b5779c57.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/heroes/knight/knight/portrait.png"
-dest_files=["res://.godot/imported/portrait.png-111d12261b2d141f9fb1bbdecebac436.ctex"]
+source_file="res://assets/characters/heroes/standard/knight/knight/portrait.png"
+dest_files=["res://.godot/imported/portrait.png-b865aca006879a8332425b81b5779c57.ctex"]
 
 [params]
 
