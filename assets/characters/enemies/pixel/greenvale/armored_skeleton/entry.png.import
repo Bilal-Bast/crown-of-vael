@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bg1jfvsnd3kim"
-path="res://.godot/imported/entry.png-6112c635148bc70058b8d66c468d5c07.ctex"
+path="res://.godot/imported/entry.png-f8bc70da7577c3258a307726690f97b9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/greenvale/armored_skeleton/entry.png"
-dest_files=["res://.godot/imported/entry.png-6112c635148bc70058b8d66c468d5c07.ctex"]
+source_file="res://assets/characters/enemies/pixel/greenvale/armored_skeleton/entry.png"
+dest_files=["res://.godot/imported/entry.png-f8bc70da7577c3258a307726690f97b9.ctex"]
 
 [params]
 
