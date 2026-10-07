@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bgkkk1wdny5le"
-path="res://.godot/imported/portrait.png-4c812a75469613395825499bae614363.ctex"
+path="res://.godot/imported/portrait.png-d6874050d171a37f3f8ace415e9a49f2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/heroes/knight/paladin/portrait.png"
-dest_files=["res://.godot/imported/portrait.png-4c812a75469613395825499bae614363.ctex"]
+source_file="res://assets/characters/heroes/standard/knight/paladin/portrait.png"
+dest_files=["res://.godot/imported/portrait.png-d6874050d171a37f3f8ace415e9a49f2.ctex"]
 
 [params]
 
