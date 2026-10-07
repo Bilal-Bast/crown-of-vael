@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ugnq43s8ngn3"
-path="res://.godot/imported/attack.png-49f1ba34b68a6def41b9544686dada93.ctex"
+path="res://.godot/imported/attack.png-5bf3464b1a486469e3df5b9f9a2d0ea2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/crimson_desert/tomb_archer/attack.png"
-dest_files=["res://.godot/imported/attack.png-49f1ba34b68a6def41b9544686dada93.ctex"]
+source_file="res://assets/characters/enemies/pixel/crimson_desert/tomb_archer/attack.png"
+dest_files=["res://.godot/imported/attack.png-5bf3464b1a486469e3df5b9f9a2d0ea2.ctex"]
 
 [params]
 
