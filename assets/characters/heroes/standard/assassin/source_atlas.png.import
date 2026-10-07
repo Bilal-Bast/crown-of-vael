@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://xgkum1y18dk4"
-path="res://.godot/imported/source_atlas.png-84e4547b6c0c95de8d2f6ac9a5f7332c.ctex"
+path="res://.godot/imported/source_atlas.png-0da8b4d520693c9802e51a6a9320c7f1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/heroes/assassin/source_atlas.png"
-dest_files=["res://.godot/imported/source_atlas.png-84e4547b6c0c95de8d2f6ac9a5f7332c.ctex"]
+source_file="res://assets/characters/heroes/standard/assassin/source_atlas.png"
+dest_files=["res://.godot/imported/source_atlas.png-0da8b4d520693c9802e51a6a9320c7f1.ctex"]
 
 [params]
 
