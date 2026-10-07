@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cmq3vecpni1j6"
-path="res://.godot/imported/entry.png-0e28498519d812aa8afe2cf405eacde6.ctex"
+path="res://.godot/imported/entry.png-cdf5c22a9f736b2201cef290dc3b0b5d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/ashen_highlands/flame_brute/entry.png"
-dest_files=["res://.godot/imported/entry.png-0e28498519d812aa8afe2cf405eacde6.ctex"]
+source_file="res://assets/characters/enemies/pixel/ashen_highlands/flame_brute/entry.png"
+dest_files=["res://.godot/imported/entry.png-cdf5c22a9f736b2201cef290dc3b0b5d.ctex"]
 
 [params]
 
