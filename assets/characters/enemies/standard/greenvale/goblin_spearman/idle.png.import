@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dbc55wknhjpfq"
-path="res://.godot/imported/idle.png-94486a310cbd99d70a9db8e39df9d6aa.ctex"
+path="res://.godot/imported/idle.png-252f472b0f55a6c56904a3311af6b011.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/greenvale/goblin_spearman/idle.png"
-dest_files=["res://.godot/imported/idle.png-94486a310cbd99d70a9db8e39df9d6aa.ctex"]
+source_file="res://assets/characters/enemies/standard/greenvale/goblin_spearman/idle.png"
+dest_files=["res://.godot/imported/idle.png-252f472b0f55a6c56904a3311af6b011.ctex"]
 
 [params]
 
