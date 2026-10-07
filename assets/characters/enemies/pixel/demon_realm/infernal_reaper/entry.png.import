@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bagp4kexto4ht"
-path="res://.godot/imported/entry.png-1b26dce46f0ed8c0756c2b3b3b766156.ctex"
+path="res://.godot/imported/entry.png-96d2f52c72d7d754b5ed5c8a63ec7d3e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/demon_realm/infernal_reaper/entry.png"
-dest_files=["res://.godot/imported/entry.png-1b26dce46f0ed8c0756c2b3b3b766156.ctex"]
+source_file="res://assets/characters/enemies/pixel/demon_realm/infernal_reaper/entry.png"
+dest_files=["res://.godot/imported/entry.png-96d2f52c72d7d754b5ed5c8a63ec7d3e.ctex"]
 
 [params]
 
