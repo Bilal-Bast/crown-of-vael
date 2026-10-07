@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://diu3xfs544blf"
-path="res://.godot/imported/idle.png-c47b742d1dee69af62117079f673a36f.ctex"
+path="res://.godot/imported/idle.png-8fcf0838878cc4c5ce5147ff370c0a1d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/frostfang_mountains/frost_spirit/idle.png"
-dest_files=["res://.godot/imported/idle.png-c47b742d1dee69af62117079f673a36f.ctex"]
+source_file="res://assets/characters/enemies/standard/frostfang_mountains/frost_spirit/idle.png"
+dest_files=["res://.godot/imported/idle.png-8fcf0838878cc4c5ce5147ff370c0a1d.ctex"]
 
 [params]
 
