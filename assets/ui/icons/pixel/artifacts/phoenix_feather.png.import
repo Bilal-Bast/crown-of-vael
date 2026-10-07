@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ct1r8kq6klmvc"
-path="res://.godot/imported/phoenix_feather.png-58bc1b72a64ffb3852a500df455e0922.ctex"
+path="res://.godot/imported/phoenix_feather.png-873b74a39c9f0a96abeef70e12b9de74.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/pixel_ui/artifacts/phoenix_feather.png"
-dest_files=["res://.godot/imported/phoenix_feather.png-58bc1b72a64ffb3852a500df455e0922.ctex"]
+source_file="res://assets/ui/icons/pixel/artifacts/phoenix_feather.png"
+dest_files=["res://.godot/imported/phoenix_feather.png-873b74a39c9f0a96abeef70e12b9de74.ctex"]
 
 [params]
 
