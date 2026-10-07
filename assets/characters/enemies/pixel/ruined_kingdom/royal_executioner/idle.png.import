@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cnpn127yvkp4b"
-path="res://.godot/imported/idle.png-1a5105ac3cbcba34e4198592490dabf8.ctex"
+path="res://.godot/imported/idle.png-bcffe4869459b08f5b73e456a0b651fa.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/ruined_kingdom/royal_executioner/idle.png"
-dest_files=["res://.godot/imported/idle.png-1a5105ac3cbcba34e4198592490dabf8.ctex"]
+source_file="res://assets/characters/enemies/pixel/ruined_kingdom/royal_executioner/idle.png"
+dest_files=["res://.godot/imported/idle.png-bcffe4869459b08f5b73e456a0b651fa.ctex"]
 
 [params]
 
