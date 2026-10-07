@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dp4abk5g2a2ui"
-path="res://.godot/imported/idle.png-8d197d21e31dc4ecfb11930fd04cb1a0.ctex"
+path="res://.godot/imported/idle.png-0894db060d18f181b389f0087527b53b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/demon_realm/demon_champion/idle.png"
-dest_files=["res://.godot/imported/idle.png-8d197d21e31dc4ecfb11930fd04cb1a0.ctex"]
+source_file="res://assets/characters/enemies/pixel/demon_realm/demon_champion/idle.png"
+dest_files=["res://.godot/imported/idle.png-0894db060d18f181b389f0087527b53b.ctex"]
 
 [params]
 
