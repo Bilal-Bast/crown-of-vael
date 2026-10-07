@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b1ynl84hgv7ou"
-path="res://.godot/imported/entry.png-76f80da36a644dc6a97ba736fe1e654a.ctex"
+path="res://.godot/imported/entry.png-ca72c4d6756a1c072fa73bc7f970ad83.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/ashen_highlands/magma_hound/entry.png"
-dest_files=["res://.godot/imported/entry.png-76f80da36a644dc6a97ba736fe1e654a.ctex"]
+source_file="res://assets/characters/enemies/pixel/ashen_highlands/magma_hound/entry.png"
+dest_files=["res://.godot/imported/entry.png-ca72c4d6756a1c072fa73bc7f970ad83.ctex"]
 
 [params]
 
