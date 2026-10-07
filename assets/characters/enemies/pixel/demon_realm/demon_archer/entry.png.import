@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://jnunj64gg8be"
-path="res://.godot/imported/entry.png-5e54e70fecffba03c3ee600b606e9eb6.ctex"
+path="res://.godot/imported/entry.png-d6aba574bc68bbb50d685ca12a264193.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/demon_realm/demon_archer/entry.png"
-dest_files=["res://.godot/imported/entry.png-5e54e70fecffba03c3ee600b606e9eb6.ctex"]
+source_file="res://assets/characters/enemies/pixel/demon_realm/demon_archer/entry.png"
+dest_files=["res://.godot/imported/entry.png-d6aba574bc68bbb50d685ca12a264193.ctex"]
 
 [params]
 
