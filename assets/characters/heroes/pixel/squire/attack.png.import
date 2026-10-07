@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b2elauhcgk1tm"
-path="res://.godot/imported/entry.png-7f747981fc724cd9233f4023fc37a17a.ctex"
+uid="uid://cvr1x40rd6n82"
+path="res://.godot/imported/attack.png-cb8db20757afb3c5cdd00c51775cf43c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/whispering_forest/ancient_treant/entry.png"
-dest_files=["res://.godot/imported/entry.png-7f747981fc724cd9233f4023fc37a17a.ctex"]
+source_file="res://assets/characters/heroes/pixel/squire/attack.png"
+dest_files=["res://.godot/imported/attack.png-cb8db20757afb3c5cdd00c51775cf43c.ctex"]
 
 [params]
 
