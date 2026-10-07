@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d3j8tfrilpos"
-path="res://.godot/imported/idle.png-11884bfb9151d5d3c0f7a79839b77268.ctex"
+path="res://.godot/imported/idle.png-0a3a0c62ab1847f32bea507fd65d37c7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/demon_realm/corrupted_giant/idle.png"
-dest_files=["res://.godot/imported/idle.png-11884bfb9151d5d3c0f7a79839b77268.ctex"]
+source_file="res://assets/characters/enemies/pixel/demon_realm/corrupted_giant/idle.png"
+dest_files=["res://.godot/imported/idle.png-0a3a0c62ab1847f32bea507fd65d37c7.ctex"]
 
 [params]
 
