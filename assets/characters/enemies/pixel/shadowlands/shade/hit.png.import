@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bju7tctpr8d21"
-path="res://.godot/imported/idle.png-5fccf45545680e1dd1de52a49a47ef58.ctex"
+uid="uid://bglm7e8p522el"
+path="res://.godot/imported/hit.png-224ab6c3195f6930daf9a12bf08367b1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/shadowlands/lord_of_shadows/idle.png"
-dest_files=["res://.godot/imported/idle.png-5fccf45545680e1dd1de52a49a47ef58.ctex"]
+source_file="res://assets/characters/enemies/pixel/shadowlands/shade/hit.png"
+dest_files=["res://.godot/imported/hit.png-224ab6c3195f6930daf9a12bf08367b1.ctex"]
 
 [params]
 
@@ -36,5 +36,5 @@ process/premult_alpha=false
 process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
-process/size_limit=768
+process/size_limit=0
 detect_3d/compress_to=1
