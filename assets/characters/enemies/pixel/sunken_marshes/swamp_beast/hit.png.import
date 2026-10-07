@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ontcrudppqgp"
-path="res://.godot/imported/hit.png-80f7e6e698762c729997681f5d4f42c7.ctex"
+path="res://.godot/imported/hit.png-e8ad53a9e9b8d13fc5276576c22e7681.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/sunken_marshes/swamp_beast/hit.png"
-dest_files=["res://.godot/imported/hit.png-80f7e6e698762c729997681f5d4f42c7.ctex"]
+source_file="res://assets/characters/enemies/pixel/sunken_marshes/swamp_beast/hit.png"
+dest_files=["res://.godot/imported/hit.png-e8ad53a9e9b8d13fc5276576c22e7681.ctex"]
 
 [params]
 
