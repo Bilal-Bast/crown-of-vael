@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://fojry4yqfcmf"
-path="res://.godot/imported/hit.png-5fb846c4a1ec809e6fc4004ac39885b0.ctex"
+path="res://.godot/imported/hit.png-f969561db1c6ba4884cfbda7d7fcc610.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/greenvale/skeleton/hit.png"
-dest_files=["res://.godot/imported/hit.png-5fb846c4a1ec809e6fc4004ac39885b0.ctex"]
+source_file="res://assets/characters/enemies/pixel/greenvale/skeleton/hit.png"
+dest_files=["res://.godot/imported/hit.png-f969561db1c6ba4884cfbda7d7fcc610.ctex"]
 
 [params]
 
