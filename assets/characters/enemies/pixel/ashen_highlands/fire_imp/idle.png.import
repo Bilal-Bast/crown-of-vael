@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://y3ogb6rsf3vj"
-path="res://.godot/imported/entry.png-4fd93d29fc4fee705afd10964ac1d4d7.ctex"
+uid="uid://dyymqu51u37yp"
+path="res://.godot/imported/idle.png-c5f3f00386c9aa63d3ff54a1a23633d0.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/ruined_kingdom/fallen_champion/entry.png"
-dest_files=["res://.godot/imported/entry.png-4fd93d29fc4fee705afd10964ac1d4d7.ctex"]
+source_file="res://assets/characters/enemies/pixel/ashen_highlands/fire_imp/idle.png"
+dest_files=["res://.godot/imported/idle.png-c5f3f00386c9aa63d3ff54a1a23633d0.ctex"]
 
 [params]
 
