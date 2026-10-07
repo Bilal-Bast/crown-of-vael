@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dd125ik2l2o80"
-path="res://.godot/imported/idle.png-6baea785d470a5edc08dc289c40dbb5b.ctex"
+path="res://.godot/imported/idle.png-d48ae15d33b7c9268ebebbf57a426b07.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/heroes/knight/paladin/idle.png"
-dest_files=["res://.godot/imported/idle.png-6baea785d470a5edc08dc289c40dbb5b.ctex"]
+source_file="res://assets/characters/heroes/standard/knight/paladin/idle.png"
+dest_files=["res://.godot/imported/idle.png-d48ae15d33b7c9268ebebbf57a426b07.ctex"]
 
 [params]
 
