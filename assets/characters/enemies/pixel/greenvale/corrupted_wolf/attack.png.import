@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d3y04l6itt1mh"
-path="res://.godot/imported/attack.png-40a8a7b0b80b6411ee91888a697cc75f.ctex"
+path="res://.godot/imported/attack.png-9e4771e349e2c7018f3a4cbec96e6b0c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/greenvale/corrupted_wolf/attack.png"
-dest_files=["res://.godot/imported/attack.png-40a8a7b0b80b6411ee91888a697cc75f.ctex"]
+source_file="res://assets/characters/enemies/pixel/greenvale/corrupted_wolf/attack.png"
+dest_files=["res://.godot/imported/attack.png-9e4771e349e2c7018f3a4cbec96e6b0c.ctex"]
 
 [params]
 
