@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://udkp66kljocp"
-path="res://.godot/imported/hit.png-ae6f2f0ba06c39f46cee0b90c2ee4af5.ctex"
+path="res://.godot/imported/hit.png-46300157e7b5fa4e8806c16e311f71f9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/whispering_forest/skeleton_archer/hit.png"
-dest_files=["res://.godot/imported/hit.png-ae6f2f0ba06c39f46cee0b90c2ee4af5.ctex"]
+source_file="res://assets/characters/enemies/pixel/whispering_forest/skeleton_archer/hit.png"
+dest_files=["res://.godot/imported/hit.png-46300157e7b5fa4e8806c16e311f71f9.ctex"]
 
 [params]
 
