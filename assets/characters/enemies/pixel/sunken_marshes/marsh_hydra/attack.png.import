@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://kyejerufcxwl"
-path="res://.godot/imported/attack.png-4a8d60ee708acb41522c976837de6b86.ctex"
+path="res://.godot/imported/attack.png-8025b189c759765564d4ff5f3380365d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/sunken_marshes/marsh_hydra/attack.png"
-dest_files=["res://.godot/imported/attack.png-4a8d60ee708acb41522c976837de6b86.ctex"]
+source_file="res://assets/characters/enemies/pixel/sunken_marshes/marsh_hydra/attack.png"
+dest_files=["res://.godot/imported/attack.png-8025b189c759765564d4ff5f3380365d.ctex"]
 
 [params]
 
