@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://gwsf084ire22"
-path="res://.godot/imported/entry.png-2323ebdbcb8e6a5f7a05f465a535af77.ctex"
+uid="uid://y3ogb6rsf3vj"
+path="res://.godot/imported/entry.png-8626eab22c304cfc736837e79d8095ee.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/ashen_highlands/ash_knight/entry.png"
-dest_files=["res://.godot/imported/entry.png-2323ebdbcb8e6a5f7a05f465a535af77.ctex"]
+source_file="res://assets/characters/enemies/pixel/ruined_kingdom/fallen_champion/entry.png"
+dest_files=["res://.godot/imported/entry.png-8626eab22c304cfc736837e79d8095ee.ctex"]
 
 [params]
 
