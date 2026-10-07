@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://datcn186gam2v"
-path="res://.godot/imported/entry.png-8b51db69f0824dfc47d65f20a730f094.ctex"
+path="res://.godot/imported/entry.png-ff53ba68f4899795f7ba7e19735774da.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/sunken_marshes/plague_knight/entry.png"
-dest_files=["res://.godot/imported/entry.png-8b51db69f0824dfc47d65f20a730f094.ctex"]
+source_file="res://assets/characters/enemies/pixel/sunken_marshes/plague_knight/entry.png"
+dest_files=["res://.godot/imported/entry.png-ff53ba68f4899795f7ba7e19735774da.ctex"]
 
 [params]
 
