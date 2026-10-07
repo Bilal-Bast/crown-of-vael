@@ -19,25 +19,25 @@ func _run() -> void:
 		check(HeroArtService.form_path(stage).ends_with("/" + expected[stage]), "evolution %d folder path" % stage)
 	for slot in ["idle", "attack", "guard", "portrait"]:
 		check(HeroArtService.texture_for(0, slot) != null, "Squire %s asset loads" % slot)
-	check(HeroArtService.resolve_path(0, "idle") == "res://assets/heroes/knight/squire/squire_idle.png", "Squire legacy filename preserved")
+	check(HeroArtService.resolve_path(0, "idle") == "res://assets/characters/heroes/standard/knight/squire/squire_idle.png", "Squire legacy filename preserved")
 	for slot in ["idle", "attack", "guard", "portrait"]:
 		check(HeroArtService.texture_for(1, slot) != null, "Knight %s asset loads" % slot)
-		check(HeroArtService.resolve_path(1, slot) == "res://assets/heroes/knight/knight/%s.png" % slot, "Knight %s resolves real asset path" % slot)
+		check(HeroArtService.resolve_path(1, slot) == "res://assets/characters/heroes/standard/knight/knight/%s.png" % slot, "Knight %s resolves real asset path" % slot)
 	for slot in ["idle", "attack", "guard", "portrait"]:
 		check(HeroArtService.texture_for(2, slot) != null, "Royal Knight %s asset loads" % slot)
-		check(HeroArtService.resolve_path(2, slot) == "res://assets/heroes/knight/royal_knight/%s.png" % slot, "Royal Knight %s resolves real asset path" % slot)
+		check(HeroArtService.resolve_path(2, slot) == "res://assets/characters/heroes/standard/knight/royal_knight/%s.png" % slot, "Royal Knight %s resolves real asset path" % slot)
 	for slot in ["idle", "attack", "guard", "portrait"]:
 		var paladin_texture := HeroArtService.texture_for(3, slot)
 		check(paladin_texture != null, "Paladin %s asset loads" % slot)
 		if paladin_texture != null:
 			check(paladin_texture.get_image().detect_alpha(), "Paladin %s transparency retained" % slot)
-		check(HeroArtService.resolve_path(3, slot) == "res://assets/heroes/knight/paladin/%s.png" % slot, "Paladin %s resolves real asset path" % slot)
+		check(HeroArtService.resolve_path(3, slot) == "res://assets/characters/heroes/standard/knight/paladin/%s.png" % slot, "Paladin %s resolves real asset path" % slot)
 	for slot in ["idle", "attack", "guard", "portrait"]:
 		var divine_texture := HeroArtService.texture_for(4, slot)
 		check(divine_texture != null, "Divine Paladin %s asset loads" % slot)
 		if divine_texture != null:
 			check(divine_texture.get_image().detect_alpha(), "Divine Paladin %s transparency retained" % slot)
-		check(HeroArtService.resolve_path(4, slot) == "res://assets/heroes/knight/divine_paladin/%s.png" % slot, "Divine Paladin %s resolves real asset path" % slot)
+		check(HeroArtService.resolve_path(4, slot) == "res://assets/characters/heroes/standard/knight/divine_paladin/%s.png" % slot, "Divine Paladin %s resolves real asset path" % slot)
 	check(HeroArtService.texture_for(4, "skill") == null and HeroArtService.resolve_path(4, "skill").is_empty(), "missing optional Divine skill art keeps fallback behavior")
 	var divine_path := HeroArtService.asset_path(4, "idle")
 	for i in 100:
