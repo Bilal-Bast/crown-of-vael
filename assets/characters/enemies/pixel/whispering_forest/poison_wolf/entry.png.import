@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://hgbhd535vnfx"
-path="res://.godot/imported/entry.png-73eb01a225437f1c9a8c6f3d0b7be58d.ctex"
+path="res://.godot/imported/entry.png-a71dd29875413cdd24a623c4dab6f96a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/whispering_forest/poison_wolf/entry.png"
-dest_files=["res://.godot/imported/entry.png-73eb01a225437f1c9a8c6f3d0b7be58d.ctex"]
+source_file="res://assets/characters/enemies/pixel/whispering_forest/poison_wolf/entry.png"
+dest_files=["res://.godot/imported/entry.png-a71dd29875413cdd24a623c4dab6f96a.ctex"]
 
 [params]
 
