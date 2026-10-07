@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cnba1kknbna07"
-path="res://.godot/imported/idle.png-4ac573d0276c6705efbd0c09d6eecc2d.ctex"
+path="res://.godot/imported/idle.png-a23d462891b50a040f96ea1d8afbd7a0.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/demon_realm/infernal_mage/idle.png"
-dest_files=["res://.godot/imported/idle.png-4ac573d0276c6705efbd0c09d6eecc2d.ctex"]
+source_file="res://assets/characters/enemies/standard/demon_realm/infernal_mage/idle.png"
+dest_files=["res://.godot/imported/idle.png-a23d462891b50a040f96ea1d8afbd7a0.ctex"]
 
 [params]
 
