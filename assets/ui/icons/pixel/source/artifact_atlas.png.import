@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bugpiosbo50xm"
-path="res://.godot/imported/artifact_atlas.png-50f277c05c5e30ac3c36bda01cc679cc.ctex"
+path="res://.godot/imported/artifact_atlas.png-ea13a5fe7979e7e88b8043b30dd0f197.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/pixel_ui/source/artifact_atlas.png"
-dest_files=["res://.godot/imported/artifact_atlas.png-50f277c05c5e30ac3c36bda01cc679cc.ctex"]
+source_file="res://assets/ui/icons/pixel/source/artifact_atlas.png"
+dest_files=["res://.godot/imported/artifact_atlas.png-ea13a5fe7979e7e88b8043b30dd0f197.ctex"]
 
 [params]
 
