@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://yimvu8qrfdom"
-path="res://.godot/imported/source_atlas.png-267cd58b2ad91c4abade778e0c18f406.ctex"
+path="res://.godot/imported/source_atlas.png-f136432719cab3d3d918303133bf3b90.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/heroes/ranger/source_atlas.png"
-dest_files=["res://.godot/imported/source_atlas.png-267cd58b2ad91c4abade778e0c18f406.ctex"]
+source_file="res://assets/characters/heroes/standard/ranger/source_atlas.png"
+dest_files=["res://.godot/imported/source_atlas.png-f136432719cab3d3d918303133bf3b90.ctex"]
 
 [params]
 
