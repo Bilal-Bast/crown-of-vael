@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c5jl68toviqvg"
-path="res://.godot/imported/battle_polished.png-fa411a55e3bddc8498a83fc7a60f310d.ctex"
+path="res://.godot/imported/battle_polished.png-134736b08bba00116e33b7a56a622698.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/backgrounds/ashen_highlands/battle_polished.png"
-dest_files=["res://.godot/imported/battle_polished.png-fa411a55e3bddc8498a83fc7a60f310d.ctex"]
+source_file="res://assets/environments/regions/ashen_highlands/pixel/battle_polished.png"
+dest_files=["res://.godot/imported/battle_polished.png-134736b08bba00116e33b7a56a622698.ctex"]
 
 [params]
 
