@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bjj3f7jhsqm72"
-path="res://.godot/imported/battle.png-a5112eb8aad28f4df741d50cca13cc5b.ctex"
+uid="uid://crq6601a3xwwj"
+path="res://.godot/imported/dragon_heart.png-b105e37c34a18a9da9b41d74bb873b80.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/backgrounds/frostfang_mountains/battle.png"
-dest_files=["res://.godot/imported/battle.png-a5112eb8aad28f4df741d50cca13cc5b.ctex"]
+source_file="res://assets/ui/icons/pixel/artifacts/dragon_heart.png"
+dest_files=["res://.godot/imported/dragon_heart.png-b105e37c34a18a9da9b41d74bb873b80.ctex"]
 
 [params]
 
