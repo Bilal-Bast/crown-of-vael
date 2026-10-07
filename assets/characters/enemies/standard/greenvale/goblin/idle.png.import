@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b4nq3nedk07w3"
-path="res://.godot/imported/idle.png-fcefef07292cddcbebe5439eabfaf825.ctex"
+path="res://.godot/imported/idle.png-facc63d049ff317ff77b42444a8c7878.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/greenvale/goblin/idle.png"
-dest_files=["res://.godot/imported/idle.png-fcefef07292cddcbebe5439eabfaf825.ctex"]
+source_file="res://assets/characters/enemies/standard/greenvale/goblin/idle.png"
+dest_files=["res://.godot/imported/idle.png-facc63d049ff317ff77b42444a8c7878.ctex"]
 
 [params]
 
