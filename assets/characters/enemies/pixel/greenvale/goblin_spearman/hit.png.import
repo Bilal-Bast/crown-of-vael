@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dkmesvuwub4b2"
-path="res://.godot/imported/hit.png-6d0f385656dc5f06005bb097193faaee.ctex"
+path="res://.godot/imported/hit.png-c409ca834891632d813133696da03c1e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/greenvale/goblin_spearman/hit.png"
-dest_files=["res://.godot/imported/hit.png-6d0f385656dc5f06005bb097193faaee.ctex"]
+source_file="res://assets/characters/enemies/pixel/greenvale/goblin_spearman/hit.png"
+dest_files=["res://.godot/imported/hit.png-c409ca834891632d813133696da03c1e.ctex"]
 
 [params]
 
