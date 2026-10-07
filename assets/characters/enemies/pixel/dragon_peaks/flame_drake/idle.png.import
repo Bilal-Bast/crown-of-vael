@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://rtrona1c71xb"
-path="res://.godot/imported/idle.png-4cd951ecc9aea2fbf05860f6d2046af3.ctex"
+path="res://.godot/imported/idle.png-025e1260218316e53d3a22145d6803ef.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/dragon_peaks/flame_drake/idle.png"
-dest_files=["res://.godot/imported/idle.png-4cd951ecc9aea2fbf05860f6d2046af3.ctex"]
+source_file="res://assets/characters/enemies/pixel/dragon_peaks/flame_drake/idle.png"
+dest_files=["res://.godot/imported/idle.png-025e1260218316e53d3a22145d6803ef.ctex"]
 
 [params]
 
