@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://1n53q8b5fv3u"
-path="res://.godot/imported/idle.png-cb91d7db08ed2e629edfd141eaa6a4e7.ctex"
+path="res://.godot/imported/idle.png-8dadc773f502bd01e5c3d0fd2eaa7ef2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/whispering_forest/forest_bandit/idle.png"
-dest_files=["res://.godot/imported/idle.png-cb91d7db08ed2e629edfd141eaa6a4e7.ctex"]
+source_file="res://assets/characters/enemies/standard/whispering_forest/forest_bandit/idle.png"
+dest_files=["res://.godot/imported/idle.png-8dadc773f502bd01e5c3d0fd2eaa7ef2.ctex"]
 
 [params]
 
