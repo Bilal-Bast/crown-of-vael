@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cy0h3sf4sy82m"
-path="res://.godot/imported/idle.png-97fc42ba2ec4f82f5b6f6ec9fb4f66e0.ctex"
+path="res://.godot/imported/idle.png-fa2dc96e2f47ad75052315b7156824f5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/crimson_desert/tomb_archer/idle.png"
-dest_files=["res://.godot/imported/idle.png-97fc42ba2ec4f82f5b6f6ec9fb4f66e0.ctex"]
+source_file="res://assets/characters/enemies/pixel/crimson_desert/tomb_archer/idle.png"
+dest_files=["res://.godot/imported/idle.png-fa2dc96e2f47ad75052315b7156824f5.ctex"]
 
 [params]
 
