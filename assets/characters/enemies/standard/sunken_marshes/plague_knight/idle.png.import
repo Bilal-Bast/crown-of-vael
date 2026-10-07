@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://yybq5bp1misx"
-path="res://.godot/imported/idle.png-98ac12ee5b3c37cbd9bdd9ea323e722d.ctex"
+path="res://.godot/imported/idle.png-96ffb96981e3d3070dd458949c849193.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/sunken_marshes/plague_knight/idle.png"
-dest_files=["res://.godot/imported/idle.png-98ac12ee5b3c37cbd9bdd9ea323e722d.ctex"]
+source_file="res://assets/characters/enemies/standard/sunken_marshes/plague_knight/idle.png"
+dest_files=["res://.godot/imported/idle.png-96ffb96981e3d3070dd458949c849193.ctex"]
 
 [params]
 
