@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dwtw06ik4mtrr"
-path="res://.godot/imported/battle.png-0b4db5728c8917201b2a5722a2b194be.ctex"
+path="res://.godot/imported/battle.png-fbfa381fa7592132397ac3eadb05d91c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/backgrounds/whispering_forest/battle.png"
-dest_files=["res://.godot/imported/battle.png-0b4db5728c8917201b2a5722a2b194be.ctex"]
+source_file="res://assets/environments/regions/whispering_forest/pixel/battle.png"
+dest_files=["res://.godot/imported/battle.png-fbfa381fa7592132397ac3eadb05d91c.ctex"]
 
 [params]
 
