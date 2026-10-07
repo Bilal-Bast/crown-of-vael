@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://6b43eumo25ng"
-path="res://.godot/imported/entry.png-cef617b69f69b4f1aaa11ae6126ea28e.ctex"
+path="res://.godot/imported/entry.png-ae96bdedcb611624f913ed4c740e5c27.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/ruined_kingdom/dark_archer/entry.png"
-dest_files=["res://.godot/imported/entry.png-cef617b69f69b4f1aaa11ae6126ea28e.ctex"]
+source_file="res://assets/characters/enemies/pixel/ruined_kingdom/dark_archer/entry.png"
+dest_files=["res://.godot/imported/entry.png-ae96bdedcb611624f913ed4c740e5c27.ctex"]
 
 [params]
 
