@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dirgai0yfhgyu"
-path="res://.godot/imported/entry.png-17abcf2e17ba0ee7a9f7b747201dcc27.ctex"
+path="res://.godot/imported/entry.png-ed34d82e8277348f7a686a2e7216f176.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/frostfang_mountains/frost_knight/entry.png"
-dest_files=["res://.godot/imported/entry.png-17abcf2e17ba0ee7a9f7b747201dcc27.ctex"]
+source_file="res://assets/characters/enemies/pixel/frostfang_mountains/frost_knight/entry.png"
+dest_files=["res://.godot/imported/entry.png-ed34d82e8277348f7a686a2e7216f176.ctex"]
 
 [params]
 
