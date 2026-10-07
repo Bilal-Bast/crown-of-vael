@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://h44i3v46lj67"
-path="res://.godot/imported/idle.png-791b02bbf5a2d62f5ec6ffd2e4a4c87c.ctex"
+path="res://.godot/imported/idle.png-9c6b042cda662c37024fad8be617e1b0.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/whispering_forest/corrupted_boar/idle.png"
-dest_files=["res://.godot/imported/idle.png-791b02bbf5a2d62f5ec6ffd2e4a4c87c.ctex"]
+source_file="res://assets/characters/enemies/pixel/whispering_forest/corrupted_boar/idle.png"
+dest_files=["res://.godot/imported/idle.png-9c6b042cda662c37024fad8be617e1b0.ctex"]
 
 [params]
 
