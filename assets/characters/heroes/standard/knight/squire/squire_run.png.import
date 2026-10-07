@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://uei5lunaij1g"
-path="res://.godot/imported/squire_run.png-6166b2c1ee3c32d039369802adc47cb8.ctex"
+path="res://.godot/imported/squire_run.png-9b6740ff17f918c624f9d7a62de61f4c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/heroes/knight/squire/squire_run.png"
-dest_files=["res://.godot/imported/squire_run.png-6166b2c1ee3c32d039369802adc47cb8.ctex"]
+source_file="res://assets/characters/heroes/standard/knight/squire/squire_run.png"
+dest_files=["res://.godot/imported/squire_run.png-9b6740ff17f918c624f9d7a62de61f4c.ctex"]
 
 [params]
 
