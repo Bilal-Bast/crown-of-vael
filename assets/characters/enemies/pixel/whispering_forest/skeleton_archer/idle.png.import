@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bdv8daquhxvpv"
-path="res://.godot/imported/idle.png-0c6fa4d8d4ac7d8e6736a9c3eb28857e.ctex"
+path="res://.godot/imported/idle.png-3a259a0a797a973665c583fac548733e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/whispering_forest/skeleton_archer/idle.png"
-dest_files=["res://.godot/imported/idle.png-0c6fa4d8d4ac7d8e6736a9c3eb28857e.ctex"]
+source_file="res://assets/characters/enemies/pixel/whispering_forest/skeleton_archer/idle.png"
+dest_files=["res://.godot/imported/idle.png-3a259a0a797a973665c583fac548733e.ctex"]
 
 [params]
 
