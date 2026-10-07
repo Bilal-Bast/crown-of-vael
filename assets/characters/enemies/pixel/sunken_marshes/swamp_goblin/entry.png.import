@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c1xpgs8eiptxu"
-path="res://.godot/imported/idle.png-9d387e40aaf15d53194ef5cae5f13464.ctex"
+uid="uid://bx8pl23c22lt1"
+path="res://.godot/imported/entry.png-0a21612eea5fb6a1164f9431537b5bc3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/ashen_highlands/magma_hound/idle.png"
-dest_files=["res://.godot/imported/idle.png-9d387e40aaf15d53194ef5cae5f13464.ctex"]
+source_file="res://assets/characters/enemies/pixel/sunken_marshes/swamp_goblin/entry.png"
+dest_files=["res://.godot/imported/entry.png-0a21612eea5fb6a1164f9431537b5bc3.ctex"]
 
 [params]
 
