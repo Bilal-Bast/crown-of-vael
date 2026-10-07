@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b3t0xr3r37i2m"
-path="res://.godot/imported/hit.png-f1660f248a11ec1ff0d6205fe89f6eb1.ctex"
+path="res://.godot/imported/hit.png-e3aaccd5c1b544441d9ef71f6bad9e8f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/shadowlands/shadow_champion/hit.png"
-dest_files=["res://.godot/imported/hit.png-f1660f248a11ec1ff0d6205fe89f6eb1.ctex"]
+source_file="res://assets/characters/enemies/pixel/shadowlands/shadow_champion/hit.png"
+dest_files=["res://.godot/imported/hit.png-e3aaccd5c1b544441d9ef71f6bad9e8f.ctex"]
 
 [params]
 
