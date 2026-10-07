@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://t7o7h3xdytsg"
-path="res://.godot/imported/hit.png-bfad90b65204973483faed2a321d9a2c.ctex"
+path="res://.godot/imported/hit.png-3013fd5bae9161609dce1079e46150ee.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/frostfang_mountains/frostfang_giant/hit.png"
-dest_files=["res://.godot/imported/hit.png-bfad90b65204973483faed2a321d9a2c.ctex"]
+source_file="res://assets/characters/enemies/pixel/frostfang_mountains/frostfang_giant/hit.png"
+dest_files=["res://.godot/imported/hit.png-3013fd5bae9161609dce1079e46150ee.ctex"]
 
 [params]
 
