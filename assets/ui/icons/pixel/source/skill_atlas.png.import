@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://crlnhiixdqe8n"
-path="res://.godot/imported/skill_atlas.png-21b9e07ca4e66af845086b21a7be7d86.ctex"
+path="res://.godot/imported/skill_atlas.png-963203143b32b69951a44446ee27c5cb.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/pixel_ui/source/skill_atlas.png"
-dest_files=["res://.godot/imported/skill_atlas.png-21b9e07ca4e66af845086b21a7be7d86.ctex"]
+source_file="res://assets/ui/icons/pixel/source/skill_atlas.png"
+dest_files=["res://.godot/imported/skill_atlas.png-963203143b32b69951a44446ee27c5cb.ctex"]
 
 [params]
 
