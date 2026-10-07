@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://gxoy6s2swbo5"
-path="res://.godot/imported/hit.png-dab65dfa063e6051a076cae61c084ad1.ctex"
+path="res://.godot/imported/hit.png-928d7689c507239fc68656f66d74624b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/crimson_desert/desert_raider/hit.png"
-dest_files=["res://.godot/imported/hit.png-dab65dfa063e6051a076cae61c084ad1.ctex"]
+source_file="res://assets/characters/enemies/pixel/crimson_desert/desert_raider/hit.png"
+dest_files=["res://.godot/imported/hit.png-928d7689c507239fc68656f66d74624b.ctex"]
 
 [params]
 
