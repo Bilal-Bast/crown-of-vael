@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dynybyvhlwi06"
-path="res://.godot/imported/blood_crown.png-98752e2bdd38b61f104a1315ef7df92f.ctex"
+path="res://.godot/imported/blood_crown.png-06e022b9039ff08d3611c3b6410b5764.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/pixel_ui/artifacts/blood_crown.png"
-dest_files=["res://.godot/imported/blood_crown.png-98752e2bdd38b61f104a1315ef7df92f.ctex"]
+source_file="res://assets/ui/icons/pixel/artifacts/blood_crown.png"
+dest_files=["res://.godot/imported/blood_crown.png-06e022b9039ff08d3611c3b6410b5764.ctex"]
 
 [params]
 
