@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dj2cfk2gg3vju"
-path="res://.godot/imported/run.png-1e599ff8dc677f90518452d64710cab0.ctex"
+path="res://.godot/imported/run.png-717df485882dcd16b7d909f7f7f34f0d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/heroes/knight/divine_paladin/run.png"
-dest_files=["res://.godot/imported/run.png-1e599ff8dc677f90518452d64710cab0.ctex"]
+source_file="res://assets/characters/heroes/standard/knight/divine_paladin/run.png"
+dest_files=["res://.godot/imported/run.png-717df485882dcd16b7d909f7f7f34f0d.ctex"]
 
 [params]
 
