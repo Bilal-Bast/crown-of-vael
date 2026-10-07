@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dgte40hyvouqd"
-path="res://.godot/imported/attack.png-bb7f36141ddfde01fa33dbced9231caa.ctex"
+uid="uid://bmtvwcvivrn1v"
+path="res://.godot/imported/gloves.png-75731cbc3d9fb74fd10b3ad9bfa1e989.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/demon_realm/corrupted_giant/attack.png"
-dest_files=["res://.godot/imported/attack.png-bb7f36141ddfde01fa33dbced9231caa.ctex"]
+source_file="res://assets/ui/icons/pixel/equipment/gloves.png"
+dest_files=["res://.godot/imported/gloves.png-75731cbc3d9fb74fd10b3ad9bfa1e989.ctex"]
 
 [params]
 
