@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cc5y40ecnrrro"
-path="res://.godot/imported/ring.png-3bf5ca6e1466cfc1e11c80d374a15dd5.ctex"
+path="res://.godot/imported/ring.png-8cef0a7b10f8e03085e80eb9eec2f0a1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/pixel_ui/equipment/rarity_atlas/ring.png"
-dest_files=["res://.godot/imported/ring.png-3bf5ca6e1466cfc1e11c80d374a15dd5.ctex"]
+source_file="res://assets/ui/icons/pixel/equipment/rarity_atlas/ring.png"
+dest_files=["res://.godot/imported/ring.png-8cef0a7b10f8e03085e80eb9eec2f0a1.ctex"]
 
 [params]
 
