@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dvfu185r16xnw"
-path="res://.godot/imported/guard.png-dcb28e2ec8d0a6355b22d988eb5a4249.ctex"
+path="res://.godot/imported/guard.png-9b58a0c5c32106db687dd4dd5f6e91fe.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/heroes/knight/paladin/guard.png"
-dest_files=["res://.godot/imported/guard.png-dcb28e2ec8d0a6355b22d988eb5a4249.ctex"]
+source_file="res://assets/characters/heroes/standard/knight/paladin/guard.png"
+dest_files=["res://.godot/imported/guard.png-9b58a0c5c32106db687dd4dd5f6e91fe.ctex"]
 
 [params]
 
