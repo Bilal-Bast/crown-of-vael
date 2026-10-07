@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cvwpmduv1d34v"
-path="res://.godot/imported/portrait.png-17087483c1415fc7d2b255a3fb3e7bc7.ctex"
+uid="uid://c22gy1k8uri23"
+path="res://.godot/imported/idle.png-376c11fb83d0f2c0ccb738d8d3b6a295.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/heroes/assassin/portrait.png"
-dest_files=["res://.godot/imported/portrait.png-17087483c1415fc7d2b255a3fb3e7bc7.ctex"]
+source_file="res://assets/characters/enemies/standard/greenvale/corrupted_wolf/idle.png"
+dest_files=["res://.godot/imported/idle.png-376c11fb83d0f2c0ccb738d8d3b6a295.ctex"]
 
 [params]
 
@@ -36,5 +36,5 @@ process/premult_alpha=false
 process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
-process/size_limit=0
+process/size_limit=512
 detect_3d/compress_to=1
