@@ -7,7 +7,7 @@ const OUTPUT_FRAME := 256
 func _initialize() -> void:
 	var failures := 0
 	for hero_id in HEROES:
-		var source_path := "res://assets/heroes/%s/source_atlas_pixel.png" % hero_id
+		var source_path := "res://assets/characters/heroes/standard/%s/source_atlas_pixel.png" % hero_id
 		var source := Image.new()
 		if source.load(source_path) != OK or source.get_width() < 1200 or source.get_height() < 1200:
 			push_error("Invalid hero source atlas: %s" % source_path)
@@ -17,7 +17,7 @@ func _initialize() -> void:
 			push_error("Hero source atlas has no transparency: %s" % source_path)
 			failures += 1
 			continue
-		var base := "res://assets/heroes/%s" % hero_id
+		var base := "res://assets/characters/heroes/standard/%s" % hero_id
 		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(base))
 		var portrait := Image.create(OUTPUT_FRAME, OUTPUT_FRAME, false, Image.FORMAT_RGBA8)
 		for state_index in STATES.size():
