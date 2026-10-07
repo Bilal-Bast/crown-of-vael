@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bjusiqglm20rn"
-path="res://.godot/imported/death.png-36bb90c71d00ac79aa15ed2f3a83a750.ctex"
+path="res://.godot/imported/death.png-650703b0d1bf8e78e61fbd1df14b1932.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/ruined_kingdom/corrupted_king/death.png"
-dest_files=["res://.godot/imported/death.png-36bb90c71d00ac79aa15ed2f3a83a750.ctex"]
+source_file="res://assets/characters/enemies/pixel/ruined_kingdom/corrupted_king/death.png"
+dest_files=["res://.godot/imported/death.png-650703b0d1bf8e78e61fbd1df14b1932.ctex"]
 
 [params]
 
