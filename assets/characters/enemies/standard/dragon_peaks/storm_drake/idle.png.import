@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dnnh3nhkb17cj"
-path="res://.godot/imported/idle.png-57310b67346c0583bc9c7f4d7b6017ab.ctex"
+path="res://.godot/imported/idle.png-4d1779f3914872e4721824f5afc2b72a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/dragon_peaks/storm_drake/idle.png"
-dest_files=["res://.godot/imported/idle.png-57310b67346c0583bc9c7f4d7b6017ab.ctex"]
+source_file="res://assets/characters/enemies/standard/dragon_peaks/storm_drake/idle.png"
+dest_files=["res://.godot/imported/idle.png-4d1779f3914872e4721824f5afc2b72a.ctex"]
 
 [params]
 
