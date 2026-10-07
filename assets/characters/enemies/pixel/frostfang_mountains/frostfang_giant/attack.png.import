@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://r20532jsnawu"
-path="res://.godot/imported/attack.png-ae4419db956f34f9e9496093f3bf0e56.ctex"
+path="res://.godot/imported/attack.png-75ccaa1ecdf544547c0647044b14d470.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/frostfang_mountains/frostfang_giant/attack.png"
-dest_files=["res://.godot/imported/attack.png-ae4419db956f34f9e9496093f3bf0e56.ctex"]
+source_file="res://assets/characters/enemies/pixel/frostfang_mountains/frostfang_giant/attack.png"
+dest_files=["res://.godot/imported/attack.png-75ccaa1ecdf544547c0647044b14d470.ctex"]
 
 [params]
 
