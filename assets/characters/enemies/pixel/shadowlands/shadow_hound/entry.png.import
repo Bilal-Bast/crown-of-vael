@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://btx68bd2n0i2x"
-path="res://.godot/imported/entry.png-341361d81a93e004bb3f604d14bc36dc.ctex"
+path="res://.godot/imported/entry.png-7a4084d3246879193b4563ab1f2a509a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/shadowlands/shadow_hound/entry.png"
-dest_files=["res://.godot/imported/entry.png-341361d81a93e004bb3f604d14bc36dc.ctex"]
+source_file="res://assets/characters/enemies/pixel/shadowlands/shadow_hound/entry.png"
+dest_files=["res://.godot/imported/entry.png-7a4084d3246879193b4563ab1f2a509a.ctex"]
 
 [params]
 
