@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://crf6ujvbk24ae"
-path="res://.godot/imported/entry.png-cd0cea5dcf3a27ae406bfd180ccf6cda.ctex"
+path="res://.godot/imported/entry.png-418055d1eb2482a2e10873c03b4133cb.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/frostfang_mountains/ice_troll/entry.png"
-dest_files=["res://.godot/imported/entry.png-cd0cea5dcf3a27ae406bfd180ccf6cda.ctex"]
+source_file="res://assets/characters/enemies/pixel/frostfang_mountains/ice_troll/entry.png"
+dest_files=["res://.godot/imported/entry.png-418055d1eb2482a2e10873c03b4133cb.ctex"]
 
 [params]
 
