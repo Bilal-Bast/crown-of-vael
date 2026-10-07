@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cm0nh3arj45uq"
-path="res://.godot/imported/hit.png-1845feeb812034bdc199ec950aea2bc5.ctex"
+path="res://.godot/imported/hit.png-af6e173dc2a3689422e8c1db4f8dc73f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/whispering_forest/ancient_treant/hit.png"
-dest_files=["res://.godot/imported/hit.png-1845feeb812034bdc199ec950aea2bc5.ctex"]
+source_file="res://assets/characters/enemies/pixel/whispering_forest/ancient_treant/hit.png"
+dest_files=["res://.godot/imported/hit.png-af6e173dc2a3689422e8c1db4f8dc73f.ctex"]
 
 [params]
 
