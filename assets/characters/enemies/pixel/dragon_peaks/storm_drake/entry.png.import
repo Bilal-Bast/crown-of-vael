@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://djdbte3l2u54p"
-path="res://.godot/imported/entry.png-db903f4617ddc5cf52636044adbaab72.ctex"
+path="res://.godot/imported/entry.png-7483d8b2b36289d70c725a4dea0c67af.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/dragon_peaks/storm_drake/entry.png"
-dest_files=["res://.godot/imported/entry.png-db903f4617ddc5cf52636044adbaab72.ctex"]
+source_file="res://assets/characters/enemies/pixel/dragon_peaks/storm_drake/entry.png"
+dest_files=["res://.godot/imported/entry.png-7483d8b2b36289d70c725a4dea0c67af.ctex"]
 
 [params]
 
