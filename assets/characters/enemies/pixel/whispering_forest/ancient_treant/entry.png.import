@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://culv8uce20ipp"
-path="res://.godot/imported/entry.png-74891749d3c5c05a40dff488deeb5030.ctex"
+uid="uid://b2elauhcgk1tm"
+path="res://.godot/imported/entry.png-f8f99077632f11c1fc888f6b7c92522a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/ashen_highlands/charred_skeleton/entry.png"
-dest_files=["res://.godot/imported/entry.png-74891749d3c5c05a40dff488deeb5030.ctex"]
+source_file="res://assets/characters/enemies/pixel/whispering_forest/ancient_treant/entry.png"
+dest_files=["res://.godot/imported/entry.png-f8f99077632f11c1fc888f6b7c92522a.ctex"]
 
 [params]
 
