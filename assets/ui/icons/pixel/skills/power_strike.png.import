@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bnefq7iv2u8t0"
-path="res://.godot/imported/power_strike.png-1ed42868ea604fb14c54632b134e8e34.ctex"
+path="res://.godot/imported/power_strike.png-3d0d0d2af4298de7382e74747efe26dd.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/pixel_ui/skills/power_strike.png"
-dest_files=["res://.godot/imported/power_strike.png-1ed42868ea604fb14c54632b134e8e34.ctex"]
+source_file="res://assets/ui/icons/pixel/skills/power_strike.png"
+dest_files=["res://.godot/imported/power_strike.png-3d0d0d2af4298de7382e74747efe26dd.ctex"]
 
 [params]
 
