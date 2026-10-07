@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://twmx4v3vovvi"
-path="res://.godot/imported/entry.png-4ac0310a9f0b2eb72e824c44b188c697.ctex"
+path="res://.godot/imported/entry.png-51f9ed35eba694f3b858c5b6876c7c95.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/ruined_kingdom/fallen_knight/entry.png"
-dest_files=["res://.godot/imported/entry.png-4ac0310a9f0b2eb72e824c44b188c697.ctex"]
+source_file="res://assets/characters/enemies/pixel/ruined_kingdom/fallen_knight/entry.png"
+dest_files=["res://.godot/imported/entry.png-51f9ed35eba694f3b858c5b6876c7c95.ctex"]
 
 [params]
 
