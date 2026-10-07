@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dwphodfpie3u8"
-path="res://.godot/imported/death.png-fd73a2b93cac07db4b3762633f5f404a.ctex"
+uid="uid://c1xpgs8eiptxu"
+path="res://.godot/imported/idle.png-16ae50346440adf83031146e1e7111d2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/shadowlands/lord_of_shadows/death.png"
-dest_files=["res://.godot/imported/death.png-fd73a2b93cac07db4b3762633f5f404a.ctex"]
+source_file="res://assets/characters/enemies/pixel/ashen_highlands/magma_hound/idle.png"
+dest_files=["res://.godot/imported/idle.png-16ae50346440adf83031146e1e7111d2.ctex"]
 
 [params]
 
