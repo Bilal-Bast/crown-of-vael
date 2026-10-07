@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bca7y2gwf4tts"
-path="res://.godot/imported/entry.png-fbe9ca2d6dcd8b39d44dc89b94bb42d3.ctex"
+path="res://.godot/imported/entry.png-d15b32666d51ce8c9f9058c2ccbdfdea.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/ashen_highlands/infernal_ogre/entry.png"
-dest_files=["res://.godot/imported/entry.png-fbe9ca2d6dcd8b39d44dc89b94bb42d3.ctex"]
+source_file="res://assets/characters/enemies/pixel/ashen_highlands/infernal_ogre/entry.png"
+dest_files=["res://.godot/imported/entry.png-d15b32666d51ce8c9f9058c2ccbdfdea.ctex"]
 
 [params]
 
