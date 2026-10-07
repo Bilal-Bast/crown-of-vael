@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://jlx5gmqn2vkx"
-path="res://.godot/imported/attack.png-e0ec45456b6ea0471a6393c05dba8bbd.ctex"
+path="res://.godot/imported/attack.png-29398a0683f9b7cebb48ee05d69cd7e4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/crimson_desert/fire_cultist/attack.png"
-dest_files=["res://.godot/imported/attack.png-e0ec45456b6ea0471a6393c05dba8bbd.ctex"]
+source_file="res://assets/characters/enemies/pixel/crimson_desert/fire_cultist/attack.png"
+dest_files=["res://.godot/imported/attack.png-29398a0683f9b7cebb48ee05d69cd7e4.ctex"]
 
 [params]
 
