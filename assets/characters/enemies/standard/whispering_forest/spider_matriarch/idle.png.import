@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dg8e1s4ef16vf"
-path="res://.godot/imported/idle.png-90365c69fed8a49177dde1e8a660c9bb.ctex"
+path="res://.godot/imported/idle.png-403ceb42d885e38a242ce6697787207a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/whispering_forest/spider_matriarch/idle.png"
-dest_files=["res://.godot/imported/idle.png-90365c69fed8a49177dde1e8a660c9bb.ctex"]
+source_file="res://assets/characters/enemies/standard/whispering_forest/spider_matriarch/idle.png"
+dest_files=["res://.godot/imported/idle.png-403ceb42d885e38a242ce6697787207a.ctex"]
 
 [params]
 
