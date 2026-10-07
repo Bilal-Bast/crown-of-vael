@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://1rxl4i3m41xj"
-path="res://.godot/imported/dragon_fang.png-dd3380728a78723e122b4061f4ba8241.ctex"
+path="res://.godot/imported/dragon_fang.png-6bc2e921625700927dd6a2a75b277d63.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/pixel_ui/artifacts/dragon_fang.png"
-dest_files=["res://.godot/imported/dragon_fang.png-dd3380728a78723e122b4061f4ba8241.ctex"]
+source_file="res://assets/ui/icons/pixel/artifacts/dragon_fang.png"
+dest_files=["res://.godot/imported/dragon_fang.png-6bc2e921625700927dd6a2a75b277d63.ctex"]
 
 [params]
 
