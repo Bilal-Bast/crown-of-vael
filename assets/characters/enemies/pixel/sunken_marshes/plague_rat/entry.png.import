@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://biy7h3kj2vmw8"
-path="res://.godot/imported/entry.png-13482f1fffc7db0f6e9733503402f226.ctex"
+path="res://.godot/imported/entry.png-023bfeeacbd1e0a7f3aa8f1edb6a063f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/sunken_marshes/plague_rat/entry.png"
-dest_files=["res://.godot/imported/entry.png-13482f1fffc7db0f6e9733503402f226.ctex"]
+source_file="res://assets/characters/enemies/pixel/sunken_marshes/plague_rat/entry.png"
+dest_files=["res://.godot/imported/entry.png-023bfeeacbd1e0a7f3aa8f1edb6a063f.ctex"]
 
 [params]
 
