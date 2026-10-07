@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dpv36cyjeghnp"
-path="res://.godot/imported/hit.png-19ea8ebe24cf8fc05b11bcfec3c831ff.ctex"
+path="res://.godot/imported/hit.png-fe3fdaae79066559e6edac8f58877de5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/heroes/knight/royal_knight/hit.png"
-dest_files=["res://.godot/imported/hit.png-19ea8ebe24cf8fc05b11bcfec3c831ff.ctex"]
+source_file="res://assets/characters/heroes/standard/knight/royal_knight/hit.png"
+dest_files=["res://.godot/imported/hit.png-fe3fdaae79066559e6edac8f58877de5.ctex"]
 
 [params]
 
