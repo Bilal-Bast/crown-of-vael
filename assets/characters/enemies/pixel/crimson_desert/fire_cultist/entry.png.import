@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cowdigur3e2hr"
-path="res://.godot/imported/entry.png-a577c8b72c3c9f9d2c9e327ef8cc659f.ctex"
+path="res://.godot/imported/entry.png-91f00e30209d4a37c69ff444cd712f00.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/crimson_desert/fire_cultist/entry.png"
-dest_files=["res://.godot/imported/entry.png-a577c8b72c3c9f9d2c9e327ef8cc659f.ctex"]
+source_file="res://assets/characters/enemies/pixel/crimson_desert/fire_cultist/entry.png"
+dest_files=["res://.godot/imported/entry.png-91f00e30209d4a37c69ff444cd712f00.ctex"]
 
 [params]
 
