@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://s1ltexhoalq0"
-path="res://.godot/imported/entry.png-9ba3a506c7c7a57e2d17a9b8af213c6c.ctex"
+path="res://.godot/imported/entry.png-66347ef79740a6b3e0747b4ca8cbf8cc.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/frostfang_mountains/snow_bandit/entry.png"
-dest_files=["res://.godot/imported/entry.png-9ba3a506c7c7a57e2d17a9b8af213c6c.ctex"]
+source_file="res://assets/characters/enemies/pixel/frostfang_mountains/snow_bandit/entry.png"
+dest_files=["res://.godot/imported/entry.png-66347ef79740a6b3e0747b4ca8cbf8cc.ctex"]
 
 [params]
 
