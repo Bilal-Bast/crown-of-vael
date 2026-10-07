@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dsngrtmxoaolt"
-path="res://.godot/imported/entry.png-d6d0c8618f14e07eaa12a23e0b6634dc.ctex"
+path="res://.godot/imported/entry.png-fe5250764f22f5d3472b491a47203cfe.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/crimson_desert/ancient_sand_wyrm/entry.png"
-dest_files=["res://.godot/imported/entry.png-d6d0c8618f14e07eaa12a23e0b6634dc.ctex"]
+source_file="res://assets/characters/enemies/pixel/crimson_desert/ancient_sand_wyrm/entry.png"
+dest_files=["res://.godot/imported/entry.png-fe5250764f22f5d3472b491a47203cfe.ctex"]
 
 [params]
 
