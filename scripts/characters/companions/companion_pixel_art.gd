@@ -1,8 +1,8 @@
 class_name CompanionPixelArt
 extends RefCounted
 
-const WOLF_ATLAS: Texture2D = preload("res://assets/prototype_pixel/companions/wolf_evolutions.png")
-const COMPANION_ATLAS: Texture2D = preload("res://assets/prototype_pixel/companions/companions.png")
+const WOLF_ATLAS: Texture2D = preload("res://assets/characters/companions/pixel/wolf_evolutions.png")
+const COMPANION_ATLAS: Texture2D = preload("res://assets/characters/companions/pixel/companions.png")
 
 const OTHER_ROWS := {
 	"fairy": 0, "young_dragon": 1, "griffin": 2,
