@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cgp3eyackm1bo"
-path="res://.godot/imported/entrance.png-422dc3827d01ab96e7812c79549994df.ctex"
+path="res://.godot/imported/entrance.png-226d3ec2e347c1496e0fcc98c03e4be9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/shadowlands/lord_of_shadows/entrance.png"
-dest_files=["res://.godot/imported/entrance.png-422dc3827d01ab96e7812c79549994df.ctex"]
+source_file="res://assets/characters/enemies/pixel/shadowlands/lord_of_shadows/entrance.png"
+dest_files=["res://.godot/imported/entrance.png-226d3ec2e347c1496e0fcc98c03e4be9.ctex"]
 
 [params]
 
