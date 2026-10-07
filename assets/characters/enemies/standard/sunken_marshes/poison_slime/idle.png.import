@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b0ht1nt5ej1re"
-path="res://.godot/imported/idle.png-cf3103a0f63ff760ec182db1ee376894.ctex"
+path="res://.godot/imported/idle.png-8f83779916067d0b62f6c753ea88f3ca.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/sunken_marshes/poison_slime/idle.png"
-dest_files=["res://.godot/imported/idle.png-cf3103a0f63ff760ec182db1ee376894.ctex"]
+source_file="res://assets/characters/enemies/standard/sunken_marshes/poison_slime/idle.png"
+dest_files=["res://.godot/imported/idle.png-8f83779916067d0b62f6c753ea88f3ca.ctex"]
 
 [params]
 
