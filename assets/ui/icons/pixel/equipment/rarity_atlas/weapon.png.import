@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bbdlcxglyu1k8"
-path="res://.godot/imported/weapon.png-75074d16d7038fdb795905f42f9ca85e.ctex"
+path="res://.godot/imported/weapon.png-1f09567b7ad4c41d934cdf9530738736.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/pixel_ui/equipment/rarity_atlas/weapon.png"
-dest_files=["res://.godot/imported/weapon.png-75074d16d7038fdb795905f42f9ca85e.ctex"]
+source_file="res://assets/ui/icons/pixel/equipment/rarity_atlas/weapon.png"
+dest_files=["res://.godot/imported/weapon.png-1f09567b7ad4c41d934cdf9530738736.ctex"]
 
 [params]
 
