@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://claj3b00ql03y"
-path="res://.godot/imported/attack.png-eefab396b87a36fc0bde4a9e6ec74b7f.ctex"
+path="res://.godot/imported/attack.png-e62fc9e197e4c2e9f8268ff86a530621.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/ashen_highlands/magma_hound/attack.png"
-dest_files=["res://.godot/imported/attack.png-eefab396b87a36fc0bde4a9e6ec74b7f.ctex"]
+source_file="res://assets/characters/enemies/pixel/ashen_highlands/magma_hound/attack.png"
+dest_files=["res://.godot/imported/attack.png-e62fc9e197e4c2e9f8268ff86a530621.ctex"]
 
 [params]
 
