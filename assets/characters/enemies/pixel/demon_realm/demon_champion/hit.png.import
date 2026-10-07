@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bs5dvqeef3h76"
-path="res://.godot/imported/hit.png-1ce03b796eaacfa0c52a127af2255b43.ctex"
+path="res://.godot/imported/hit.png-5b140177a05f2629ed5864708b8c39f9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/demon_realm/demon_champion/hit.png"
-dest_files=["res://.godot/imported/hit.png-1ce03b796eaacfa0c52a127af2255b43.ctex"]
+source_file="res://assets/characters/enemies/pixel/demon_realm/demon_champion/hit.png"
+dest_files=["res://.godot/imported/hit.png-5b140177a05f2629ed5864708b8c39f9.ctex"]
 
 [params]
 
