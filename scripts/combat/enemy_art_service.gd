@@ -31,7 +31,8 @@ const REGION_ENEMIES := {
 }
 const REQUIRED_STATES := ["idle", "attack", "hit"]
 const SLOT_FILES := {"idle": "idle.png", "attack": "attack.png", "hit": "hit.png", "portrait": "portrait.png", "death": "death.png"}
-const BASE := "res://assets"
+const CHARACTER_BASE := "res://assets/characters"
+const ENVIRONMENT_BASE := "res://assets/environments"
 const ENEMY_META := {
 	"Goblin": {"scale": 0.82, "offset": Vector2.ZERO, "attack_duration": 0.26, "hit_duration": 0.22, "ranged_offset": Vector2(40, -86)},
 	"Skeleton": {"scale": 0.84, "offset": Vector2.ZERO, "attack_duration": 0.27, "hit_duration": 0.23, "ranged_offset": Vector2(40, -86)},
@@ -75,7 +76,7 @@ static func enemy_path(enemy_id: String, state: String = "idle", region: int = 1
 	var folder := enemy_folder(enemy_id, region)
 	if folder.is_empty() or not SLOT_FILES.has(state):
 		return ""
-	return "%s/enemies/%s/%s/%s" % [BASE, ENEMY_REGION_FOLDERS[region], folder, SLOT_FILES[state]]
+	return "%s/enemies/standard/%s/%s/%s" % [CHARACTER_BASE, ENEMY_REGION_FOLDERS[region], folder, SLOT_FILES[state]]
 
 static func resolve_enemy_path(enemy_id: String, state: String = "idle", region: int = 1) -> String:
 	var key := "enemy:%d:%s:%s" % [region, enemy_id, state]
@@ -118,10 +119,10 @@ static func background_path(region: int = 1, boss: bool = false) -> String:
 		return ""
 	var folder := str(BACKGROUND_REGION_FOLDERS[region])
 	if boss:
-		var boss_path := "%s/backgrounds/regions/%s/boss_bg.png" % [BASE, folder]
+		var boss_path := "%s/regions/%s/painted/boss_bg.png" % [ENVIRONMENT_BASE, folder]
 		if _path_exists_cached("background:%d:boss" % region, boss_path):
 			return boss_path
-	var regular_path := "%s/backgrounds/regions/%s/battle_bg.png" % [BASE, folder]
+	var regular_path := "%s/regions/%s/painted/battle_bg.png" % [ENVIRONMENT_BASE, folder]
 	return regular_path if _path_exists_cached("background:%d:regular" % region, regular_path) else ""
 
 static func _path_exists_cached(key: String, path: String) -> bool:
@@ -152,9 +153,9 @@ static func validation_report(region: int = 1) -> Array[String]:
 			if resolve_enemy_path(enemy_id, state, region).is_empty():
 				warnings.append("Missing %s art: %s" % [state, enemy_path(enemy_id, state, region)])
 	var folder := str(BACKGROUND_REGION_FOLDERS[region])
-	if not _path_exists_cached("background:%d:regular" % region, "%s/backgrounds/regions/%s/battle_bg.png" % [BASE, folder]):
+	if not _path_exists_cached("background:%d:regular" % region, "%s/regions/%s/painted/battle_bg.png" % [ENVIRONMENT_BASE, folder]):
 		warnings.append("Missing regular background: %s" % background_path(region))
-	if not _path_exists_cached("background:%d:boss" % region, "%s/backgrounds/regions/%s/boss_bg.png" % [BASE, folder]):
+	if not _path_exists_cached("background:%d:boss" % region, "%s/regions/%s/painted/boss_bg.png" % [ENVIRONMENT_BASE, folder]):
 		warnings.append("Missing optional boss background; regular background fallback will be used")
 	return warnings
 
