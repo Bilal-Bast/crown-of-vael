@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d0xvr1wvoml8s"
-path="res://.godot/imported/hit.png-6498b4b2cb96a98afa41d0e1e7ef4944.ctex"
+path="res://.godot/imported/hit.png-5e0bc7f51aa588b3095adbefa1659582.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/sunken_marshes/cultist/hit.png"
-dest_files=["res://.godot/imported/hit.png-6498b4b2cb96a98afa41d0e1e7ef4944.ctex"]
+source_file="res://assets/characters/enemies/pixel/sunken_marshes/cultist/hit.png"
+dest_files=["res://.godot/imported/hit.png-5e0bc7f51aa588b3095adbefa1659582.ctex"]
 
 [params]
 
