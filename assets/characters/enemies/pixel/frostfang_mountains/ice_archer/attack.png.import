@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bdmxfb43se8at"
-path="res://.godot/imported/attack.png-adc6fcde41278a134ed6dd02e417d1cd.ctex"
+path="res://.godot/imported/attack.png-d6b84bd34b3aa5cbbfe0ac29c03f752f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/frostfang_mountains/ice_archer/attack.png"
-dest_files=["res://.godot/imported/attack.png-adc6fcde41278a134ed6dd02e417d1cd.ctex"]
+source_file="res://assets/characters/enemies/pixel/frostfang_mountains/ice_archer/attack.png"
+dest_files=["res://.godot/imported/attack.png-d6b84bd34b3aa5cbbfe0ac29c03f752f.ctex"]
 
 [params]
 
