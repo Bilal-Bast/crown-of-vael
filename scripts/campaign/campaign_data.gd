@@ -84,7 +84,7 @@ static func element_multiplier(attacker: String, defender: String) -> float:
 static func music_path(region: int, boss: bool, difficulty: int = 0) -> String:
 	var suffix := "boss" if boss else "battle"
 	var variant := "_hard" if difficulty >= 3 else ""
-	return "res://audio/region_%02d_%s%s.ogg" % [region, suffix, variant]
+	return "res://assets/audio/music/region_%02d_%s%s.ogg" % [region, suffix, variant]
 
 static func wave_kinds(region: int, stage: int, wave: int, force_elite: bool = false, force_treasure: bool = false) -> Array[String]:
 	var result: Array[String] = []
