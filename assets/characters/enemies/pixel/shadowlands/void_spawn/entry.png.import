@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dt2p264fyvfi0"
-path="res://.godot/imported/entry.png-ac93846b7449100577ac8d132cc29139.ctex"
+path="res://.godot/imported/entry.png-1556910ec235e8ef83b6aef8f0e8f08e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/shadowlands/void_spawn/entry.png"
-dest_files=["res://.godot/imported/entry.png-ac93846b7449100577ac8d132cc29139.ctex"]
+source_file="res://assets/characters/enemies/pixel/shadowlands/void_spawn/entry.png"
+dest_files=["res://.godot/imported/entry.png-1556910ec235e8ef83b6aef8f0e8f08e.ctex"]
 
 [params]
 
