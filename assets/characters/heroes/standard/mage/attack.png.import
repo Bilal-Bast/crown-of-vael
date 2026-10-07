@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://lw2bner7hslp"
-path="res://.godot/imported/attack.png-b23b4bd68d956e52966f4be4aea76c6f.ctex"
+path="res://.godot/imported/attack.png-a4c57117af9b130877da2f1f7d0abe2a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/heroes/mage/attack.png"
-dest_files=["res://.godot/imported/attack.png-b23b4bd68d956e52966f4be4aea76c6f.ctex"]
+source_file="res://assets/characters/heroes/standard/mage/attack.png"
+dest_files=["res://.godot/imported/attack.png-a4c57117af9b130877da2f1f7d0abe2a.ctex"]
 
 [params]
 
