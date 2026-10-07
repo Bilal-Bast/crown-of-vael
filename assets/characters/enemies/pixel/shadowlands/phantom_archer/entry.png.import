@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b5shoi0cy3gi8"
-path="res://.godot/imported/entry.png-e930ac2c2c8d77fdd500a856133a7c7c.ctex"
+path="res://.godot/imported/entry.png-66221bdc23e23291d5158681775ffa34.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/shadowlands/phantom_archer/entry.png"
-dest_files=["res://.godot/imported/entry.png-e930ac2c2c8d77fdd500a856133a7c7c.ctex"]
+source_file="res://assets/characters/enemies/pixel/shadowlands/phantom_archer/entry.png"
+dest_files=["res://.godot/imported/entry.png-66221bdc23e23291d5158681775ffa34.ctex"]
 
 [params]
 
