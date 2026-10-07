@@ -11,7 +11,7 @@ func check(value: bool, label: String) -> void:
 		push_error("PHASE 12C: " + label)
 
 func _run() -> void:
-	var audio_script := load("res://scripts/core/audio_service.gd")
+	var audio_script := load("res://scripts/systems/audio_service.gd")
 	var audio = audio_script.new()
 	root.add_child(audio)
 	check(not audio.play_event("unknown_test_event"), "missing audio mapping remains silent")
