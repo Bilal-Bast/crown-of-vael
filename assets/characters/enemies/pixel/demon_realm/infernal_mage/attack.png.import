@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bhewfasq812kw"
-path="res://.godot/imported/attack.png-743b2e54dff16db0e0920a913671c42a.ctex"
+path="res://.godot/imported/attack.png-6bb40de530782484e2de1d0cc1f39d49.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/demon_realm/infernal_mage/attack.png"
-dest_files=["res://.godot/imported/attack.png-743b2e54dff16db0e0920a913671c42a.ctex"]
+source_file="res://assets/characters/enemies/pixel/demon_realm/infernal_mage/attack.png"
+dest_files=["res://.godot/imported/attack.png-6bb40de530782484e2de1d0cc1f39d49.ctex"]
 
 [params]
 
