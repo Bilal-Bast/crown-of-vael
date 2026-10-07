@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://1oirjrckdqvh"
-path="res://.godot/imported/attack.png-07c574b40d5d1d762c167ba70d605973.ctex"
+path="res://.godot/imported/attack.png-136c07264603ce6ebdb2c9b46e161f71.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/heroes/ranger/attack.png"
-dest_files=["res://.godot/imported/attack.png-07c574b40d5d1d762c167ba70d605973.ctex"]
+source_file="res://assets/characters/heroes/standard/ranger/attack.png"
+dest_files=["res://.godot/imported/attack.png-136c07264603ce6ebdb2c9b46e161f71.ctex"]
 
 [params]
 
