@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://xr5c248xf5kg"
-path="res://.godot/imported/idle.png-d837b819247fc4aae60f44b3638fff63.ctex"
+path="res://.godot/imported/idle.png-dfc8c528561da5effe6cde3f897bda29.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/shadowlands/phantom_archer/idle.png"
-dest_files=["res://.godot/imported/idle.png-d837b819247fc4aae60f44b3638fff63.ctex"]
+source_file="res://assets/characters/enemies/standard/shadowlands/phantom_archer/idle.png"
+dest_files=["res://.godot/imported/idle.png-dfc8c528561da5effe6cde3f897bda29.ctex"]
 
 [params]
 
