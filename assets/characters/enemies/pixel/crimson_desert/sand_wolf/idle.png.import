@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c2gg75cw1xgil"
-path="res://.godot/imported/idle.png-1f70611c24c973d16999838b8313dcad.ctex"
+path="res://.godot/imported/idle.png-866f009f6f950caa03e7118293826fa1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/crimson_desert/sand_wolf/idle.png"
-dest_files=["res://.godot/imported/idle.png-1f70611c24c973d16999838b8313dcad.ctex"]
+source_file="res://assets/characters/enemies/pixel/crimson_desert/sand_wolf/idle.png"
+dest_files=["res://.godot/imported/idle.png-866f009f6f950caa03e7118293826fa1.ctex"]
 
 [params]
 
