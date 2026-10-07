@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c805nyb6txrv0"
-path="res://.godot/imported/entry.png-fd7c87108b931be00e92c9a8737b6520.ctex"
+path="res://.godot/imported/entry.png-85a733d257638e1993bbce0429c4c437.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/frostfang_mountains/ice_goblin/entry.png"
-dest_files=["res://.godot/imported/entry.png-fd7c87108b931be00e92c9a8737b6520.ctex"]
+source_file="res://assets/characters/enemies/pixel/frostfang_mountains/ice_goblin/entry.png"
+dest_files=["res://.godot/imported/entry.png-85a733d257638e1993bbce0429c4c437.ctex"]
 
 [params]
 
