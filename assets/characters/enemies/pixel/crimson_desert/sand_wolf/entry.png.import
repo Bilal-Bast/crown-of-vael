@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://sgcrsq0btxqm"
-path="res://.godot/imported/entry.png-76f965751e8e2525f287dc7e258f6774.ctex"
+path="res://.godot/imported/entry.png-d169435106882995e795912b52e8e5ca.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/crimson_desert/sand_wolf/entry.png"
-dest_files=["res://.godot/imported/entry.png-76f965751e8e2525f287dc7e258f6774.ctex"]
+source_file="res://assets/characters/enemies/pixel/crimson_desert/sand_wolf/entry.png"
+dest_files=["res://.godot/imported/entry.png-d169435106882995e795912b52e8e5ca.ctex"]
 
 [params]
 
