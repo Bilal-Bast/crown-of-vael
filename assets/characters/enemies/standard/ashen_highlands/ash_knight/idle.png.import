@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ctqiwjrgqf08v"
-path="res://.godot/imported/idle.png-333c346df2d782c86ec2efd252a821ba.ctex"
+path="res://.godot/imported/idle.png-333bf82adf963ca3037ce9ddd3d87d8f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/ashen_highlands/ash_knight/idle.png"
-dest_files=["res://.godot/imported/idle.png-333c346df2d782c86ec2efd252a821ba.ctex"]
+source_file="res://assets/characters/enemies/standard/ashen_highlands/ash_knight/idle.png"
+dest_files=["res://.godot/imported/idle.png-333bf82adf963ca3037ce9ddd3d87d8f.ctex"]
 
 [params]
 
