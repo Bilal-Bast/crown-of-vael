@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://beyhwnd213sci"
-path="res://.godot/imported/idle.png-35f3a19181949239282189a26733b995.ctex"
+path="res://.godot/imported/idle.png-86c43280123b843114069e96e4c93959.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/ruined_kingdom/dark_archer/idle.png"
-dest_files=["res://.godot/imported/idle.png-35f3a19181949239282189a26733b995.ctex"]
+source_file="res://assets/characters/enemies/pixel/ruined_kingdom/dark_archer/idle.png"
+dest_files=["res://.godot/imported/idle.png-86c43280123b843114069e96e4c93959.ctex"]
 
 [params]
 
