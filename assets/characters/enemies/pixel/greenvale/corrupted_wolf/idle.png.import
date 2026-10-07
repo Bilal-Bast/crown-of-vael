@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://0egc65xk446a"
-path="res://.godot/imported/idle.png-0f0a9af8fbed9e0d6eb476e873ebbf7d.ctex"
+path="res://.godot/imported/idle.png-3694520f3cd5c9630839776b21671b95.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/greenvale/corrupted_wolf/idle.png"
-dest_files=["res://.godot/imported/idle.png-0f0a9af8fbed9e0d6eb476e873ebbf7d.ctex"]
+source_file="res://assets/characters/enemies/pixel/greenvale/corrupted_wolf/idle.png"
+dest_files=["res://.godot/imported/idle.png-3694520f3cd5c9630839776b21671b95.ctex"]
 
 [params]
 
