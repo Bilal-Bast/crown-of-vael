@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dqigy1iqxm3lm"
-path="res://.godot/imported/idle.png-2f91e4bbd61b3422a0e95376472f343c.ctex"
+uid="uid://dtr72w8lrykpy"
+path="res://.godot/imported/armor.png-750e1d79fd17e6e9b5afc51a29f296c9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/greenvale/goblin_captain/idle.png"
-dest_files=["res://.godot/imported/idle.png-2f91e4bbd61b3422a0e95376472f343c.ctex"]
+source_file="res://assets/ui/icons/pixel/equipment/rarity_atlas/armor.png"
+dest_files=["res://.godot/imported/armor.png-750e1d79fd17e6e9b5afc51a29f296c9.ctex"]
 
 [params]
 
@@ -36,5 +36,5 @@ process/premult_alpha=false
 process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
-process/size_limit=512
+process/size_limit=0
 detect_3d/compress_to=1
