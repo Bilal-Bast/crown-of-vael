@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://reaber5btjqt"
-path="res://.godot/imported/idle.png-b091825d18413088fa3c800c107a7b05.ctex"
+uid="uid://c5b6yv4s3k7vf"
+path="res://.godot/imported/battle_bg.png-ceb7b023dd57542bd02c9a1d1d9c4220.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/whispering_forest/corrupted_boar/idle.png"
-dest_files=["res://.godot/imported/idle.png-b091825d18413088fa3c800c107a7b05.ctex"]
+source_file="res://assets/environments/regions/dragon_peaks/painted/battle_bg.png"
+dest_files=["res://.godot/imported/battle_bg.png-ceb7b023dd57542bd02c9a1d1d9c4220.ctex"]
 
 [params]
 
@@ -36,5 +36,5 @@ process/premult_alpha=false
 process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
-process/size_limit=512
+process/size_limit=1536
 detect_3d/compress_to=1
