@@ -6,13 +6,13 @@ The reversible switch is `PROTOTYPE_ENABLED` in `scripts/combat/pixel_battle_art
 
 ## Prototype art
 
-- `assets/prototype_pixel/heroes/squire/{idle,attack,guard,hit}.png`: looping four-frame idle at 7 FPS, six-frame attack and shield bash at 12 FPS, and a four-frame hit reaction at 12 FPS. These replace the former static state swaps while preserving the Squire identity.
-- `assets/prototype_pixel/heroes/squire/run.png`: six right-facing run frames, looped at 10 FPS only during the 1.5-second between-wave transition. Missing or invalid run art falls back to the existing Squire idle sprite while movement continues.
-- `assets/prototype_pixel/enemies/greenvale/{goblin,skeleton,corrupted_wolf}/{idle,attack,hit}.png`: four-frame looping idles; Goblin uses 4/4/3 frames at 8/11/11 FPS, Skeleton 4/4/3 at 7/9/10 FPS, and Wolf 4/5/3 at 8/12/11 FPS for idle/attack/hit.
+- `assets/characters/heroes/pixel/squire/{idle,attack,guard,hit}.png`: looping four-frame idle at 7 FPS, six-frame attack and shield bash at 12 FPS, and a four-frame hit reaction at 12 FPS. These replace the former static state swaps while preserving the Squire identity.
+- `assets/characters/heroes/pixel/squire/run.png`: six right-facing run frames, looped at 10 FPS only during the 1.5-second between-wave transition. Missing or invalid run art falls back to the existing Squire idle sprite while movement continues.
+- `assets/characters/enemies/pixel/greenvale/{goblin,skeleton,corrupted_wolf}/{idle,attack,hit}.png`: four-frame looping idles; Goblin uses 4/4/3 frames at 8/11/11 FPS, Skeleton 4/4/3 at 7/9/10 FPS, and Wolf 4/5/3 at 8/12/11 FPS for idle/attack/hit.
 - Matching `entry.png` sheets animate only the right-to-lane movement: Goblin (4 frames at 11 FPS), Skeleton (4 at 9 FPS), and Corrupted Wolf (4 at 11 FPS). Missing or invalid entry art falls back to the existing idle sprite while the current movement remains in effect.
-- `assets/prototype_pixel/backgrounds/greenvale/battle.png`: dusk countryside, ruined tower and fence, distant hills, and broken road.
-- `assets/prototype_pixel/enemies/whispering_forest/`: production animation strips for Forest Goblin, Giant Spider, Corrupted Boar, Forest Bandit, Skeleton Archer, Poison Wolf, Spider Matriarch, Forest Brute, and Ancient Treant. Normal enemies use 4 idle, 4 entry, 5 attack, and 3 hit frames. Elites use 4/4/5/4. The Treant uses 4 idle, 4 entrance, 5 attack, 3 hit, and 6 death frames. Strips run at 8 FPS idle, 11 FPS entry/attack/hit, and 9 FPS for Treant entrance/death.
-- `assets/prototype_pixel/backgrounds/whispering_forest/battle.png`: 1280 by 720 forest background, filtered nearest-neighbor and contained in the existing battlefield region.
+- `assets/environments/regions/greenvale_outskirts/pixel/battle.png`: dusk countryside, ruined tower and fence, distant hills, and broken road.
+- `assets/characters/enemies/pixel/whispering_forest/`: production animation strips for Forest Goblin, Giant Spider, Corrupted Boar, Forest Bandit, Skeleton Archer, Poison Wolf, Spider Matriarch, Forest Brute, and Ancient Treant. Normal enemies use 4 idle, 4 entry, 5 attack, and 3 hit frames. Elites use 4/4/5/4. The Treant uses 4 idle, 4 entrance, 5 attack, 3 hit, and 6 death frames. Strips run at 8 FPS idle, 11 FPS entry/attack/hit, and 9 FPS for Treant entrance/death.
+- `assets/environments/regions/whispering_forest/pixel/battle.png`: 1280 by 720 forest background, filtered nearest-neighbor and contained in the existing battlefield region.
 - Skeleton Archer uses the existing pixel-arrow projectile style and timing.
 - Shield Bash and Squire melee attacks use a small stepped pixel impact effect drawn in the battle lane.
 
