@@ -1,6 +1,6 @@
 # Crown of Vael
 
-Open `project.godot` in Godot 4.7.1 and run the project. The 1080 × 1920 portrait viewport scales to 360 × 640. Characters, the Squire portrait, item icons, and effects use procedural Godot drawing and text.
+Open `project.godot` in Godot 4.7.1 and run the project. The 1080 × 1920 portrait viewport scales to 360 × 640. Character sprites, region backgrounds, UI icons, and procedural combat effects are organized under `assets/`.
 
 The selected hero fights automatically with equipped skills, companions, and artifacts. Campaign stages have three waves of five enemies; each region's Stage 20 is a 30-second boss fight. Stage progression, death rollback, boss retry, the HUD, and account-wide Gold upgrades continue from earlier phases.
 
@@ -68,11 +68,23 @@ Mage, Ranger, and Necromancer use lightweight traveling projectiles; Assassin us
 
 ## Structure and checks
 
-- `scripts/core/game_data.gd`: enemy, hero, evolution, and progression values.
+- `scripts/data/game_data.gd`: enemy, hero, evolution, and progression values.
 - `scripts/equipment/equipment_data.gd`: starter pool, rarity visuals, item stats, costs, and drop rolls.
-- `scripts/core/save_data.gd`: persistence, migration, rewards, equipment actions, and future evolution gate.
+- `scripts/systems/save_data.gd`: persistence, migration, rewards, equipment actions, and future evolution gate.
 - `scripts/combat/battle_controller.gd`: combat and live reward events.
-- `scripts/combat/battlefield.gd`, `scripts/heroes/hero_portrait.gd`: procedural battle art and Squire portrait.
+- `scripts/combat/battlefield.gd`, `scripts/components/ui/hero_portrait.gd`: battle presentation and reusable Squire portrait.
 - `scripts/ui/main.gd`: portrait HUD, Heroes, Equipment, and navigation.
 - `tests/shared/progression_smoke.gd`, `tests/shared/layout_smoke.gd`, `tests/phase3/phase3_smoke.gd`: progression, layout, and Phase 3 checks.
 - `tests/phase3/phase3_visual_capture.gd`: 360 × 640 captures for visual review.
+
+## Project map and editor previews
+
+- `scenes/main.tscn` is the production root. It builds the current screens and HUD in `scripts/ui/main.gd`; screen-specific logic stays in its feature folders.
+- `scripts/systems/`, `scripts/data/`, `scripts/characters/`, `scripts/combat/`, `scripts/ui/`, and `scripts/components/ui/` hold shared systems, data, character code, combat, screen code, and reusable UI widgets.
+- `assets/characters/` separates standard and pixel sprites. `assets/environments/regions/` keeps each region's painted and pixel battle backgrounds together.
+- `resources/` is reserved for designer-authored `.tres` catalogs. Current gameplay data remains in the existing typed scripts.
+- `tests/` holds checks and capture helpers; generated captures and local test saves go under the ignored `.godot/` directory.
+
+For a visual asset browser, open `dev/asset_gallery/asset_gallery.tscn` and run **Current Scene (F6)**. Use the category and region selectors to browse hero/enemy/boss sprites, region and menu backgrounds, UI icons, and live previews of the procedural combat effects.
+
+For screen browsing, open `dev/screen_gallery/screen_gallery.tscn` and run **Current Scene (F6)**. Its buttons switch the embedded production UI between Battle, Heroes, Equipment, Skills, Summon, and Settings. The preview uses `user://crown_of_vael_screen_gallery.save`, separate from the production save.
