@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cyyxhih1ih8e8"
-path="res://.godot/imported/guard.png-ca5a71ac8b24e71df23e9e92b9bcef5c.ctex"
+path="res://.godot/imported/guard.png-1195d414821c5990bc2627db7799b58d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/heroes/assassin/guard.png"
-dest_files=["res://.godot/imported/guard.png-ca5a71ac8b24e71df23e9e92b9bcef5c.ctex"]
+source_file="res://assets/characters/heroes/standard/assassin/guard.png"
+dest_files=["res://.godot/imported/guard.png-1195d414821c5990bc2627db7799b58d.ctex"]
 
 [params]
 
