@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bvore8djc2615"
-path="res://.godot/imported/idle.png-b5b55fdd9c1c825fb975c148eb61813c.ctex"
+path="res://.godot/imported/idle.png-32722ea1fc0e0e0216297e94308ee16a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/dragon_peaks/dragon_knight/idle.png"
-dest_files=["res://.godot/imported/idle.png-b5b55fdd9c1c825fb975c148eb61813c.ctex"]
+source_file="res://assets/characters/enemies/pixel/dragon_peaks/dragon_knight/idle.png"
+dest_files=["res://.godot/imported/idle.png-32722ea1fc0e0e0216297e94308ee16a.ctex"]
 
 [params]
 
