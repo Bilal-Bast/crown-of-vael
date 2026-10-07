@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d0acmhpe8y22y"
-path="res://.godot/imported/entry.png-107dc2bb726b3f347bbf333cc43423be.ctex"
+path="res://.godot/imported/entry.png-1ebd1b5a93ebb935a031911d9dc491cf.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/demon_realm/lesser_demon/entry.png"
-dest_files=["res://.godot/imported/entry.png-107dc2bb726b3f347bbf333cc43423be.ctex"]
+source_file="res://assets/characters/enemies/pixel/demon_realm/lesser_demon/entry.png"
+dest_files=["res://.godot/imported/entry.png-1ebd1b5a93ebb935a031911d9dc491cf.ctex"]
 
 [params]
 
