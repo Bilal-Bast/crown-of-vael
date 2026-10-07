@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dy24sgcj1ar10"
-path="res://.godot/imported/source_atlas.png-84a0f38fa4e8ad31874e72a1147d4428.ctex"
+path="res://.godot/imported/source_atlas.png-b89f70a6ea9e3b22523d2a71031af466.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/heroes/mage/source_atlas.png"
-dest_files=["res://.godot/imported/source_atlas.png-84a0f38fa4e8ad31874e72a1147d4428.ctex"]
+source_file="res://assets/characters/heroes/standard/mage/source_atlas.png"
+dest_files=["res://.godot/imported/source_atlas.png-b89f70a6ea9e3b22523d2a71031af466.ctex"]
 
 [params]
 
