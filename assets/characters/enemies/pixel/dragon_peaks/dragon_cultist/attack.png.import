@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://sfx10t7oq7sp"
-path="res://.godot/imported/attack.png-6575dde17ef65fa8e7f9801ff797f873.ctex"
+path="res://.godot/imported/attack.png-b9daee54f4034c7c6fd2fe965c7f39c0.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/dragon_peaks/dragon_cultist/attack.png"
-dest_files=["res://.godot/imported/attack.png-6575dde17ef65fa8e7f9801ff797f873.ctex"]
+source_file="res://assets/characters/enemies/pixel/dragon_peaks/dragon_cultist/attack.png"
+dest_files=["res://.godot/imported/attack.png-b9daee54f4034c7c6fd2fe965c7f39c0.ctex"]
 
 [params]
 
