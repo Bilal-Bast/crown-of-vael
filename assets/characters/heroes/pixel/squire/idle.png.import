@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://canwi4nwifril"
-path="res://.godot/imported/idle.png-525a587a5a6c8d7acf8f2af76f2154e0.ctex"
+path="res://.godot/imported/idle.png-221b9a01dadec4b15f64e0619310df1a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/heroes/squire/idle.png"
-dest_files=["res://.godot/imported/idle.png-525a587a5a6c8d7acf8f2af76f2154e0.ctex"]
+source_file="res://assets/characters/heroes/pixel/squire/idle.png"
+dest_files=["res://.godot/imported/idle.png-221b9a01dadec4b15f64e0619310df1a.ctex"]
 
 [params]
 
