@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bcmh6f6cvav31"
-path="res://.godot/imported/idle.png-54c6945a2e2e728ef5ec6253c72c2d4a.ctex"
+path="res://.godot/imported/idle.png-2528508c7f309ae719f9b8e8e7aaf72a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/greenvale/armored_skeleton/idle.png"
-dest_files=["res://.godot/imported/idle.png-54c6945a2e2e728ef5ec6253c72c2d4a.ctex"]
+source_file="res://assets/characters/enemies/pixel/greenvale/armored_skeleton/idle.png"
+dest_files=["res://.godot/imported/idle.png-2528508c7f309ae719f9b8e8e7aaf72a.ctex"]
 
 [params]
 
