@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dykoetvyetj3j"
-path="res://.godot/imported/entry.png-a204bab894b984c635ecc6751263daa6.ctex"
+path="res://.godot/imported/entry.png-3b36a77f3c91057b3878d6911a700c5d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/greenvale/bandit/entry.png"
-dest_files=["res://.godot/imported/entry.png-a204bab894b984c635ecc6751263daa6.ctex"]
+source_file="res://assets/characters/enemies/pixel/greenvale/bandit/entry.png"
+dest_files=["res://.godot/imported/entry.png-3b36a77f3c91057b3878d6911a700c5d.ctex"]
 
 [params]
 
