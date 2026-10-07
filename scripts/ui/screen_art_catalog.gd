@@ -2,13 +2,13 @@ class_name ScreenArtCatalog
 extends RefCounted
 
 const ATLAS_PATHS := [
-	"res://assets/backgrounds/menus/bright_scenes_atlas_01.png",
-	"res://assets/backgrounds/menus/bright_scenes_atlas_02.png",
-	"res://assets/backgrounds/menus/bright_scenes_atlas_03.png",
-	"res://assets/backgrounds/menus/bright_scenes_atlas_04.png",
-	"res://assets/backgrounds/menus/bright_scenes_atlas_05.png",
-	"res://assets/backgrounds/menus/bright_scenes_atlas_06.png",
-	"res://assets/backgrounds/menus/bright_scenes_atlas_07.png",
+	"res://assets/environments/menus/bright_scenes_atlas_01.png",
+	"res://assets/environments/menus/bright_scenes_atlas_02.png",
+	"res://assets/environments/menus/bright_scenes_atlas_03.png",
+	"res://assets/environments/menus/bright_scenes_atlas_04.png",
+	"res://assets/environments/menus/bright_scenes_atlas_05.png",
+	"res://assets/environments/menus/bright_scenes_atlas_06.png",
+	"res://assets/environments/menus/bright_scenes_atlas_07.png",
 ]
 
 const CELLS := {
