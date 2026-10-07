@@ -1,16 +1,16 @@
 extends SceneTree
 
 const SOURCE := {
-	"equipment": "res://assets/pixel_ui/source/equipment_atlas.png",
-	"artifacts": "res://assets/pixel_ui/source/artifact_atlas.png",
-	"skills": "res://assets/pixel_ui/source/skill_atlas.png",
+	"equipment": "res://assets/ui/icons/pixel/source/equipment_atlas.png",
+	"artifacts": "res://assets/ui/icons/pixel/source/artifact_atlas.png",
+	"skills": "res://assets/ui/icons/pixel/source/skill_atlas.png",
 }
 const ICONS := {
 	"equipment": ["weapon", "helmet", "armor", "gloves", "boots", "necklace", "ring"],
 	"artifacts": ["blood_crown", "hourglass_arkon", "dragon_heart", "dragon_fang", "dragon_eye", "guardian_sigil", "phoenix_feather"],
 	"skills": ["shield_bash", "power_strike", "whirlwind_slash", "iron_guard", "quick_slash", "battle_cry", "piercing_strike", "healing_light"],
 }
-const OUTPUT_DIR := "res://assets/pixel_ui"
+const OUTPUT_DIR := "res://assets/ui/icons/pixel"
 const CANVAS_SIZE := 96
 const ICON_SIZE := 86
 
