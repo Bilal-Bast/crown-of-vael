@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c2ggae7qn7o71"
-path="res://.godot/imported/attack.png-1cddd428ecc47aaad00f17af83b013df.ctex"
+path="res://.godot/imported/attack.png-faa1e82158087b3368e98a59dd1a5ce5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/whispering_forest/forest_bandit/attack.png"
-dest_files=["res://.godot/imported/attack.png-1cddd428ecc47aaad00f17af83b013df.ctex"]
+source_file="res://assets/characters/enemies/pixel/whispering_forest/forest_bandit/attack.png"
+dest_files=["res://.godot/imported/attack.png-faa1e82158087b3368e98a59dd1a5ce5.ctex"]
 
 [params]
 
