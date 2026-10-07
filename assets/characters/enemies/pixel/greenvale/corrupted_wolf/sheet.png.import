@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d2mmuakbwcq8k"
-path="res://.godot/imported/sheet.png-b775993ff26d78f0bfd702e13f801506.ctex"
+path="res://.godot/imported/sheet.png-8f1d23405250daeed060fd8406b6cff9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/greenvale/corrupted_wolf/sheet.png"
-dest_files=["res://.godot/imported/sheet.png-b775993ff26d78f0bfd702e13f801506.ctex"]
+source_file="res://assets/characters/enemies/pixel/greenvale/corrupted_wolf/sheet.png"
+dest_files=["res://.godot/imported/sheet.png-8f1d23405250daeed060fd8406b6cff9.ctex"]
 
 [params]
 
