@@ -8,13 +8,13 @@ static var _gold_coin_cache: Texture2D
 static var _gem_cache: Texture2D
 
 const EQUIPMENT_RARITY_ATLASES := {
-	"weapon": preload("res://assets/pixel_ui/equipment/rarity_atlas/weapon.png"),
-	"helmet": preload("res://assets/pixel_ui/equipment/rarity_atlas/helmet.png"),
-	"armor": preload("res://assets/pixel_ui/equipment/rarity_atlas/armor.png"),
-	"gloves": preload("res://assets/pixel_ui/equipment/rarity_atlas/gloves.png"),
-	"boots": preload("res://assets/pixel_ui/equipment/rarity_atlas/boots.png"),
-	"necklace": preload("res://assets/pixel_ui/equipment/rarity_atlas/necklace.png"),
-	"ring": preload("res://assets/pixel_ui/equipment/rarity_atlas/ring.png"),
+	"weapon": preload("res://assets/ui/icons/pixel/equipment/rarity_atlas/weapon.png"),
+	"helmet": preload("res://assets/ui/icons/pixel/equipment/rarity_atlas/helmet.png"),
+	"armor": preload("res://assets/ui/icons/pixel/equipment/rarity_atlas/armor.png"),
+	"gloves": preload("res://assets/ui/icons/pixel/equipment/rarity_atlas/gloves.png"),
+	"boots": preload("res://assets/ui/icons/pixel/equipment/rarity_atlas/boots.png"),
+	"necklace": preload("res://assets/ui/icons/pixel/equipment/rarity_atlas/necklace.png"),
+	"ring": preload("res://assets/ui/icons/pixel/equipment/rarity_atlas/ring.png"),
 }
 
 const NAV_PATTERNS := {
@@ -105,7 +105,7 @@ static func _load_icon(category: String, id: String) -> Texture2D:
 	var key := "%s/%s" % [category, id]
 	if _cache.has(key):
 		return _cache[key] as Texture2D
-	var path := "res://assets/pixel_ui/%s/%s.png" % [category, id]
+	var path := "res://assets/ui/icons/pixel/%s/%s.png" % [category, id]
 	var texture := load(path) as Texture2D
 	if texture != null:
 		_cache[key] = texture
