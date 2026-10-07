@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://0qul4onm1uh3"
-path="res://.godot/imported/shield_bash.png-adff207edf60b28a11cc0192f1070e93.ctex"
+path="res://.godot/imported/shield_bash.png-4f22d1b081159d8c94276778d3a4414d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/pixel_ui/skills/shield_bash.png"
-dest_files=["res://.godot/imported/shield_bash.png-adff207edf60b28a11cc0192f1070e93.ctex"]
+source_file="res://assets/ui/icons/pixel/skills/shield_bash.png"
+dest_files=["res://.godot/imported/shield_bash.png-4f22d1b081159d8c94276778d3a4414d.ctex"]
 
 [params]
 
