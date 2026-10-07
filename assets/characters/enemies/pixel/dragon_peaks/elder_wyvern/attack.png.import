@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cwjqot15h0vd8"
-path="res://.godot/imported/attack.png-3caea124990707b2a74c261d603758a8.ctex"
+path="res://.godot/imported/attack.png-aa6bd523dff258e8ec8cec0cfb9b8e4d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/dragon_peaks/elder_wyvern/attack.png"
-dest_files=["res://.godot/imported/attack.png-3caea124990707b2a74c261d603758a8.ctex"]
+source_file="res://assets/characters/enemies/pixel/dragon_peaks/elder_wyvern/attack.png"
+dest_files=["res://.godot/imported/attack.png-aa6bd523dff258e8ec8cec0cfb9b8e4d.ctex"]
 
 [params]
 
