@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bb65bd301exbg"
-path="res://.godot/imported/attack.png-84a04971cf6c3e6ec4b5c9e991bd7217.ctex"
+path="res://.godot/imported/attack.png-b75b84a526cc9dee5673a4ff3cce320c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/crimson_desert/desert_raider/attack.png"
-dest_files=["res://.godot/imported/attack.png-84a04971cf6c3e6ec4b5c9e991bd7217.ctex"]
+source_file="res://assets/characters/enemies/pixel/crimson_desert/desert_raider/attack.png"
+dest_files=["res://.godot/imported/attack.png-b75b84a526cc9dee5673a4ff3cce320c.ctex"]
 
 [params]
 
