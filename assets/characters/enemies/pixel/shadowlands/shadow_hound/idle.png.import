@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dmmqxtmwb6fdq"
-path="res://.godot/imported/idle.png-bd83f927bdd69f4047180b206aa3a15a.ctex"
+path="res://.godot/imported/idle.png-7e6e637a334a647aa9693b2a1cbbe693.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/shadowlands/shadow_hound/idle.png"
-dest_files=["res://.godot/imported/idle.png-bd83f927bdd69f4047180b206aa3a15a.ctex"]
+source_file="res://assets/characters/enemies/pixel/shadowlands/shadow_hound/idle.png"
+dest_files=["res://.godot/imported/idle.png-7e6e637a334a647aa9693b2a1cbbe693.ctex"]
 
 [params]
 
