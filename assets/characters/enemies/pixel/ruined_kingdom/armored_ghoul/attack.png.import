@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dcc7xu43qx465"
-path="res://.godot/imported/attack.png-0a30df44fa74963a891e84bb3df060e1.ctex"
+path="res://.godot/imported/attack.png-360d4a38c4d2c88dd9a770dd674397b7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/ruined_kingdom/armored_ghoul/attack.png"
-dest_files=["res://.godot/imported/attack.png-0a30df44fa74963a891e84bb3df060e1.ctex"]
+source_file="res://assets/characters/enemies/pixel/ruined_kingdom/armored_ghoul/attack.png"
+dest_files=["res://.godot/imported/attack.png-360d4a38c4d2c88dd9a770dd674397b7.ctex"]
 
 [params]
 
