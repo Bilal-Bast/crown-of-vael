@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cna3svaftelln"
-path="res://.godot/imported/entry.png-39399829d4bd295ebea0e070183f7867.ctex"
+path="res://.godot/imported/entry.png-4561c448c50474e46a3b5eba14db671b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/frostfang_mountains/frozen_skeleton/entry.png"
-dest_files=["res://.godot/imported/entry.png-39399829d4bd295ebea0e070183f7867.ctex"]
+source_file="res://assets/characters/enemies/pixel/frostfang_mountains/frozen_skeleton/entry.png"
+dest_files=["res://.godot/imported/entry.png-4561c448c50474e46a3b5eba14db671b.ctex"]
 
 [params]
 
