@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b0qo7uc2j3d4e"
-path="res://.godot/imported/attack.png-dd3e3002519611d75c6a827610f5380d.ctex"
+path="res://.godot/imported/attack.png-75a7d5ab3bba352e049d54e8da1cbe74.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/dragon_peaks/flame_drake/attack.png"
-dest_files=["res://.godot/imported/attack.png-dd3e3002519611d75c6a827610f5380d.ctex"]
+source_file="res://assets/characters/enemies/pixel/dragon_peaks/flame_drake/attack.png"
+dest_files=["res://.godot/imported/attack.png-75a7d5ab3bba352e049d54e8da1cbe74.ctex"]
 
 [params]
 
