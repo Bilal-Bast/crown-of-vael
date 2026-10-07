@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bae643e0dg1ol"
-path="res://.godot/imported/idle.png-6e16197fd3721b6d8563848ddbfcb192.ctex"
+uid="uid://pik3wket54hu"
+path="res://.godot/imported/idle.png-293c6fb4cf0a6983d097c40ee1e59d36.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/sunken_marshes/plague_rat/idle.png"
-dest_files=["res://.godot/imported/idle.png-6e16197fd3721b6d8563848ddbfcb192.ctex"]
+source_file="res://assets/characters/enemies/standard/sunken_marshes/marsh_hydra/idle.png"
+dest_files=["res://.godot/imported/idle.png-293c6fb4cf0a6983d097c40ee1e59d36.ctex"]
 
 [params]
 
@@ -36,5 +36,5 @@ process/premult_alpha=false
 process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
-process/size_limit=512
+process/size_limit=768
 detect_3d/compress_to=1
