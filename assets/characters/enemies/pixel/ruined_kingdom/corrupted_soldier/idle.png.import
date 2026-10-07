@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://jsuk1v0wf5as"
-path="res://.godot/imported/idle.png-5946f41ec5b4e1bdc8f0ca68749808c4.ctex"
+path="res://.godot/imported/idle.png-aa83fb2a2ad965f426904b42017b37f7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/ruined_kingdom/corrupted_soldier/idle.png"
-dest_files=["res://.godot/imported/idle.png-5946f41ec5b4e1bdc8f0ca68749808c4.ctex"]
+source_file="res://assets/characters/enemies/pixel/ruined_kingdom/corrupted_soldier/idle.png"
+dest_files=["res://.godot/imported/idle.png-aa83fb2a2ad965f426904b42017b37f7.ctex"]
 
 [params]
 
