@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://8vf5p2r1ryo"
-path="res://.godot/imported/attack.png-0a066f07a89f077cb8b188448eb2c280.ctex"
+path="res://.godot/imported/attack.png-17cad254bc6efd5aa9c1501eb10ce01e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/shadowlands/shadow_knight/attack.png"
-dest_files=["res://.godot/imported/attack.png-0a066f07a89f077cb8b188448eb2c280.ctex"]
+source_file="res://assets/characters/enemies/pixel/shadowlands/shadow_knight/attack.png"
+dest_files=["res://.godot/imported/attack.png-17cad254bc6efd5aa9c1501eb10ce01e.ctex"]
 
 [params]
 
