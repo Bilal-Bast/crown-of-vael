@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bkiennvrru4x1"
-path="res://.godot/imported/attack.png-4912af9dd49c1b7e17f2dbe4d9724030.ctex"
+path="res://.godot/imported/attack.png-b379809f3c51112dbfc3a709a6e405a8.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/greenvale/goblin_captain/attack.png"
-dest_files=["res://.godot/imported/attack.png-4912af9dd49c1b7e17f2dbe4d9724030.ctex"]
+source_file="res://assets/characters/enemies/pixel/greenvale/goblin_captain/attack.png"
+dest_files=["res://.godot/imported/attack.png-b379809f3c51112dbfc3a709a6e405a8.ctex"]
 
 [params]
 
