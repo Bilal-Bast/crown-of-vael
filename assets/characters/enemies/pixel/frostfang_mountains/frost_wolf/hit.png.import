@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://pbidc4808gm3"
-path="res://.godot/imported/hit.png-3244f4c0e85279c8e1a6c34e810c58f0.ctex"
+path="res://.godot/imported/hit.png-92dd84abefa1d266a1156ed055eaff1c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/frostfang_mountains/frost_wolf/hit.png"
-dest_files=["res://.godot/imported/hit.png-3244f4c0e85279c8e1a6c34e810c58f0.ctex"]
+source_file="res://assets/characters/enemies/pixel/frostfang_mountains/frost_wolf/hit.png"
+dest_files=["res://.godot/imported/hit.png-92dd84abefa1d266a1156ed055eaff1c.ctex"]
 
 [params]
 
