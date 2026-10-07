@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://jl37ocd4dbb0"
-path="res://.godot/imported/idle.png-5909f19057b8d04361ece48f9884f3e5.ctex"
+path="res://.godot/imported/idle.png-a229e38e7c6109d2e71ad2dadd4c40bc.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/ashen_highlands/raider/idle.png"
-dest_files=["res://.godot/imported/idle.png-5909f19057b8d04361ece48f9884f3e5.ctex"]
+source_file="res://assets/characters/enemies/standard/ashen_highlands/raider/idle.png"
+dest_files=["res://.godot/imported/idle.png-a229e38e7c6109d2e71ad2dadd4c40bc.ctex"]
 
 [params]
 
