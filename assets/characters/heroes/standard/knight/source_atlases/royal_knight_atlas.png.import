@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bd8kodl8mjl8f"
-path="res://.godot/imported/royal_knight_atlas.png-94fcb1e87dcfd86c35d9f3d81cc3776e.ctex"
+path="res://.godot/imported/royal_knight_atlas.png-5fa281c042c46fb903ff8521a9b75c72.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/heroes/knight/source_atlases/royal_knight_atlas.png"
-dest_files=["res://.godot/imported/royal_knight_atlas.png-94fcb1e87dcfd86c35d9f3d81cc3776e.ctex"]
+source_file="res://assets/characters/heroes/standard/knight/source_atlases/royal_knight_atlas.png"
+dest_files=["res://.godot/imported/royal_knight_atlas.png-5fa281c042c46fb903ff8521a9b75c72.ctex"]
 
 [params]
 
