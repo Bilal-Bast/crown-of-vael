@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ddcyssv1wl4oa"
-path="res://.godot/imported/portrait.png-11689b1117d14c88bbc37e92d6e16d06.ctex"
+path="res://.godot/imported/portrait.png-a37f90c913aae6a7432fbaaab5cf38bd.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/heroes/ranger/portrait.png"
-dest_files=["res://.godot/imported/portrait.png-11689b1117d14c88bbc37e92d6e16d06.ctex"]
+source_file="res://assets/characters/heroes/standard/ranger/portrait.png"
+dest_files=["res://.godot/imported/portrait.png-a37f90c913aae6a7432fbaaab5cf38bd.ctex"]
 
 [params]
 
