@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dnrqjds0hiela"
-path="res://.godot/imported/divine_paladin_atlas.png-c77931bfd00f434f735c8f2f193a1fd6.ctex"
+path="res://.godot/imported/divine_paladin_atlas.png-9204d2000e1d45c35f1f1b8851c455db.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/heroes/knight/source_atlases/divine_paladin_atlas.png"
-dest_files=["res://.godot/imported/divine_paladin_atlas.png-c77931bfd00f434f735c8f2f193a1fd6.ctex"]
+source_file="res://assets/characters/heroes/standard/knight/source_atlases/divine_paladin_atlas.png"
+dest_files=["res://.godot/imported/divine_paladin_atlas.png-9204d2000e1d45c35f1f1b8851c455db.ctex"]
 
 [params]
 
