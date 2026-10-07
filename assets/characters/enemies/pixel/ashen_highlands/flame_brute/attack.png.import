@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cscltlkohoae3"
-path="res://.godot/imported/attack.png-c98503420b2c8bd1a77f28167e40395b.ctex"
+path="res://.godot/imported/attack.png-dad9a03ac6988676499901b0da0bfa16.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/ashen_highlands/flame_brute/attack.png"
-dest_files=["res://.godot/imported/attack.png-c98503420b2c8bd1a77f28167e40395b.ctex"]
+source_file="res://assets/characters/enemies/pixel/ashen_highlands/flame_brute/attack.png"
+dest_files=["res://.godot/imported/attack.png-dad9a03ac6988676499901b0da0bfa16.ctex"]
 
 [params]
 
