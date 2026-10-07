@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cmakqnx3dv6hk"
-path="res://.godot/imported/idle.png-3ec0947072c5796eededb5833b466ec0.ctex"
+path="res://.godot/imported/idle.png-25fbb5aa0ecd58b27951093792f3d5b5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/ashen_highlands/magma_hound/idle.png"
-dest_files=["res://.godot/imported/idle.png-3ec0947072c5796eededb5833b466ec0.ctex"]
+source_file="res://assets/characters/enemies/standard/ashen_highlands/magma_hound/idle.png"
+dest_files=["res://.godot/imported/idle.png-25fbb5aa0ecd58b27951093792f3d5b5.ctex"]
 
 [params]
 
