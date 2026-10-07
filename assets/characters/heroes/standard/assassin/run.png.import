@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://17hbtjkpuf2c"
-path="res://.godot/imported/run.png-e8f35a0ae6513be3c5f650e006c55a8b.ctex"
+path="res://.godot/imported/run.png-3121ef2dd2e7a3ff06f0090763ec4036.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/heroes/assassin/run.png"
-dest_files=["res://.godot/imported/run.png-e8f35a0ae6513be3c5f650e006c55a8b.ctex"]
+source_file="res://assets/characters/heroes/standard/assassin/run.png"
+dest_files=["res://.godot/imported/run.png-3121ef2dd2e7a3ff06f0090763ec4036.ctex"]
 
 [params]
 
