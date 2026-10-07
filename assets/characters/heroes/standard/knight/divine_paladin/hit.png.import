@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://btv82i68lo8vi"
-path="res://.godot/imported/hit.png-9f86b1a3ac806045ea781e4c5fc289d9.ctex"
+path="res://.godot/imported/hit.png-8ec4ce969017e911e8bd3b6b8bed20ac.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/heroes/knight/divine_paladin/hit.png"
-dest_files=["res://.godot/imported/hit.png-9f86b1a3ac806045ea781e4c5fc289d9.ctex"]
+source_file="res://assets/characters/heroes/standard/knight/divine_paladin/hit.png"
+dest_files=["res://.godot/imported/hit.png-8ec4ce969017e911e8bd3b6b8bed20ac.ctex"]
 
 [params]
 
