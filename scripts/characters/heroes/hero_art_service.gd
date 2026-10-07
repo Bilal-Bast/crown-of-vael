@@ -13,10 +13,10 @@ const FORM_META := [
 	{"scale": 0.765, "offset": Vector2.ZERO, "portrait_scale": 1.0, "attack_duration": 0.26, "hit_duration": 0.30, "aura": 0.35},
 	{"scale": 0.7875, "offset": Vector2.ZERO, "portrait_scale": 1.0, "attack_duration": 0.26, "hit_duration": 0.30, "aura": 0.62},
 ]
-const BASE := "res://assets/heroes/knight"
+const BASE := "res://assets/characters/heroes/standard/knight"
 const OTHER_HEROES := ["mage", "ranger", "assassin", "necromancer"]
 const OTHER_FRAME_COLORS := {"mage": Color("b46e9f"), "ranger": Color("86a66b"), "assassin": Color("9876b9"), "necromancer": Color("7e6e9e")}
-const OTHER_BASES := {"mage": "res://assets/heroes/mage", "ranger": "res://assets/heroes/ranger", "assassin": "res://assets/heroes/assassin", "necromancer": "res://assets/heroes/necromancer"}
+const OTHER_BASES := {"mage": "res://assets/characters/heroes/standard/mage", "ranger": "res://assets/characters/heroes/standard/ranger", "assassin": "res://assets/characters/heroes/standard/assassin", "necromancer": "res://assets/characters/heroes/standard/necromancer"}
 const SQUIRE_FILES := {"idle": "squire_idle.png", "run": "squire_run.png", "attack": "squire_attack.png", "guard": "squire_guard.png", "hit": "squire_hit.png", "portrait": "squire_portrait.png"}
 const STANDARD_FILES := {"idle": "idle.png", "run": "run.png", "attack": "attack.png", "guard": "guard.png", "hit": "hit.png", "portrait": "portrait.png", "skill": "skill.png", "death": "death.png", "evolution_fx": "evolution_fx.png", "aura": "aura.png"}
 static var _texture_cache: Dictionary = {}
