@@ -1,6 +1,6 @@
 extends SceneTree
 
-const ROOT := "res://assets/heroes/knight"
+const ROOT := "res://assets/characters/heroes/standard/knight"
 const FORMS := ["squire", "knight", "royal_knight", "paladin", "divine_paladin"]
 const ROWS := ["idle", "run", "attack", "guard", "hit"]
 
