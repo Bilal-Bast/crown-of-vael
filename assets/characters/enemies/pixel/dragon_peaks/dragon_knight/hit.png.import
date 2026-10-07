@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cdy5ph0tnhyn"
-path="res://.godot/imported/hit.png-41289a3f621d8d6e54f8acece50db07c.ctex"
+path="res://.godot/imported/hit.png-ed21287606c3f362529d8bead9f838b1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/dragon_peaks/dragon_knight/hit.png"
-dest_files=["res://.godot/imported/hit.png-41289a3f621d8d6e54f8acece50db07c.ctex"]
+source_file="res://assets/characters/enemies/pixel/dragon_peaks/dragon_knight/hit.png"
+dest_files=["res://.godot/imported/hit.png-ed21287606c3f362529d8bead9f838b1.ctex"]
 
 [params]
 
