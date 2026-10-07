@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bj7kro55ketm1"
-path="res://.godot/imported/hit.png-29f98e1c2212e8e8a2d798d3cf161940.ctex"
+path="res://.godot/imported/hit.png-7760cbe32da47e2f9fb7afcc6d89605c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/dragon_peaks/wyvern/hit.png"
-dest_files=["res://.godot/imported/hit.png-29f98e1c2212e8e8a2d798d3cf161940.ctex"]
+source_file="res://assets/characters/enemies/pixel/dragon_peaks/wyvern/hit.png"
+dest_files=["res://.godot/imported/hit.png-7760cbe32da47e2f9fb7afcc6d89605c.ctex"]
 
 [params]
 
