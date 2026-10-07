@@ -3,28 +3,28 @@ extends RefCounted
 
 ## Shared pixel-art battle presentation for the converted campaign regions.
 const PROTOTYPE_ENABLED := true
-const HERO_SHEET := "res://assets/prototype_pixel/heroes/squire/sheet.png"
-const HERO_RUN_SHEET := "res://assets/prototype_pixel/heroes/squire/run.png"
-const BACKGROUND := "res://assets/prototype_pixel/backgrounds/greenvale/battle.png"
-const FOREST_BACKGROUND := "res://assets/prototype_pixel/backgrounds/whispering_forest/battle.png"
-const ASHEN_BACKGROUND := "res://assets/prototype_pixel/backgrounds/ashen_highlands/battle_polished.png"
-const FROSTFANG_BACKGROUND := "res://assets/prototype_pixel/backgrounds/frostfang_mountains/battle.png"
-const SUNKEN_MARSHES_BACKGROUND := "res://assets/prototype_pixel/backgrounds/sunken_marshes/battle.png"
-const CRIMSON_DESERT_BACKGROUND := "res://assets/prototype_pixel/backgrounds/crimson_desert/battle.png"
-const RUINED_KINGDOM_BACKGROUND := "res://assets/prototype_pixel/backgrounds/ruined_kingdom/battle.png"
-const SHADOWLANDS_BACKGROUND := "res://assets/prototype_pixel/backgrounds/shadowlands/battle.png"
-const DRAGON_PEAKS_BACKGROUND := "res://assets/prototype_pixel/backgrounds/dragon_peaks/battle.png"
-const DEMON_REALM_BACKGROUND := "res://assets/prototype_pixel/backgrounds/demon_realm/battle.png"
+const HERO_SHEET := "res://assets/characters/heroes/pixel/squire/sheet.png"
+const HERO_RUN_SHEET := "res://assets/characters/heroes/pixel/squire/run.png"
+const BACKGROUND := "res://assets/environments/regions/greenvale_outskirts/pixel/battle.png"
+const FOREST_BACKGROUND := "res://assets/environments/regions/whispering_forest/pixel/battle.png"
+const ASHEN_BACKGROUND := "res://assets/environments/regions/ashen_highlands/pixel/battle_polished.png"
+const FROSTFANG_BACKGROUND := "res://assets/environments/regions/frostfang_mountains/pixel/battle.png"
+const SUNKEN_MARSHES_BACKGROUND := "res://assets/environments/regions/sunken_marshes/pixel/battle.png"
+const CRIMSON_DESERT_BACKGROUND := "res://assets/environments/regions/crimson_desert/pixel/battle.png"
+const RUINED_KINGDOM_BACKGROUND := "res://assets/environments/regions/ruined_kingdom/pixel/battle.png"
+const SHADOWLANDS_BACKGROUND := "res://assets/environments/regions/shadowlands/pixel/battle.png"
+const DRAGON_PEAKS_BACKGROUND := "res://assets/environments/regions/dragon_peaks/pixel/battle.png"
+const DEMON_REALM_BACKGROUND := "res://assets/environments/regions/demon_realm/pixel/battle.png"
 const ENEMY_SHEETS := {
-	"Goblin": "res://assets/prototype_pixel/enemies/greenvale/goblin/sheet.png",
-	"Skeleton": "res://assets/prototype_pixel/enemies/greenvale/skeleton/sheet.png",
-	"Corrupted Wolf": "res://assets/prototype_pixel/enemies/greenvale/corrupted_wolf/sheet.png",
-	"Goblin Archer": "res://assets/prototype_pixel/enemies/greenvale/goblin_archer/idle.png",
-	"Goblin Spearman": "res://assets/prototype_pixel/enemies/greenvale/goblin_spearman/idle.png",
-	"Bandit": "res://assets/prototype_pixel/enemies/greenvale/bandit/idle.png",
-	"Goblin Captain": "res://assets/prototype_pixel/enemies/greenvale/goblin_captain/idle.png",
-	"Armored Skeleton": "res://assets/prototype_pixel/enemies/greenvale/armored_skeleton/idle.png",
-	"Goblin Warlord": "res://assets/prototype_pixel/enemies/greenvale/goblin_warlord/idle.png",
+	"Goblin": "res://assets/characters/enemies/pixel/greenvale/goblin/sheet.png",
+	"Skeleton": "res://assets/characters/enemies/pixel/greenvale/skeleton/sheet.png",
+	"Corrupted Wolf": "res://assets/characters/enemies/pixel/greenvale/corrupted_wolf/sheet.png",
+	"Goblin Archer": "res://assets/characters/enemies/pixel/greenvale/goblin_archer/idle.png",
+	"Goblin Spearman": "res://assets/characters/enemies/pixel/greenvale/goblin_spearman/idle.png",
+	"Bandit": "res://assets/characters/enemies/pixel/greenvale/bandit/idle.png",
+	"Goblin Captain": "res://assets/characters/enemies/pixel/greenvale/goblin_captain/idle.png",
+	"Armored Skeleton": "res://assets/characters/enemies/pixel/greenvale/armored_skeleton/idle.png",
+	"Goblin Warlord": "res://assets/characters/enemies/pixel/greenvale/goblin_warlord/idle.png",
 }
 const FOREST_SHEETS := {
  "Forest Goblin": "forest_goblin", "Giant Spider": "giant_spider", "Corrupted Boar": "corrupted_boar",
@@ -140,68 +140,68 @@ const HOVER_PLACEMENT := {
 	"Elder Wyvern": 12.0
 }
 const ENEMY_ENTRY_ANIMATIONS := {
-	"Goblin": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin/entry.png", "frames": 4, "fps": 11.0},
-	"Skeleton": {"path": "res://assets/prototype_pixel/enemies/greenvale/skeleton/entry.png", "frames": 4, "fps": 9.0},
-	"Corrupted Wolf": {"path": "res://assets/prototype_pixel/enemies/greenvale/corrupted_wolf/entry.png", "frames": 4, "fps": 11.0},
-	"Goblin Archer": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_archer/entry.png", "frames": 4, "fps": 11.0},
-	"Goblin Spearman": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_spearman/entry.png", "frames": 4, "fps": 10.0},
-	"Bandit": {"path": "res://assets/prototype_pixel/enemies/greenvale/bandit/entry.png", "frames": 4, "fps": 12.0},
-	"Goblin Captain": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_captain/entry.png", "frames": 4, "fps": 10.0},
-	"Armored Skeleton": {"path": "res://assets/prototype_pixel/enemies/greenvale/armored_skeleton/entry.png", "frames": 4, "fps": 8.0},
-	"Goblin Warlord": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_warlord/entry.png", "frames": 4, "fps": 8.0},
+	"Goblin": {"path": "res://assets/characters/enemies/pixel/greenvale/goblin/entry.png", "frames": 4, "fps": 11.0},
+	"Skeleton": {"path": "res://assets/characters/enemies/pixel/greenvale/skeleton/entry.png", "frames": 4, "fps": 9.0},
+	"Corrupted Wolf": {"path": "res://assets/characters/enemies/pixel/greenvale/corrupted_wolf/entry.png", "frames": 4, "fps": 11.0},
+	"Goblin Archer": {"path": "res://assets/characters/enemies/pixel/greenvale/goblin_archer/entry.png", "frames": 4, "fps": 11.0},
+	"Goblin Spearman": {"path": "res://assets/characters/enemies/pixel/greenvale/goblin_spearman/entry.png", "frames": 4, "fps": 10.0},
+	"Bandit": {"path": "res://assets/characters/enemies/pixel/greenvale/bandit/entry.png", "frames": 4, "fps": 12.0},
+	"Goblin Captain": {"path": "res://assets/characters/enemies/pixel/greenvale/goblin_captain/entry.png", "frames": 4, "fps": 10.0},
+	"Armored Skeleton": {"path": "res://assets/characters/enemies/pixel/greenvale/armored_skeleton/entry.png", "frames": 4, "fps": 8.0},
+	"Goblin Warlord": {"path": "res://assets/characters/enemies/pixel/greenvale/goblin_warlord/entry.png", "frames": 4, "fps": 8.0},
 }
 const CHARACTER_ANIMATIONS := {
 	"Squire": {
-		"idle": {"path": "res://assets/prototype_pixel/heroes/squire/idle.png", "frames": 4, "fps": 7.0},
-		"attack": {"path": "res://assets/prototype_pixel/heroes/squire/attack.png", "frames": 6, "fps": 12.0},
-		"guard": {"path": "res://assets/prototype_pixel/heroes/squire/guard.png", "frames": 6, "fps": 12.0},
-		"hit": {"path": "res://assets/prototype_pixel/heroes/squire/hit.png", "frames": 4, "fps": 12.0},
+		"idle": {"path": "res://assets/characters/heroes/pixel/squire/idle.png", "frames": 4, "fps": 7.0},
+		"attack": {"path": "res://assets/characters/heroes/pixel/squire/attack.png", "frames": 6, "fps": 12.0},
+		"guard": {"path": "res://assets/characters/heroes/pixel/squire/guard.png", "frames": 6, "fps": 12.0},
+		"hit": {"path": "res://assets/characters/heroes/pixel/squire/hit.png", "frames": 4, "fps": 12.0},
 	},
 	"Goblin": {
-		"idle": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin/idle.png", "frames": 4, "fps": 8.0},
-		"attack": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin/attack.png", "frames": 4, "fps": 11.0},
-		"hit": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin/hit.png", "frames": 3, "fps": 11.0},
+		"idle": {"path": "res://assets/characters/enemies/pixel/greenvale/goblin/idle.png", "frames": 4, "fps": 8.0},
+		"attack": {"path": "res://assets/characters/enemies/pixel/greenvale/goblin/attack.png", "frames": 4, "fps": 11.0},
+		"hit": {"path": "res://assets/characters/enemies/pixel/greenvale/goblin/hit.png", "frames": 3, "fps": 11.0},
 	},
 	"Skeleton": {
-		"idle": {"path": "res://assets/prototype_pixel/enemies/greenvale/skeleton/idle.png", "frames": 4, "fps": 7.0},
-		"attack": {"path": "res://assets/prototype_pixel/enemies/greenvale/skeleton/attack.png", "frames": 4, "fps": 9.0},
-		"hit": {"path": "res://assets/prototype_pixel/enemies/greenvale/skeleton/hit.png", "frames": 3, "fps": 10.0},
+		"idle": {"path": "res://assets/characters/enemies/pixel/greenvale/skeleton/idle.png", "frames": 4, "fps": 7.0},
+		"attack": {"path": "res://assets/characters/enemies/pixel/greenvale/skeleton/attack.png", "frames": 4, "fps": 9.0},
+		"hit": {"path": "res://assets/characters/enemies/pixel/greenvale/skeleton/hit.png", "frames": 3, "fps": 10.0},
 	},
 	"Corrupted Wolf": {
-		"idle": {"path": "res://assets/prototype_pixel/enemies/greenvale/corrupted_wolf/idle.png", "frames": 4, "fps": 8.0},
-		"attack": {"path": "res://assets/prototype_pixel/enemies/greenvale/corrupted_wolf/attack.png", "frames": 5, "fps": 12.0},
-		"hit": {"path": "res://assets/prototype_pixel/enemies/greenvale/corrupted_wolf/hit.png", "frames": 3, "fps": 11.0},
+		"idle": {"path": "res://assets/characters/enemies/pixel/greenvale/corrupted_wolf/idle.png", "frames": 4, "fps": 8.0},
+		"attack": {"path": "res://assets/characters/enemies/pixel/greenvale/corrupted_wolf/attack.png", "frames": 5, "fps": 12.0},
+		"hit": {"path": "res://assets/characters/enemies/pixel/greenvale/corrupted_wolf/hit.png", "frames": 3, "fps": 11.0},
 	},
 	"Goblin Archer": {
-		"idle": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_archer/idle.png", "frames": 4, "fps": 7.5},
-		"attack": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_archer/attack.png", "frames": 5, "fps": 10.0},
-		"hit": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_archer/hit.png", "frames": 3, "fps": 11.0},
+		"idle": {"path": "res://assets/characters/enemies/pixel/greenvale/goblin_archer/idle.png", "frames": 4, "fps": 7.5},
+		"attack": {"path": "res://assets/characters/enemies/pixel/greenvale/goblin_archer/attack.png", "frames": 5, "fps": 10.0},
+		"hit": {"path": "res://assets/characters/enemies/pixel/greenvale/goblin_archer/hit.png", "frames": 3, "fps": 11.0},
 	},
 	"Goblin Spearman": {
-		"idle": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_spearman/idle.png", "frames": 4, "fps": 7.5},
-		"attack": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_spearman/attack.png", "frames": 5, "fps": 11.0},
-		"hit": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_spearman/hit.png", "frames": 3, "fps": 11.0},
+		"idle": {"path": "res://assets/characters/enemies/pixel/greenvale/goblin_spearman/idle.png", "frames": 4, "fps": 7.5},
+		"attack": {"path": "res://assets/characters/enemies/pixel/greenvale/goblin_spearman/attack.png", "frames": 5, "fps": 11.0},
+		"hit": {"path": "res://assets/characters/enemies/pixel/greenvale/goblin_spearman/hit.png", "frames": 3, "fps": 11.0},
 	},
 	"Bandit": {
-		"idle": {"path": "res://assets/prototype_pixel/enemies/greenvale/bandit/idle.png", "frames": 4, "fps": 8.0},
-		"attack": {"path": "res://assets/prototype_pixel/enemies/greenvale/bandit/attack.png", "frames": 5, "fps": 12.0},
-		"hit": {"path": "res://assets/prototype_pixel/enemies/greenvale/bandit/hit.png", "frames": 3, "fps": 12.0},
+		"idle": {"path": "res://assets/characters/enemies/pixel/greenvale/bandit/idle.png", "frames": 4, "fps": 8.0},
+		"attack": {"path": "res://assets/characters/enemies/pixel/greenvale/bandit/attack.png", "frames": 5, "fps": 12.0},
+		"hit": {"path": "res://assets/characters/enemies/pixel/greenvale/bandit/hit.png", "frames": 3, "fps": 12.0},
 	},
 	"Goblin Captain": {
-		"idle": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_captain/idle.png", "frames": 4, "fps": 7.0},
-		"attack": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_captain/attack.png", "frames": 5, "fps": 10.0},
-		"hit": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_captain/hit.png", "frames": 3, "fps": 10.0},
+		"idle": {"path": "res://assets/characters/enemies/pixel/greenvale/goblin_captain/idle.png", "frames": 4, "fps": 7.0},
+		"attack": {"path": "res://assets/characters/enemies/pixel/greenvale/goblin_captain/attack.png", "frames": 5, "fps": 10.0},
+		"hit": {"path": "res://assets/characters/enemies/pixel/greenvale/goblin_captain/hit.png", "frames": 3, "fps": 10.0},
 	},
 	"Armored Skeleton": {
-		"idle": {"path": "res://assets/prototype_pixel/enemies/greenvale/armored_skeleton/idle.png", "frames": 4, "fps": 6.5},
-		"attack": {"path": "res://assets/prototype_pixel/enemies/greenvale/armored_skeleton/attack.png", "frames": 5, "fps": 9.0},
-		"hit": {"path": "res://assets/prototype_pixel/enemies/greenvale/armored_skeleton/hit.png", "frames": 3, "fps": 9.0},
+		"idle": {"path": "res://assets/characters/enemies/pixel/greenvale/armored_skeleton/idle.png", "frames": 4, "fps": 6.5},
+		"attack": {"path": "res://assets/characters/enemies/pixel/greenvale/armored_skeleton/attack.png", "frames": 5, "fps": 9.0},
+		"hit": {"path": "res://assets/characters/enemies/pixel/greenvale/armored_skeleton/hit.png", "frames": 3, "fps": 9.0},
 	},
 	"Goblin Warlord": {
-		"idle": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_warlord/idle.png", "frames": 4, "fps": 6.0},
-		"attack": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_warlord/attack.png", "frames": 6, "fps": 9.0},
-		"hit": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_warlord/hit.png", "frames": 4, "fps": 10.0},
-		"death": {"path": "res://assets/prototype_pixel/enemies/greenvale/goblin_warlord/death.png", "frames": 6, "fps": 9.0},
+		"idle": {"path": "res://assets/characters/enemies/pixel/greenvale/goblin_warlord/idle.png", "frames": 4, "fps": 6.0},
+		"attack": {"path": "res://assets/characters/enemies/pixel/greenvale/goblin_warlord/attack.png", "frames": 6, "fps": 9.0},
+		"hit": {"path": "res://assets/characters/enemies/pixel/greenvale/goblin_warlord/hit.png", "frames": 4, "fps": 10.0},
+		"death": {"path": "res://assets/characters/enemies/pixel/greenvale/goblin_warlord/death.png", "frames": 6, "fps": 9.0},
 	},
 }
 static var _frame_cache: Dictionary = {}
@@ -489,7 +489,7 @@ static func _ruined_kingdom_config(character_id: String, state: String) -> Dicti
 	elif state not in (["idle", "entry", "entrance"] if boss else ["idle", "entry"]): return {}
 	var anim := "entrance" if boss and state in ["entry", "entrance"] else state
 	var fps := 7.0 if state == "idle" else (8.0 if state in ["death", "entrance"] or boss and state == "entry" else 11.0)
-	return {"path": "res://assets/prototype_pixel/enemies/ruined_kingdom/%s/%s.png" % [RUINED_KINGDOM_SHEETS[character_id], anim], "frames": frames, "fps": fps}
+	return {"path": "res://assets/characters/enemies/pixel/ruined_kingdom/%s/%s.png" % [RUINED_KINGDOM_SHEETS[character_id], anim], "frames": frames, "fps": fps}
 
 static func _shadowlands_config(character_id: String, state: String) -> Dictionary:
 	if not SHADOWLANDS_SHEETS.has(character_id): return {}
@@ -505,7 +505,7 @@ static func _shadowlands_config(character_id: String, state: String) -> Dictiona
 	elif state not in (["idle", "entry", "entrance"] if boss else ["idle", "entry"]): return {}
 	var anim := "entrance" if boss and state in ["entry", "entrance"] else state
 	var fps := 7.0 if state == "idle" else (8.0 if boss and state in ["entry", "entrance", "death"] else 11.0)
-	return {"path": "res://assets/prototype_pixel/enemies/shadowlands/%s/%s.png" % [SHADOWLANDS_SHEETS[character_id], anim], "frames": frames, "fps": fps}
+	return {"path": "res://assets/characters/enemies/pixel/shadowlands/%s/%s.png" % [SHADOWLANDS_SHEETS[character_id], anim], "frames": frames, "fps": fps}
 
 static func _dragon_peaks_config(character_id: String, state: String) -> Dictionary:
 	if not DRAGON_PEAKS_SHEETS.has(character_id): return {}
@@ -521,7 +521,7 @@ static func _dragon_peaks_config(character_id: String, state: String) -> Diction
 	elif state not in (["idle", "entry", "entrance"] if boss else ["idle", "entry"]): return {}
 	var anim := "entrance" if boss and state in ["entry", "entrance"] else state
 	var fps := 7.0 if state == "idle" else (8.0 if boss and state in ["entry", "entrance", "death"] else 11.0)
-	return {"path": "res://assets/prototype_pixel/enemies/dragon_peaks/%s/%s.png" % [DRAGON_PEAKS_SHEETS[character_id], anim], "frames": frames, "fps": fps}
+	return {"path": "res://assets/characters/enemies/pixel/dragon_peaks/%s/%s.png" % [DRAGON_PEAKS_SHEETS[character_id], anim], "frames": frames, "fps": fps}
 
 static func _demon_realm_config(character_id: String, state: String) -> Dictionary:
 	if not DEMON_REALM_SHEETS.has(character_id): return {}
@@ -537,7 +537,7 @@ static func _demon_realm_config(character_id: String, state: String) -> Dictiona
 	elif state not in (["idle", "entry", "entrance"] if boss else ["idle", "entry"]): return {}
 	var anim := "entrance" if boss and state in ["entry", "entrance"] else state
 	var fps := 7.0 if state == "idle" else (8.0 if boss and state in ["entry", "entrance", "death"] else 11.0)
-	return {"path": "res://assets/prototype_pixel/enemies/demon_realm/%s/%s.png" % [DEMON_REALM_SHEETS[character_id], anim], "frames": frames, "fps": fps}
+	return {"path": "res://assets/characters/enemies/pixel/demon_realm/%s/%s.png" % [DEMON_REALM_SHEETS[character_id], anim], "frames": frames, "fps": fps}
 
 static func _ashen_config(character_id: String, state: String) -> Dictionary:
 	if not ASHEN_SHEETS.has(character_id): return {}
@@ -549,7 +549,7 @@ static func _ashen_config(character_id: String, state: String) -> Dictionary:
 		if character_id != "Infernal Ogre": return {}
 		frames = 6
 	elif state not in ["idle", "entry", "entrance"]: return {}
-	return {"path": "res://assets/prototype_pixel/enemies/ashen_highlands/%s/%s.png" % [ASHEN_SHEETS[character_id], state], "frames": frames, "fps": 7.0 if state == "idle" else (8.0 if state in ["death", "entrance"] else 11.0)}
+	return {"path": "res://assets/characters/enemies/pixel/ashen_highlands/%s/%s.png" % [ASHEN_SHEETS[character_id], state], "frames": frames, "fps": 7.0 if state == "idle" else (8.0 if state in ["death", "entrance"] else 11.0)}
 
 static func _frostfang_config(character_id: String, state: String) -> Dictionary:
 	if not FROSTFANG_SHEETS.has(character_id): return {}
@@ -561,7 +561,7 @@ static func _frostfang_config(character_id: String, state: String) -> Dictionary
 		if character_id != "Frostfang Giant": return {}
 		frames = 6
 	elif state not in ["idle", "entry"]: return {}
-	return {"path": "res://assets/prototype_pixel/enemies/frostfang_mountains/%s/%s.png" % [FROSTFANG_SHEETS[character_id], state], "frames": frames, "fps": 7.0 if state == "idle" else (8.0 if state == "death" else 11.0)}
+	return {"path": "res://assets/characters/enemies/pixel/frostfang_mountains/%s/%s.png" % [FROSTFANG_SHEETS[character_id], state], "frames": frames, "fps": 7.0 if state == "idle" else (8.0 if state == "death" else 11.0)}
 
 static func _sunken_marshes_config(character_id: String, state: String) -> Dictionary:
 	if not SUNKEN_MARSHES_SHEETS.has(character_id): return {}
@@ -573,7 +573,7 @@ static func _sunken_marshes_config(character_id: String, state: String) -> Dicti
 		if character_id != "Marsh Hydra": return {}
 		frames = 6
 	elif state not in ["idle", "entry"]: return {}
-	return {"path": "res://assets/prototype_pixel/enemies/sunken_marshes/%s/%s.png" % [SUNKEN_MARSHES_SHEETS[character_id], state], "frames": frames, "fps": 7.0 if state == "idle" else (8.0 if state == "death" else 11.0)}
+	return {"path": "res://assets/characters/enemies/pixel/sunken_marshes/%s/%s.png" % [SUNKEN_MARSHES_SHEETS[character_id], state], "frames": frames, "fps": 7.0 if state == "idle" else (8.0 if state == "death" else 11.0)}
 
 static func _crimson_desert_config(character_id: String, state: String) -> Dictionary:
 	if not CRIMSON_DESERT_SHEETS.has(character_id): return {}
@@ -588,7 +588,7 @@ static func _crimson_desert_config(character_id: String, state: String) -> Dicti
 		frames = 6
 	elif state not in (["idle", "entry", "entrance"] if boss else ["idle", "entry"]): return {}
 	var anim := "entrance" if boss and state == "entry" else state
-	return {"path": "res://assets/prototype_pixel/enemies/crimson_desert/%s/%s.png" % [CRIMSON_DESERT_SHEETS[character_id], anim], "frames": frames, "fps": 7.0 if state == "idle" else (8.0 if state == "death" else 11.0)}
+	return {"path": "res://assets/characters/enemies/pixel/crimson_desert/%s/%s.png" % [CRIMSON_DESERT_SHEETS[character_id], anim], "frames": frames, "fps": 7.0 if state == "idle" else (8.0 if state == "death" else 11.0)}
 
 static func _forest_config(character_id: String, state: String) -> Dictionary:
 	if not FOREST_SHEETS.has(character_id):
@@ -601,7 +601,7 @@ static func _forest_config(character_id: String, state: String) -> Dictionary:
 		frames = 6
 	elif state not in ["idle", "entry", "entrance"]: return {}
 	var animation := "entry" if state == "entrance" else state
-	var path := "res://assets/prototype_pixel/enemies/whispering_forest/%s/%s.png" % [FOREST_SHEETS[character_id], animation]
+	var path := "res://assets/characters/enemies/pixel/whispering_forest/%s/%s.png" % [FOREST_SHEETS[character_id], animation]
 	return {"path": path, "frames": frames, "fps": 8.0 if state == "idle" else (9.0 if state in ["death", "entrance"] else 11.0)}
 
 static func validation_report() -> Array[String]:
