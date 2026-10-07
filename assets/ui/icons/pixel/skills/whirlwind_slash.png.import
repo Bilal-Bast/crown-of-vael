@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c0fsyx5oetq6h"
-path="res://.godot/imported/whirlwind_slash.png-51bb590318ad5fa9ea31f16db5ed3886.ctex"
+path="res://.godot/imported/whirlwind_slash.png-93d7e5b91de719e5a6ddac14033ef4ec.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/pixel_ui/skills/whirlwind_slash.png"
-dest_files=["res://.godot/imported/whirlwind_slash.png-51bb590318ad5fa9ea31f16db5ed3886.ctex"]
+source_file="res://assets/ui/icons/pixel/skills/whirlwind_slash.png"
+dest_files=["res://.godot/imported/whirlwind_slash.png-93d7e5b91de719e5a6ddac14033ef4ec.ctex"]
 
 [params]
 
