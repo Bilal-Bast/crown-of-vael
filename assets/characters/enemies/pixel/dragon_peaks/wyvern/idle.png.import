@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b1st6g5pvqbn1"
-path="res://.godot/imported/idle.png-14b7752429f7cf481007a02f5283167e.ctex"
+path="res://.godot/imported/idle.png-868b51b7f8795acc2df8a8bd75259236.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/dragon_peaks/wyvern/idle.png"
-dest_files=["res://.godot/imported/idle.png-14b7752429f7cf481007a02f5283167e.ctex"]
+source_file="res://assets/characters/enemies/pixel/dragon_peaks/wyvern/idle.png"
+dest_files=["res://.godot/imported/idle.png-868b51b7f8795acc2df8a8bd75259236.ctex"]
 
 [params]
 
