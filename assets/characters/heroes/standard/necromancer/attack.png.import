@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bibdjpo4dsqle"
-path="res://.godot/imported/attack.png-a943585d133d86c85b0d2d134052c5e0.ctex"
+path="res://.godot/imported/attack.png-3131d95831466be33ca5b0235cfd86a3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/heroes/necromancer/attack.png"
-dest_files=["res://.godot/imported/attack.png-a943585d133d86c85b0d2d134052c5e0.ctex"]
+source_file="res://assets/characters/heroes/standard/necromancer/attack.png"
+dest_files=["res://.godot/imported/attack.png-3131d95831466be33ca5b0235cfd86a3.ctex"]
 
 [params]
 
