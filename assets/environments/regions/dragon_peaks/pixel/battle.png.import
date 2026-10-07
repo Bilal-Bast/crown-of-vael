@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ku6q7k7wrd0o"
-path="res://.godot/imported/hit.png-483ea6a3c7a2f670d5e320d923961f66.ctex"
+uid="uid://ckj0vik1tos27"
+path="res://.godot/imported/battle.png-b971bbebe02767e0adc1fb2a6df069bf.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/heroes/squire/hit.png"
-dest_files=["res://.godot/imported/hit.png-483ea6a3c7a2f670d5e320d923961f66.ctex"]
+source_file="res://assets/environments/regions/dragon_peaks/pixel/battle.png"
+dest_files=["res://.godot/imported/battle.png-b971bbebe02767e0adc1fb2a6df069bf.ctex"]
 
 [params]
 
