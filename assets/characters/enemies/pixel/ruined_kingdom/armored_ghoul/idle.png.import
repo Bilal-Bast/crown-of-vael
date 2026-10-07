@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://da4ew28niet88"
-path="res://.godot/imported/idle.png-479f276ac7cfeb297176da48b7b51623.ctex"
+path="res://.godot/imported/idle.png-feb4a8e4663c891e3f56ee571d2a6e10.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/ruined_kingdom/armored_ghoul/idle.png"
-dest_files=["res://.godot/imported/idle.png-479f276ac7cfeb297176da48b7b51623.ctex"]
+source_file="res://assets/characters/enemies/pixel/ruined_kingdom/armored_ghoul/idle.png"
+dest_files=["res://.godot/imported/idle.png-feb4a8e4663c891e3f56ee571d2a6e10.ctex"]
 
 [params]
 
