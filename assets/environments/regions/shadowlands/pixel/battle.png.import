@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://btuvp1v5yq7ra"
-path="res://.godot/imported/battle.png-9d68c7ddc7f21e272730958b14c03ec7.ctex"
+path="res://.godot/imported/battle.png-c539cfc61c6b1a5e9524580e29e3b780.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/backgrounds/shadowlands/battle.png"
-dest_files=["res://.godot/imported/battle.png-9d68c7ddc7f21e272730958b14c03ec7.ctex"]
+source_file="res://assets/environments/regions/shadowlands/pixel/battle.png"
+dest_files=["res://.godot/imported/battle.png-c539cfc61c6b1a5e9524580e29e3b780.ctex"]
 
 [params]
 
