@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c0fkyfhhqvnn5"
-path="res://.godot/imported/entrance.png-3912888e9941810454a98a45930e3ea9.ctex"
+path="res://.godot/imported/entrance.png-4ad0a98b1aca6178f81de2265d59d39a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/dragon_peaks/ancient_dragon/entrance.png"
-dest_files=["res://.godot/imported/entrance.png-3912888e9941810454a98a45930e3ea9.ctex"]
+source_file="res://assets/characters/enemies/pixel/dragon_peaks/ancient_dragon/entrance.png"
+dest_files=["res://.godot/imported/entrance.png-4ad0a98b1aca6178f81de2265d59d39a.ctex"]
 
 [params]
 
