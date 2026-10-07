@@ -36,13 +36,13 @@ func _run() -> void:
 	quit(1 if failures else 0)
 
 const EQUIPMENT_RARITY_TEXTURES := {
-	"weapon": preload("res://assets/pixel_ui/equipment/rarity_atlas/weapon.png"),
-	"helmet": preload("res://assets/pixel_ui/equipment/rarity_atlas/helmet.png"),
-	"armor": preload("res://assets/pixel_ui/equipment/rarity_atlas/armor.png"),
-	"gloves": preload("res://assets/pixel_ui/equipment/rarity_atlas/gloves.png"),
-	"boots": preload("res://assets/pixel_ui/equipment/rarity_atlas/boots.png"),
-	"necklace": preload("res://assets/pixel_ui/equipment/rarity_atlas/necklace.png"),
-	"ring": preload("res://assets/pixel_ui/equipment/rarity_atlas/ring.png"),
+	"weapon": preload("res://assets/ui/icons/pixel/equipment/rarity_atlas/weapon.png"),
+	"helmet": preload("res://assets/ui/icons/pixel/equipment/rarity_atlas/helmet.png"),
+	"armor": preload("res://assets/ui/icons/pixel/equipment/rarity_atlas/armor.png"),
+	"gloves": preload("res://assets/ui/icons/pixel/equipment/rarity_atlas/gloves.png"),
+	"boots": preload("res://assets/ui/icons/pixel/equipment/rarity_atlas/boots.png"),
+	"necklace": preload("res://assets/ui/icons/pixel/equipment/rarity_atlas/necklace.png"),
+	"ring": preload("res://assets/ui/icons/pixel/equipment/rarity_atlas/ring.png"),
 }
 
 func _has_visible_pixels(image: Image) -> bool:
