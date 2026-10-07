@@ -12,7 +12,7 @@ func check(value: bool, label: String) -> void:
 		push_error("PHASE 12E: " + label)
 
 func _run() -> void:
-	for resource in ["res://scenes/main.tscn", "res://icon.svg", "res://scripts/core/save_data.gd", "res://scripts/core/audio_service.gd", "res://scripts/combat/combat_vfx_service.gd", "res://assets/heroes/knight/knight/idle.png", "res://assets/enemies/greenvale/goblin/idle.png"]:
+	for resource in ["res://scenes/main.tscn", "res://icon.svg", "res://scripts/systems/save_data.gd", "res://scripts/systems/audio_service.gd", "res://scripts/combat/combat_vfx_service.gd", "res://assets/characters/heroes/standard/knight/knight/idle.png", "res://assets/characters/enemies/standard/greenvale/goblin/idle.png"]:
 		check(ResourceLoader.exists(resource), "required project resource exists: " + resource)
 	check(str(ProjectSettings.get_setting("application/config/name")) == "Crown of Vael", "app label")
 	check(str(ProjectSettings.get_setting("application/config/version")) == "0.1.0", "version name")
