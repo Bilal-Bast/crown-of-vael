@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://kg1fh17qfb86"
-path="res://.godot/imported/heroes.png-e19a45c3f6a3b9cdd055431d111b5805.ctex"
+path="res://.godot/imported/heroes.png-c3bffced8d612a1c1230289be08290f3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/navigation_icons/heroes.png"
-dest_files=["res://.godot/imported/heroes.png-e19a45c3f6a3b9cdd055431d111b5805.ctex"]
+source_file="res://assets/ui/icons/navigation/heroes.png"
+dest_files=["res://.godot/imported/heroes.png-c3bffced8d612a1c1230289be08290f3.ctex"]
 
 [params]
 
