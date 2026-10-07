@@ -5,11 +5,11 @@ const BattlefieldScript = preload("res://scripts/combat/battlefield.gd")
 const SkillBarScript = preload("res://scripts/skills/skill_bar.gd")
 const SkillsScreenScript = preload("res://scripts/skills/skills_screen.gd")
 const SummonScreenScript = preload("res://scripts/summons/summon_screen.gd")
-const CompanionsScreenScript = preload("res://scripts/companions/companions_screen.gd")
+const CompanionsScreenScript = preload("res://scripts/characters/companions/companions_screen.gd")
 const ArtifactsScreenScript = preload("res://scripts/artifacts/artifacts_screen.gd")
-const HeroPortraitScript = preload("res://scripts/heroes/hero_portrait.gd")
+const HeroPortraitScript = preload("res://scripts/components/ui/hero_portrait.gd")
 const AdventureScreenScript = preload("res://scripts/adventure/adventure_screen.gd")
-const HeroesScreenScript = preload("res://scripts/heroes/heroes_screen.gd")
+const HeroesScreenScript = preload("res://scripts/characters/heroes/heroes_screen.gd")
 const QuestsScreenScript = preload("res://scripts/progression/quests_screen.gd")
 const LoginScreenScript = preload("res://scripts/progression/login_screen.gd")
 const BattlePassScreenScript = preload("res://scripts/monetization/battle_pass_screen.gd")
@@ -20,7 +20,7 @@ const SettingsScreenScript = preload("res://scripts/ui/settings_screen.gd")
 const ScreenArtCatalog = preload("res://scripts/ui/screen_art_catalog.gd")
 const IdleRewardServiceScript = preload("res://scripts/progression/idle_reward_service.gd")
 const TutorialServiceScript = preload("res://scripts/progression/tutorial_service.gd")
-const NumberFormatScript = preload("res://scripts/core/number_format.gd")
+const NumberFormatScript = preload("res://scripts/systems/number_format.gd")
 const CrownUI = preload("res://scripts/ui/crown_ui.gd")
 const NAV_ICON_FILES := {
 	"Heroes": "heroes", "Companions": "companions", "Equipment": "equipment", "Skills": "skills", "Summon": "summon",
@@ -37,6 +37,7 @@ const MUTED := Color("b8cbe2")
 
 var profile: SaveData
 var battle: BattleController
+var overlay_layer: Control
 var battlefield: Battlefield
 var battlefield_host: Control
 var feature_panel: PanelContainer
@@ -156,6 +157,7 @@ func _ready() -> void:
 		profile.save()
 	pve_service = PveService.new(profile)
 	battle = BattleScript.new()
+	battle.name = "BattleController"
 	add_child(battle)
 	battle.changed.connect(_refresh_ui)
 	battle.message.connect(_show_message)
@@ -228,17 +230,19 @@ func _handle_back_request() -> void:
 		exit_confirmation.dialog_text = "Your progress is saved automatically."
 		exit_confirmation.ok_button_text = "EXIT"
 		exit_confirmation.confirmed.connect(get_tree().quit)
-		add_child(exit_confirmation)
+		overlay_layer.add_child(exit_confirmation)
 	exit_confirmation.popup_centered()
 
 func _build_ui() -> void:
 	_apply_ui_theme()
 	var backdrop := ColorRect.new()
+	backdrop.name = "ScreenBackdrop"
 	backdrop.color = Color("0b1728")
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(backdrop)
 
 	var root := VBoxContainer.new()
+	root.name = "GameLayout"
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.offset_left = 18
 	root.offset_right = -18
@@ -246,6 +250,11 @@ func _build_ui() -> void:
 	root.offset_bottom = -10
 	root.add_theme_constant_override("separation", 8)
 	add_child(root)
+	overlay_layer = Control.new()
+	overlay_layer.name = "OverlayLayer"
+	overlay_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	overlay_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(overlay_layer)
 	_build_top_bar()
 	_build_stage_card()
 
@@ -259,6 +268,7 @@ func _build_ui() -> void:
 	feature_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.add_child(feature_panel)
 	var feature_layer := Control.new()
+	feature_layer.name = "FeatureScreenLayer"
 	feature_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	feature_layer.clip_contents = true
 	feature_panel.add_child(feature_layer)
@@ -277,6 +287,7 @@ func _build_ui() -> void:
 	backdrop_shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	feature_layer.add_child(backdrop_shade)
 	var feature_box := VBoxContainer.new()
+	feature_box.name = "FeatureScreenLayout"
 	feature_box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	feature_box.offset_left = 12
 	feature_box.offset_right = -12
@@ -285,6 +296,7 @@ func _build_ui() -> void:
 	feature_box.add_theme_constant_override("separation", 4)
 	feature_layer.add_child(feature_box)
 	feature_header = HBoxContainer.new()
+	feature_header.name = "FeatureScreenHeader"
 	feature_header.custom_minimum_size.y = 48
 	feature_header.visible = false
 	feature_header.alignment = BoxContainer.ALIGNMENT_END
@@ -302,6 +314,7 @@ func _build_ui() -> void:
 	feature_close_button.pressed.connect(_select_tab.bind("Battle"))
 	feature_header.add_child(feature_close_button)
 	feature_screens = VBoxContainer.new()
+	feature_screens.name = "FeatureScreens"
 	feature_screens.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	feature_screens.add_theme_constant_override("separation", 0)
 	feature_box.add_child(feature_screens)
@@ -559,6 +572,7 @@ func _build_battle_area() -> void:
 	pixel_battle_background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	battlefield_host.add_child(pixel_battle_background)
 	battlefield = BattlefieldScript.new()
+	battlefield.name = "BattlefieldPresentation"
 	battlefield.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	battlefield.pixel_background_layer = pixel_battle_background
 	battlefield.set_battle(battle)
@@ -804,7 +818,7 @@ func _build_navigation(root: VBoxContainer) -> void:
 		_add_nav_button(right_rail, tab_name, true)
 	login_popup = PopupPanel.new()
 	login_popup.name = "DailyLoginPopup"
-	add_child(login_popup)
+	overlay_layer.add_child(login_popup)
 	_update_navigation()
 
 func _add_nav_button(parent: Container, tab_name: String, floating: bool) -> void:
@@ -852,7 +866,7 @@ func _add_nav_button(parent: Container, tab_name: String, floating: bool) -> voi
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	var nav_texture := load("res://assets/ui/navigation_icons/%s.png" % NAV_ICON_FILES[tab_name]) as Texture2D
+	var nav_texture := load("res://assets/ui/icons/navigation/%s.png" % NAV_ICON_FILES[tab_name]) as Texture2D
 	if floating and nav_texture != null:
 		var icon_image := nav_texture.get_image()
 		if icon_image != null:
@@ -887,7 +901,7 @@ func _add_nav_button(parent: Container, tab_name: String, floating: bool) -> voi
 func _build_guidance_popups() -> void:
 	tutorial_popup = PopupPanel.new()
 	tutorial_popup.name = "TutorialPopup"
-	add_child(tutorial_popup)
+	overlay_layer.add_child(tutorial_popup)
 	var card := _panel()
 	card.custom_minimum_size = Vector2(690, 0)
 	tutorial_popup.add_child(card)
@@ -921,7 +935,7 @@ func _build_guidance_popups() -> void:
 	offline_popup.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	offline_popup.mouse_filter = Control.MOUSE_FILTER_STOP
 	offline_popup.visible = false
-	add_child(offline_popup)
+	overlay_layer.add_child(offline_popup)
 	var scrim := ColorRect.new()
 	scrim.color = Color(0.02, 0.05, 0.06, 0.76)
 	scrim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -968,7 +982,7 @@ func _build_guidance_popups() -> void:
 	power_help_dialog = AcceptDialog.new()
 	power_help_dialog.title = "POWER"
 	power_help_dialog.dialog_text = "Power is a summary estimate shaped by hero stats, upgrades, equipment, skills and passives, companions, artifacts, and hero stars or evolution. It helps compare builds but cannot predict every battle outcome."
-	add_child(power_help_dialog)
+	overlay_layer.add_child(power_help_dialog)
 
 func _show_onboarding_or_offline() -> void:
 	if tutorials.onboarding_active():
