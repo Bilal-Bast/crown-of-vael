@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://u16b0vvwq00x"
-path="res://.godot/imported/hit.png-9335f67292a9523c1eb265ed056e2a35.ctex"
+path="res://.godot/imported/hit.png-18ebb49755c3387e9565e2e743ccbf4a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/heroes/necromancer/hit.png"
-dest_files=["res://.godot/imported/hit.png-9335f67292a9523c1eb265ed056e2a35.ctex"]
+source_file="res://assets/characters/heroes/standard/necromancer/hit.png"
+dest_files=["res://.godot/imported/hit.png-18ebb49755c3387e9565e2e743ccbf4a.ctex"]
 
 [params]
 
