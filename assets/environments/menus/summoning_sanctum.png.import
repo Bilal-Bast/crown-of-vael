@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cvr1x40rd6n82"
-path="res://.godot/imported/attack.png-c23568c46c09665350564a182146e34a.ctex"
+uid="uid://hnmacq72vkxj"
+path="res://.godot/imported/summoning_sanctum.png-014359d5ea2ec7035ede28682a0f9da8.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/heroes/squire/attack.png"
-dest_files=["res://.godot/imported/attack.png-c23568c46c09665350564a182146e34a.ctex"]
+source_file="res://assets/environments/menus/summoning_sanctum.png"
+dest_files=["res://.godot/imported/summoning_sanctum.png-014359d5ea2ec7035ede28682a0f9da8.ctex"]
 
 [params]
 
