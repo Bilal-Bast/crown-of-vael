@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cn00hhkyihkql"
-path="res://.godot/imported/entrance.png-b17a58be96a23c9252daee58ade86b24.ctex"
+path="res://.godot/imported/entrance.png-594f3be7f0459e87328e82ffe94c8468.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/demon_realm/demon_lord/entrance.png"
-dest_files=["res://.godot/imported/entrance.png-b17a58be96a23c9252daee58ade86b24.ctex"]
+source_file="res://assets/characters/enemies/pixel/demon_realm/demon_lord/entrance.png"
+dest_files=["res://.godot/imported/entrance.png-594f3be7f0459e87328e82ffe94c8468.ctex"]
 
 [params]
 
