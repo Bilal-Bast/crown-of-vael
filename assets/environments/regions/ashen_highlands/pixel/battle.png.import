@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dgb0t45jsxxjm"
-path="res://.godot/imported/battle.png-51e46de2fd3a82f1c0e21b67b96b3081.ctex"
+path="res://.godot/imported/battle.png-c6090705a5c5d69da9db84371d69cad9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/backgrounds/ashen_highlands/battle.png"
-dest_files=["res://.godot/imported/battle.png-51e46de2fd3a82f1c0e21b67b96b3081.ctex"]
+source_file="res://assets/environments/regions/ashen_highlands/pixel/battle.png"
+dest_files=["res://.godot/imported/battle.png-c6090705a5c5d69da9db84371d69cad9.ctex"]
 
 [params]
 
