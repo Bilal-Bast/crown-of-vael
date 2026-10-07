@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d0b4aneds1utj"
-path="res://.godot/imported/idle.png-da0d49cc296a2162ce0542ea658b4406.ctex"
+uid="uid://sy3jx4hag82b"
+path="res://.godot/imported/hit.png-621f99c2b4576cf6536150ad6bded053.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/dragon_peaks/ancient_dragon/idle.png"
-dest_files=["res://.godot/imported/idle.png-da0d49cc296a2162ce0542ea658b4406.ctex"]
+source_file="res://assets/characters/enemies/pixel/sunken_marshes/swamp_goblin/hit.png"
+dest_files=["res://.godot/imported/hit.png-621f99c2b4576cf6536150ad6bded053.ctex"]
 
 [params]
 
@@ -36,5 +36,5 @@ process/premult_alpha=false
 process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
-process/size_limit=768
+process/size_limit=0
 detect_3d/compress_to=1
