@@ -1,10 +1,10 @@
 class_name SquireArt
 extends RefCounted
 
-const IDLE_PATH := "res://assets/heroes/knight/squire/squire_idle.png"
-const ATTACK_PATH := "res://assets/heroes/knight/squire/squire_attack.png"
-const GUARD_PATH := "res://assets/heroes/knight/squire/squire_guard.png"
-const PORTRAIT_PATH := "res://assets/heroes/knight/squire/squire_portrait.png"
+const IDLE_PATH := "res://assets/characters/heroes/standard/knight/squire/squire_idle.png"
+const ATTACK_PATH := "res://assets/characters/heroes/standard/knight/squire/squire_attack.png"
+const GUARD_PATH := "res://assets/characters/heroes/standard/knight/squire/squire_guard.png"
+const PORTRAIT_PATH := "res://assets/characters/heroes/standard/knight/squire/squire_portrait.png"
 
 static func load_texture(path: String) -> Texture2D:
 	if path == IDLE_PATH: return HeroArtService.texture_for(0, "idle")
