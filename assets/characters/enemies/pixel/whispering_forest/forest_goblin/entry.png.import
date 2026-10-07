@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cw05mtuo2cfma"
-path="res://.godot/imported/entry.png-e20bfe18522cebc534d9c0097f3b125e.ctex"
+path="res://.godot/imported/entry.png-21bf4e7d35359a5caf93be3455df64d3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/whispering_forest/forest_goblin/entry.png"
-dest_files=["res://.godot/imported/entry.png-e20bfe18522cebc534d9c0097f3b125e.ctex"]
+source_file="res://assets/characters/enemies/pixel/whispering_forest/forest_goblin/entry.png"
+dest_files=["res://.godot/imported/entry.png-21bf4e7d35359a5caf93be3455df64d3.ctex"]
 
 [params]
 
