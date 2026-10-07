@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cyt1lxb73omp8"
-path="res://.godot/imported/attack.png-9576d851222da71543ff087921ed17d5.ctex"
+path="res://.godot/imported/attack.png-9ba235434e2faf37ff5aaece8ce11d5e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/ruined_kingdom/corrupted_soldier/attack.png"
-dest_files=["res://.godot/imported/attack.png-9576d851222da71543ff087921ed17d5.ctex"]
+source_file="res://assets/characters/enemies/pixel/ruined_kingdom/corrupted_soldier/attack.png"
+dest_files=["res://.godot/imported/attack.png-9ba235434e2faf37ff5aaece8ce11d5e.ctex"]
 
 [params]
 
