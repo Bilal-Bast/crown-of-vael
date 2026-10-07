@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://gqhkmrctfg62"
-path="res://.godot/imported/attack.png-77c2c623f9ee67b8ad9ae2c6a25bddce.ctex"
+path="res://.godot/imported/attack.png-384b588479eca0f7f35471e28939e6f2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/crimson_desert/ancient_sand_wyrm/attack.png"
-dest_files=["res://.godot/imported/attack.png-77c2c623f9ee67b8ad9ae2c6a25bddce.ctex"]
+source_file="res://assets/characters/enemies/pixel/crimson_desert/ancient_sand_wyrm/attack.png"
+dest_files=["res://.godot/imported/attack.png-384b588479eca0f7f35471e28939e6f2.ctex"]
 
 [params]
 
