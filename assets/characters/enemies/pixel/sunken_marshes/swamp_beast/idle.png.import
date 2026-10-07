@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cusuefs7onmry"
-path="res://.godot/imported/idle.png-056fda28adb16b2e344a7e21cac31916.ctex"
+path="res://.godot/imported/idle.png-23b115afef15003dfeac88a2bba8bfbe.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/sunken_marshes/swamp_beast/idle.png"
-dest_files=["res://.godot/imported/idle.png-056fda28adb16b2e344a7e21cac31916.ctex"]
+source_file="res://assets/characters/enemies/pixel/sunken_marshes/swamp_beast/idle.png"
+dest_files=["res://.godot/imported/idle.png-23b115afef15003dfeac88a2bba8bfbe.ctex"]
 
 [params]
 
