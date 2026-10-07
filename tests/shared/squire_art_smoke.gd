@@ -20,7 +20,7 @@ func _run() -> void:
 	var field := main.get("battlefield") as Battlefield
 	_check(field.squire_idle_texture != null and field.squire_attack_texture != null and field.squire_guard_texture != null, "battle textures loaded")
 	_check(SquireArt.load_texture(SquireArt.PORTRAIT_PATH) != null, "portrait texture loaded")
-	_check(SquireArt.load_texture("res://assets/heroes/knight/squire/missing.png") == null, "missing asset returns null")
+	_check(SquireArt.load_texture("res://assets/characters/heroes/standard/knight/squire/missing.png") == null, "missing asset returns null")
 	field._on_attack_started(-1, 0)
 	_check(field.hero_attack_art_time > 0.0, "normal attack starts temporary art state")
 	field._process(0.30)
