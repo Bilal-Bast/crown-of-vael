@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://clwbcrgrohagl"
-path="res://.godot/imported/portrait.png-f1b9e0414aca7be2ef31f6afae47b840.ctex"
+path="res://.godot/imported/portrait.png-814e51c196f1a09b16a03462fa8dab89.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/heroes/knight/divine_paladin/portrait.png"
-dest_files=["res://.godot/imported/portrait.png-f1b9e0414aca7be2ef31f6afae47b840.ctex"]
+source_file="res://assets/characters/heroes/standard/knight/divine_paladin/portrait.png"
+dest_files=["res://.godot/imported/portrait.png-814e51c196f1a09b16a03462fa8dab89.ctex"]
 
 [params]
 
