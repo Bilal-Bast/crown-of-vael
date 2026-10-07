@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cra2fw07uthkt"
-path="res://.godot/imported/sheet.png-f30c136eace9da61345e878a9bd0b7f3.ctex"
+uid="uid://bkygf7llvud8d"
+path="res://.godot/imported/run.png-b8427b6fb7d68f70cee4239da3064c64.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/greenvale/goblin/sheet.png"
-dest_files=["res://.godot/imported/sheet.png-f30c136eace9da61345e878a9bd0b7f3.ctex"]
+source_file="res://assets/characters/heroes/standard/mage/run.png"
+dest_files=["res://.godot/imported/run.png-b8427b6fb7d68f70cee4239da3064c64.ctex"]
 
 [params]
 
