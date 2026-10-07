@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://crrjjg7xmptit"
-path="res://.godot/imported/entry.png-1b4b59fe7372192b798b2a077cf6acc4.ctex"
+path="res://.godot/imported/entry.png-de8ae963b5939c263fa30a7446d4ea68.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/ruined_kingdom/undead_guard/entry.png"
-dest_files=["res://.godot/imported/entry.png-1b4b59fe7372192b798b2a077cf6acc4.ctex"]
+source_file="res://assets/characters/enemies/pixel/ruined_kingdom/undead_guard/entry.png"
+dest_files=["res://.godot/imported/entry.png-de8ae963b5939c263fa30a7446d4ea68.ctex"]
 
 [params]
 
