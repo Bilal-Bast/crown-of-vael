@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bbq2k5if5ah4u"
-path="res://.godot/imported/guard.png-06edb8318212783cdef38ff9eb92b3cd.ctex"
+path="res://.godot/imported/guard.png-7e7cdf11ac7a75b55c3ed00db60c9924.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/heroes/ranger/guard.png"
-dest_files=["res://.godot/imported/guard.png-06edb8318212783cdef38ff9eb92b3cd.ctex"]
+source_file="res://assets/characters/heroes/standard/ranger/guard.png"
+dest_files=["res://.godot/imported/guard.png-7e7cdf11ac7a75b55c3ed00db60c9924.ctex"]
 
 [params]
 
