@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://7v5xoshrui5p"
-path="res://.godot/imported/idle.png-c33d6df3b2d0c7e01918c0cfab21a28f.ctex"
+path="res://.godot/imported/idle.png-a7f2d772e3b4b4b90d12bff3f66d88ce.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/demon_realm/hellhound/idle.png"
-dest_files=["res://.godot/imported/idle.png-c33d6df3b2d0c7e01918c0cfab21a28f.ctex"]
+source_file="res://assets/characters/enemies/pixel/demon_realm/hellhound/idle.png"
+dest_files=["res://.godot/imported/idle.png-a7f2d772e3b4b4b90d12bff3f66d88ce.ctex"]
 
 [params]
 
