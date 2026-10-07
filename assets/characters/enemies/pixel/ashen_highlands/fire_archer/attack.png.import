@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c61wgi3oox67e"
-path="res://.godot/imported/attack.png-136053c6f26bd2a1d5a13485bca3fabe.ctex"
+path="res://.godot/imported/attack.png-801089c9fe71723f6429b2838d2e708e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/ashen_highlands/fire_archer/attack.png"
-dest_files=["res://.godot/imported/attack.png-136053c6f26bd2a1d5a13485bca3fabe.ctex"]
+source_file="res://assets/characters/enemies/pixel/ashen_highlands/fire_archer/attack.png"
+dest_files=["res://.godot/imported/attack.png-801089c9fe71723f6429b2838d2e708e.ctex"]
 
 [params]
 
