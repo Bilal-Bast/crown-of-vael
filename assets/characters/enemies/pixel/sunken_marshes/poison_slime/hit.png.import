@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bgfyxg8wcacnf"
-path="res://.godot/imported/hit.png-670fd602f33c1e28044b5d9c2f9febf5.ctex"
+path="res://.godot/imported/hit.png-dcf2c0c92d05b09451540dae82a1bdae.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/enemies/sunken_marshes/poison_slime/hit.png"
-dest_files=["res://.godot/imported/hit.png-670fd602f33c1e28044b5d9c2f9febf5.ctex"]
+source_file="res://assets/characters/enemies/pixel/sunken_marshes/poison_slime/hit.png"
+dest_files=["res://.godot/imported/hit.png-dcf2c0c92d05b09451540dae82a1bdae.ctex"]
 
 [params]
 
