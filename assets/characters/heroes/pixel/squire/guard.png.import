@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bm883adr0viut"
-path="res://.godot/imported/guard.png-7ae8b474bd2431a0a44986b43d124bec.ctex"
+path="res://.godot/imported/guard.png-32792233bebe22db406dc09297ce0e0c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/prototype_pixel/heroes/squire/guard.png"
-dest_files=["res://.godot/imported/guard.png-7ae8b474bd2431a0a44986b43d124bec.ctex"]
+source_file="res://assets/characters/heroes/pixel/squire/guard.png"
+dest_files=["res://.godot/imported/guard.png-32792233bebe22db406dc09297ce0e0c.ctex"]
 
 [params]
 
