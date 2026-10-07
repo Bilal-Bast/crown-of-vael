@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cf42a7pn3d0vx"
-path="res://.godot/imported/source_atlas.png-2cf24e1e973c28a1cae6440572a4bcca.ctex"
+path="res://.godot/imported/source_atlas.png-8d6cdf0ceb65e2b7cf564886394bceac.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/heroes/necromancer/source_atlas.png"
-dest_files=["res://.godot/imported/source_atlas.png-2cf24e1e973c28a1cae6440572a4bcca.ctex"]
+source_file="res://assets/characters/heroes/standard/necromancer/source_atlas.png"
+dest_files=["res://.godot/imported/source_atlas.png-8d6cdf0ceb65e2b7cf564886394bceac.ctex"]
 
 [params]
 
