@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://brbxd6q732gm7"
-path="res://.godot/imported/idle.png-36bf8e1fa581b1c544904ff3e7d25aa1.ctex"
+path="res://.godot/imported/idle.png-2602138f42120e2423987dc6806db168.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/ruined_kingdom/corrupted_king/idle.png"
-dest_files=["res://.godot/imported/idle.png-36bf8e1fa581b1c544904ff3e7d25aa1.ctex"]
+source_file="res://assets/characters/enemies/standard/ruined_kingdom/corrupted_king/idle.png"
+dest_files=["res://.godot/imported/idle.png-2602138f42120e2423987dc6806db168.ctex"]
 
 [params]
 
